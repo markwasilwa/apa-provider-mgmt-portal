@@ -7,13 +7,98 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-.DS_Store
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
 dist
+
+# Vite build output
 dist-ssr
-coverage
 *.local
 
+# Rollup build output
+build/
+
+# Webpack build output
+public/build/
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test coverage
+coverage/
+.nyc_output
+
+# Testing
 /cypress/videos/
 /cypress/screenshots/
 
@@ -27,4 +112,25 @@ coverage
 *.sln
 *.sw?
 
-*.tsbuildinfo
+# Temporary folders
+tmp/
+temp/
+
+# Docker
+.dockerignore
+
+# Local development
+*.local
+
+# Database
+*.sqlite
+*.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Lock files (uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
