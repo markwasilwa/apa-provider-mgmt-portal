@@ -109,8 +109,8 @@ defineExpose({
 <style scoped>
 .main-content {
   flex: 1;
-  padding: 2rem 0;
-  background-color: #f8fafc;
+  padding: 0.5rem 0;
+  background-color: white;
 }
 
 .container {

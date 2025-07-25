@@ -119,13 +119,13 @@ const recentActivities = ref([
 
 <style scoped>
 .page-container {
-  padding: 2rem;
+  padding: 1rem 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .page-title {

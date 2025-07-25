@@ -407,16 +407,15 @@ const showToastMessage = (message) => {
 /* Container and Layout */
 .provider-categories-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: white;
   padding: 0;
 }
 
 /* Header Section */
 .header-section {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 2rem 0;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.75rem 0;
 }
 
 .header-content {
@@ -433,7 +432,7 @@ const showToastMessage = (message) => {
 }
 
 .main-title {
-  color: white;
+  color: #1e293b;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
@@ -447,7 +446,7 @@ const showToastMessage = (message) => {
 }
 
 .subtitle {
-  color: rgba(255, 255, 255, 0.8);
+  color: #64748b;
   font-size: 1.1rem;
   margin: 0;
 }

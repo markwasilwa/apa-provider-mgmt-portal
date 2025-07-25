@@ -232,7 +232,7 @@ const resetForm = () => {
 
 .page-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 }
 
 .page-title {
