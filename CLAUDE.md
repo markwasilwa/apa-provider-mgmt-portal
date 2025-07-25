@@ -18,6 +18,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The application will be available at http://localhost:8080 when running via Docker Compose.
 
+## Vercel Deployment
+
+- **Easy Deploy**: Click "Import Project" in Vercel dashboard and connect the GitHub repository
+- **Auto Configuration**: Vercel will automatically detect Vite framework and use the vercel.json config
+- **Build Settings**: 
+  - Build Command: `npm run build`
+  - Output Directory: `dist`
+  - Install Command: `npm install`
+- **Environment**: The app will be automatically deployed with SPA routing support
+
 ## Architecture Overview
 
 This is a Vue 3 + Vite application for a provider management portal. Key architectural elements:
