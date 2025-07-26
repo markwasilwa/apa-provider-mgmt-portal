@@ -62,7 +62,7 @@
           </h2>
           <span class="category-count">{{ filteredCategories.length }} categories</span>
         </div>
-        
+
         <div class="table-wrapper">
           <table class="categories-table">
             <thead>
@@ -430,13 +430,13 @@ const showToastMessage = (message) => {
 .header-section {
   background: white;
   border-bottom: 1px solid #e2e8f0;
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
 }
 
 .header-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -448,40 +448,45 @@ const showToastMessage = (message) => {
 
 .main-title {
   color: #1e293b;
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .icon {
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   color: #1e293b;
 }
 
 .subtitle {
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   margin: 0;
 }
 
 .header-stats {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .stat-item {
   text-align: center;
-  color: white;
+  color: #1e293b;
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
 }
 
 .stat-number {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   line-height: 1;
+  color: #3b82f6;
 }
 
 .stat-label {
@@ -1161,17 +1166,17 @@ const showToastMessage = (message) => {
     text-align: center;
     gap: 1.5rem;
   }
-  
+
   .header-stats {
     justify-content: center;
   }
-  
+
   .content-header {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
   }
-  
+
   .search-section {
     max-width: none;
   }
@@ -1181,47 +1186,47 @@ const showToastMessage = (message) => {
   .provider-categories-container {
     padding: 0;
   }
-  
+
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .main-title {
     font-size: 2rem;
   }
-  
+
   .content-section {
     padding: 1rem;
   }
-  
+
   .table-wrapper {
     overflow-x: scroll;
   }
-  
+
   .categories-table {
     min-width: 700px;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .input-group.full-width {
     grid-column: span 1;
   }
-  
+
   .detail-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .detail-item.full-width {
     grid-column: span 1;
   }
-  
+
   .header-stats {
     gap: 1rem;
   }
-  
+
   .action-section {
     flex-direction: column;
   }
@@ -1233,15 +1238,15 @@ const showToastMessage = (message) => {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .table-header {
     padding: 1rem;
   }
-  
+
   .modal-form {
     padding: 1rem;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }

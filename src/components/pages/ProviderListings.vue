@@ -74,14 +74,14 @@
           </h2>
           <span class="provider-count">{{ totalProviders }} providers</span>
         </div>
-        
+
         <div class="table-wrapper">
           <!-- Loading State -->
           <div v-if="loading" class="loading-state">
             <div class="loading-spinner"></div>
             <p>Loading providers...</p>
           </div>
-          
+
           <!-- Error State -->
           <div v-else-if="error" class="error-state">
             <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@
             <p>{{ error }}</p>
             <button @click="loadProviders" class="retry-btn">Retry</button>
           </div>
-          
+
           <!-- Table -->
           <table v-else class="providers-table">
             <thead>
@@ -183,7 +183,7 @@
             </tbody>
           </table>
         </div>
-        
+
         <!-- Pagination -->
         <div v-if="!loading && !error && totalPages > 1" class="pagination-section">
           <div class="pagination-info">
@@ -196,7 +196,7 @@
               </svg>
               Previous
             </button>
-            
+
             <div class="page-numbers">
               <button 
                 v-for="page in Math.min(5, totalPages)" 
@@ -208,7 +208,7 @@
                 {{ page }}
               </button>
             </div>
-            
+
             <button @click="nextPage" :disabled="currentPage >= totalPages - 1" class="pagination-btn">
               Next
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -456,7 +456,7 @@ const mockProviders = ref([
 const loadProviders = async () => {
   loading.value = true
   error.value = null
-  
+
   try {
     const response = await ProviderAPIService.getProviderEntities({
       page: currentPage.value,
@@ -464,7 +464,7 @@ const loadProviders = async () => {
       sortBy: 'companyName',
       sortDirection: 'ASC'
     })
-    
+
     if (response.status === 0 && response.content) {
       const transformedProviders = response.content.content.map(transformProviderData)
       providers.value = transformedProviders
@@ -491,16 +491,16 @@ const searchProviders = async (searchTerm) => {
     await loadProviders()
     return
   }
-  
+
   loading.value = true
   error.value = null
-  
+
   try {
     const response = await ProviderAPIService.searchProviders(searchTerm, {
       page: currentPage.value,
       size: pageSize.value
     })
-    
+
     if (response.status === 0 && response.content) {
       const transformedProviders = response.content.content.map(transformProviderData)
       providers.value = transformedProviders
@@ -650,13 +650,13 @@ onMounted(() => {
 .header-section {
   background: white;
   border-bottom: 1px solid #e2e8f0;
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
 }
 
 .header-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -668,38 +668,43 @@ onMounted(() => {
 
 .main-title {
   color: #1e293b;
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .icon {
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 .subtitle {
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   margin: 0;
 }
 
 .header-stats {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .stat-item {
   text-align: center;
-  color: white;
+  color: #1e293b;
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
 }
 
 .stat-number {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   line-height: 1;
+  color: #3b82f6;
 }
 
 .stat-label {
@@ -1421,21 +1426,21 @@ onMounted(() => {
     text-align: center;
     gap: 1.5rem;
   }
-  
+
   .header-stats {
     justify-content: center;
   }
-  
+
   .content-header {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
   }
-  
+
   .search-section {
     max-width: none;
   }
-  
+
   .filter-section {
     justify-content: center;
   }
@@ -1445,39 +1450,39 @@ onMounted(() => {
   .provider-listings-container {
     padding: 0;
   }
-  
+
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .main-title {
     font-size: 2rem;
   }
-  
+
   .content-section {
     padding: 1rem;
   }
-  
+
   .table-wrapper {
     overflow-x: scroll;
   }
-  
+
   .providers-table {
     min-width: 900px;
   }
-  
+
   .detail-grid {
     grid-template-columns: 1fr 1fr;
   }
-  
+
   .detail-item.full-width {
     grid-column: span 2;
   }
-  
+
   .header-stats {
     gap: 1rem;
   }
-  
+
   .filter-section {
     flex-direction: column;
   }
@@ -1489,15 +1494,15 @@ onMounted(() => {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .table-header {
     padding: 1rem;
   }
-  
+
   .detail-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .detail-item.full-width {
     grid-column: span 1;
   }
