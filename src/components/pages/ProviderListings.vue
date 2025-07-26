@@ -62,38 +62,56 @@
             </select>
             <span class="select-icon">⌄</span>
           </div>
+          <div class="view-mode-toggle">
+            <button 
+              @click="viewMode = 'list'" 
+              :class="{ active: viewMode === 'list' }" 
+              class="view-mode-btn"
+              title="Compact List View"
+            >
+              <span class="view-mode-icon">📋</span>
+            </button>
+            <button 
+              @click="viewMode = 'cards'" 
+              :class="{ active: viewMode === 'cards' }" 
+              class="view-mode-btn"
+              title="Compact Cards View"
+            >
+              <span class="view-mode-icon">🗂️</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Providers Table -->
+      <!-- Providers Container -->
       <div class="table-container">
         <div class="table-header">
           <h2 class="table-title">
-            <span class="table-icon">📋</span>
+            <span class="table-icon">{{ viewMode === 'list' ? '📋' : '🗂️' }}</span>
             Healthcare Providers
           </h2>
           <span class="provider-count">{{ totalProviders }} providers</span>
         </div>
 
-        <div class="table-wrapper">
-          <!-- Loading State -->
-          <div v-if="loading" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading providers...</p>
-          </div>
+        <!-- Loading State -->
+        <div v-if="loading" class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Loading providers...</p>
+        </div>
 
-          <!-- Error State -->
-          <div v-else-if="error" class="error-state">
-            <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-            <h3>Error Loading Providers</h3>
-            <p>{{ error }}</p>
-            <button @click="loadProviders" class="retry-btn">Retry</button>
-          </div>
+        <!-- Error State -->
+        <div v-else-if="error" class="error-state">
+          <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h3>Error Loading Providers</h3>
+          <p>{{ error }}</p>
+          <button @click="loadProviders" class="retry-btn">Retry</button>
+        </div>
 
-          <!-- Table -->
-          <table v-else class="providers-table">
+        <!-- Table View (List) -->
+        <div v-else-if="viewMode === 'list'" class="table-wrapper">
+          <table class="providers-table">
             <thead>
               <tr>
                 <th class="th-icon"></th>
@@ -182,6 +200,61 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Cards View -->
+        <div v-else class="cards-wrapper">
+          <div class="cards-grid">
+            <div 
+              v-for="provider in filteredProviders" 
+              :key="provider.id" 
+              class="provider-card"
+              @click="viewDetails(provider)"
+            >
+              <div class="card-header">
+                <div class="card-icon-wrapper">
+                  <span class="card-icon">{{ provider.icon }}</span>
+                </div>
+                <span class="status-badge modern compact" :class="getStatusClass(provider.status)">
+                  {{ provider.status }}
+                </span>
+              </div>
+              <div class="card-body">
+                <h4 class="card-title">{{ provider.name }}</h4>
+                <div class="card-category">
+                  <span class="category-badge compact">{{ provider.category }}</span>
+                </div>
+                <div class="card-location">
+                  <span class="location-icon">📍</span>
+                  <span class="location-text">{{ provider.location }}</span>
+                </div>
+                <div class="card-rating">
+                  <span class="star">⭐</span>
+                  <span class="rating-value">{{ provider.rating }}</span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="card-stats">
+                  <div class="stat-item compact">
+                    <span class="stat-number">{{ provider.patientsServed }}</span>
+                    <span class="stat-label">patients</span>
+                  </div>
+                  <div class="stat-item compact">
+                    <span class="stat-number">{{ provider.yearsActive }}y</span>
+                    <span class="stat-label">active</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="action-btn edit" @click.stop="editProvider(provider)" title="Edit Provider">
+                    <span class="action-icon">✏️</span>
+                  </button>
+                  <button class="action-btn contact" @click.stop="contactProvider(provider)" title="Contact Provider">
+                    <span class="action-icon">📞</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Pagination -->
@@ -298,6 +371,7 @@ const statusFilter = ref('all')
 const selectedProvider = ref(null)
 const showToast = ref(false)
 const toastMessage = ref('')
+const viewMode = ref('list') // 'list' or 'cards'
 
 // API states
 const providers = ref([])
@@ -1419,6 +1493,155 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
+/* View Mode Toggle */
+.view-mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.view-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #6b7280;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-mode-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.view-mode-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.view-mode-icon {
+  font-size: 1.25rem;
+}
+
+/* Cards View */
+.cards-wrapper {
+  padding: 1rem;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.provider-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.provider-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.card-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f1f5f9;
+  border-radius: 0.5rem;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-category {
+  margin-bottom: 0.5rem;
+}
+
+.category-badge.compact {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.card-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.card-footer {
+  padding: 1rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-item.compact {
+  font-size: 0.8rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.status-badge.compact {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .header-content {
@@ -1485,6 +1708,16 @@ onMounted(() => {
 
   .filter-section {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .view-mode-toggle {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
 
@@ -1505,6 +1738,25 @@ onMounted(() => {
 
   .detail-item.full-width {
     grid-column: span 1;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .view-mode-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .view-mode-btn {
+    flex: 1;
   }
 }
 </style>
