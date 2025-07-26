@@ -29,192 +29,138 @@
       </div>
     </div>
 
-    <!-- Menu Section -->
-    <div class="menu-section">
-      <div class="menu-container">
-        <div class="menu-tabs">
-          <button 
-            v-for="tab in menuTabs" 
-            :key="tab.id"
-            class="menu-tab"
-            :class="{ active: activeTab === tab.id }"
-            @click="setActiveTab(tab.id)"
-          >
-            <svg class="tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="tab.iconPath" />
-            </svg>
-            <span class="tab-text">{{ tab.name }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions View -->
-    <div v-if="activeTab === 'actions'" class="quick-actions-view">
-      <div class="actions-container">
-        <h2 class="section-title">Quick Actions</h2>
-        <div class="actions-grid">
-          <div class="action-card" @click="showScheduleForm">
-            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <h3>Schedule New Visit</h3>
-            <p>Schedule a new provider facility visit</p>
-          </div>
-          <div class="action-card" @click="showBulkSchedule">
-            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <h3>Bulk Schedule</h3>
-            <p>Schedule multiple visits at once</p>
-          </div>
-          <div class="action-card" @click="exportVisits">
-            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3>Export Data</h3>
-            <p>Export visit records to Excel/PDF</p>
-          </div>
-          <div class="action-card" @click="generateReport">
-            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <h3>Generate Report</h3>
-            <p>Create comprehensive visit reports</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scheduled Visits View -->
-    <div v-else-if="activeTab === 'scheduled'" class="scheduled-visits-view">
-      <div class="scheduled-container">
-        <div class="section-header">
-          <h2 class="section-title">Scheduled Visits</h2>
-          <div class="section-actions">
-            <button class="action-btn" @click="refreshScheduled">
-              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        <div class="scheduled-list">
-          <div class="list-header">
-            <div class="header-col provider-col">Provider</div>
-            <div class="header-col date-col">Scheduled Date</div>
-            <div class="header-col status-col">Status</div>
-            <div class="header-col actions-col">Actions</div>
-          </div>
-          <div v-for="visit in scheduledVisits" :key="visit.id" class="list-item" @click="editVisit(visit)">
-            <div class="item-col provider-col">
-              <h4 class="provider-name">{{ visit.providerName }}</h4>
-            </div>
-            <div class="item-col date-col">
-              <span class="visit-date">{{ formatDate(visit.meetingDate) || 'Date not set' }}</span>
-            </div>
-            <div class="item-col status-col">
-              <div class="status-badge">
-                <span class="status-dot" :class="getStatusClass(visit.status)"></span>
-                <span class="status-text">{{ visit.status }}</span>
+    <!-- Visits View (Combined Scheduled Visits and Schedule New Visit) -->
+    <div class="visits-view">
+      <div class="visits-container">
+        <div class="visits-layout">
+          <!-- Left side: Scheduled Visits -->
+          <div class="scheduled-container">
+            <div class="section-header">
+              <h2 class="section-title">Scheduled Visits</h2>
+              <div class="section-actions">
+                <button class="action-btn" @click="refreshScheduled">
+                  <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
               </div>
             </div>
-            <div class="item-col actions-col">
-              <button class="edit-btn" @click.stop="editVisit(visit)" title="Edit Visit">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
+
+            <div class="scheduled-list">
+              <div class="list-header">
+                <div class="header-col provider-col">Provider</div>
+                <div class="header-col date-col">Scheduled Date</div>
+                <div class="header-col status-col">Status</div>
+                <div class="header-col actions-col">Actions</div>
+              </div>
+              <div v-for="visit in scheduledVisits" :key="visit.id" class="list-item" @click="editVisit(visit)">
+                <div class="item-col provider-col">
+                  <h4 class="provider-name">{{ visit.providerName }}</h4>
+                </div>
+                <div class="item-col date-col">
+                  <span class="visit-date">{{ formatDate(visit.meetingDate) || 'Date not set' }}</span>
+                </div>
+                <div class="item-col status-col">
+                  <div class="status-badge">
+                    <span class="status-dot" :class="getStatusClass(visit.status)"></span>
+                    <span class="status-text">{{ visit.status }}</span>
+                  </div>
+                </div>
+                <div class="item-col actions-col">
+                  <button class="edit-btn" @click.stop="editVisit(visit)" title="Edit Visit">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div v-if="scheduledVisits.length === 0" class="empty-state">
-          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <h3>No Scheduled Visits</h3>
-          <p>Get started by scheduling your first provider visit.</p>
-          <p>Use the Schedule & Update tab to create new visits.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Schedule View -->
-    <div v-else-if="activeTab === 'schedule'" class="schedule-view">
-      <div class="schedule-container">
-        <!-- Schedule Visit Card -->
-        <div class="form-card centered">
-          <div class="card-header">
-            <h2 class="card-title">
-              <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div v-if="scheduledVisits.length === 0" class="empty-state">
+              <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              Schedule New Visit
-            </h2>
+              <h3>No Scheduled Visits</h3>
+              <p>Get started by scheduling your first provider visit.</p>
+              <p>Use the form on the right to create new visits.</p>
+            </div>
           </div>
-          <form @submit.prevent="scheduleVisit" class="modern-form">
-            <div class="input-group">
-              <label class="input-label">Provider</label>
-              <div class="select-wrapper">
-                <select v-model="scheduleForm.providerId" required class="modern-select">
-                  <option value="">Choose a provider...</option>
-                  <option v-for="provider in providers" :key="provider.id" :value="provider.id">
-                    {{ provider.name }}
-                  </option>
-                </select>
-                <span class="select-icon">⌄</span>
-              </div>
-            </div>
 
-            <!-- Conflict of Interest Agreement -->
-            <div class="agreement-section">
-              <div class="agreement-header">
-                <svg class="agreement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m-3 1l-3-1" />
-                </svg>
-                <h4>Conflict of Interest Agreement</h4>
+          <!-- Right side: Schedule New Visit -->
+          <div class="schedule-container">
+            <!-- Schedule Visit Card -->
+            <div class="form-card">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Schedule New Visit
+                </h2>
               </div>
-              <div class="agreement-content">
-                <p>By proceeding, you acknowledge that you have read and understood the conflict of interest policy and have no existing conflicts with the selected provider.</p>
-              </div>
+              <form @submit.prevent="scheduleVisit" class="modern-form">
+                <div class="input-group">
+                  <label class="input-label">Provider</label>
+                  <div class="select-wrapper">
+                    <select v-model="scheduleForm.providerId" required class="modern-select">
+                      <option value="">Choose a provider...</option>
+                      <option v-for="provider in providers" :key="provider.id" :value="provider.id">
+                        {{ provider.name }}
+                      </option>
+                    </select>
+                    <span class="select-icon">⌄</span>
+                  </div>
+                </div>
 
-              <div class="consent-options">
-                <label class="consent-option" :class="{ active: scheduleForm.consent === 'agree' }">
-                  <input type="radio" v-model="scheduleForm.consent" value="agree" required>
-                  <span class="consent-check">
-                    <svg v-if="scheduleForm.consent === 'agree'" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                <!-- Conflict of Interest Agreement -->
+                <div class="agreement-section">
+                  <div class="agreement-header">
+                    <svg class="agreement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m-3 1l-3-1" />
                     </svg>
-                  </span>
-                  <span class="consent-text">I agree to the terms</span>
-                </label>
-                <label class="consent-option" :class="{ active: scheduleForm.consent === 'disagree' }">
-                  <input type="radio" v-model="scheduleForm.consent" value="disagree" required>
-                  <span class="consent-check">
-                    <svg v-if="scheduleForm.consent === 'disagree'" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                  <span class="consent-text">I disagree</span>
-                </label>
-              </div>
-            </div>
+                    <h4>Conflict of Interest Agreement</h4>
+                  </div>
+                  <div class="agreement-content">
+                    <p>By proceeding, you acknowledge that you have read and understood the conflict of interest policy and have no existing conflicts with the selected provider.</p>
+                  </div>
 
-            <div class="input-group">
-              <label class="input-label">Visit Date</label>
-              <input type="date" v-model="scheduleForm.meetingDate" required class="modern-input date-input">
-            </div>
+                  <div class="consent-options">
+                    <label class="consent-option" :class="{ active: scheduleForm.consent === 'agree' }">
+                      <input type="radio" v-model="scheduleForm.consent" value="agree" required>
+                      <span class="consent-check">
+                        <svg v-if="scheduleForm.consent === 'agree'" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                      </span>
+                      <span class="consent-text">I agree to the terms</span>
+                    </label>
+                    <label class="consent-option" :class="{ active: scheduleForm.consent === 'disagree' }">
+                      <input type="radio" v-model="scheduleForm.consent" value="disagree" required>
+                      <span class="consent-check">
+                        <svg v-if="scheduleForm.consent === 'disagree'" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </span>
+                      <span class="consent-text">I disagree</span>
+                    </label>
+                  </div>
+                </div>
 
-            <button type="submit" class="primary-btn" :disabled="scheduleForm.consent !== 'agree'">
-              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Schedule Visit
-            </button>
-          </form>
+                <div class="input-group">
+                  <label class="input-label">Visit Date</label>
+                  <input type="date" v-model="scheduleForm.meetingDate" required class="modern-input date-input">
+                </div>
+
+                <button type="submit" class="primary-btn" :disabled="scheduleForm.consent !== 'agree'">
+                  <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Schedule Visit
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -248,26 +194,6 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-
-// Menu state
-const activeTab = ref('actions')
-const menuTabs = ref([
-  {
-    id: 'actions',
-    name: 'Quick Actions',
-    iconPath: 'M13 10V3L4 14h7v7l9-11h-7z'
-  },
-  {
-    id: 'scheduled',
-    name: 'Scheduled Visits',
-    iconPath: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
-  },
-  {
-    id: 'schedule',
-    name: 'Schedule Visit',
-    iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-  }
-])
 
 // Form states
 const scheduleForm = ref({
@@ -522,27 +448,6 @@ const closeImageModal = () => {
   }
 }
 
-// Menu navigation
-const setActiveTab = (tabId) => {
-  activeTab.value = tabId
-}
-
-// Quick actions
-const showScheduleForm = () => {
-  activeTab.value = 'schedule'
-}
-
-const showBulkSchedule = () => {
-  alert('Bulk schedule feature coming soon!')
-}
-
-const exportVisits = () => {
-  alert('Export feature coming soon!')
-}
-
-const generateReport = () => {
-  alert('Report generation feature coming soon!')
-}
 
 const refreshScheduled = () => {
   alert('Refreshing scheduled visits...')
@@ -1235,117 +1140,12 @@ const getProgressText = (status) => {
   height: 1rem;
 }
 
-/* Menu Section */
-.menu-section {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0;
-}
-
-.menu-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.menu-tabs {
-  display: flex;
-  gap: 0;
-}
-
-.menu-tab {
-  background: none;
-  border: none;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #64748b;
-  font-weight: 500;
-  border-bottom: 3px solid transparent;
-}
-
-.menu-tab:hover {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.menu-tab.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-  background: white;
-}
-
-.tab-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.tab-text {
-  font-size: 0.875rem;
-}
-
-/* Quick Actions View */
-.quick-actions-view {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
+/* Section Title */
 .section-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 1.5rem;
-}
-
-.actions-grid {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.action-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-  flex: 1;
-  min-width: 250px;
-  max-width: 300px;
-}
-
-.action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #3b82f6;
-}
-
-.action-icon {
-  width: 3rem;
-  height: 3rem;
-  color: #3b82f6;
-  margin: 0 auto 1rem;
-}
-
-.action-card h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-}
-
-.action-card p {
-  color: #64748b;
-  font-size: 0.875rem;
-  margin: 0;
 }
 
 
@@ -1591,32 +1391,6 @@ const getProgressText = (status) => {
     gap: 0.75rem;
   }
 
-  .menu-tabs {
-    flex-wrap: wrap;
-  }
-
-  .menu-tab {
-    padding: 0.75rem 1rem;
-  }
-
-  .tab-text {
-    font-size: 0.75rem;
-  }
-
-  .quick-actions-view {
-    padding: 1.5rem 1rem;
-  }
-
-  .actions-grid {
-    flex-direction: column;
-    align-items: center;
-  }
-
-
-  .action-card {
-    max-width: 100%;
-    width: 100%;
-  }
 
   .scheduled-list .list-header,
   .scheduled-list .list-item {
@@ -1680,9 +1454,6 @@ const getProgressText = (status) => {
     justify-content: center;
   }
 
-  .action-card {
-    padding: 1.5rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1716,5 +1487,48 @@ const getProgressText = (status) => {
 .form-card.centered {
   max-width: 600px;
   width: 100%;
+}
+
+/* Visits View (Combined) */
+.visits-view {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.visits-container {
+  width: 100%;
+}
+
+.visits-layout {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.visits-layout .scheduled-container {
+  flex: 1;
+  min-width: 500px;
+}
+
+.visits-layout .schedule-container {
+  flex: 0 0 400px;
+}
+
+.visits-layout .form-card {
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 1200px) {
+  .visits-layout {
+    flex-direction: column;
+  }
+
+  .visits-layout .scheduled-container,
+  .visits-layout .schedule-container {
+    min-width: 100%;
+    width: 100%;
+  }
 }
 </style>
