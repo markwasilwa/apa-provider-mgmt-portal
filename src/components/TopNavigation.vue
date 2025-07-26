@@ -2,8 +2,8 @@
   <nav class="top-nav">
     <div class="nav-container">
       <div class="logo">
-        <img src="@/assets/happiness.jpeg" alt="APA Insurance" class="logo-img">
-        <span class="logo-text">APA Insurance</span>
+        <img src="@/assets/happiness.jpeg" alt="Providers Portal" class="logo-img">
+        <span class="logo-text">Providers Portal</span>
       </div>
       <div class="auth-section">
         <button class="login-btn" v-if="!isLoggedIn" @click="login">Login</button>

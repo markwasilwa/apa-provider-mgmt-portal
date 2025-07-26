@@ -8,7 +8,7 @@
             <BuildingOffice2Icon class="icon" />
             Provider Listings Directory
           </h1>
-          <p class="subtitle">Comprehensive directory of all registered healthcare providers in the APA Insurance network</p>
+          <p class="subtitle">Comprehensive directory of all registered healthcare providers in the Providers Portal network</p>
         </div>
         <div class="header-stats">
           <div class="stat-item">

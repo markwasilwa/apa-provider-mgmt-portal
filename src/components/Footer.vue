@@ -4,7 +4,7 @@
       <div class="footer-content">
         <div class="footer-section">
           <div class="footer-logo">
-            <img src="@/assets/happiness.jpeg" alt="APA Insurance" class="footer-logo-img">
+            <img src="@/assets/happiness.jpeg" alt="Providers Portal" class="footer-logo-img">
             <span class="footer-logo-text">APA Insurance</span>
           </div>
           <p class="footer-tagline">Your trusted healthcare insurance partner</p>
@@ -15,7 +15,7 @@
           <div class="contact-info">
             <div class="contact-item">
               <EnvelopeIcon class="contact-icon" />
-              <span>info@apainsurance.com</span>
+              <span>info@providersportal.com</span>
             </div>
             <div class="contact-item">
               <PhoneIcon class="contact-icon" />
@@ -23,7 +23,7 @@
             </div>
             <div class="contact-item">
               <MapPinIcon class="contact-icon" />
-              <span>APA Centre, Nairobi, Kenya</span>
+              <span>Providers Portal, Nairobi, Kenya</span>
             </div>
           </div>
         </div>
@@ -33,7 +33,7 @@
           <div class="contact-info">
             <div class="contact-item">
               <BuildingOffice2Icon class="contact-icon" />
-              <span>providers@apainsurance.com</span>
+              <span>providers@providersportal.com</span>
             </div>
             <div class="contact-item">
               <ClockIcon class="contact-icon" />
@@ -48,7 +48,7 @@
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; {{ currentYear }} APA Insurance Company. All rights reserved.</p>
+        <p>&copy; {{ currentYear }} Providers Portal. All rights reserved.</p>
         <p class="footer-disclaimer">Provider Management Portal - Internal Use Only</p>
       </div>
     </div>
