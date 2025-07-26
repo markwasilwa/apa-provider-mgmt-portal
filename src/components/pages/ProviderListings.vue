@@ -64,9 +64,9 @@
             <ChevronDownIcon class="select-icon" />
           </div>
           <div class="view-mode-toggle">
-            <button 
-              @click="viewMode = 'list'" 
-              :class="{ active: viewMode === 'list' }" 
+            <button
+              @click="viewMode = 'list'"
+              :class="{ active: viewMode === 'list' }"
               class="view-mode-btn"
               title="Compact List View"
             >
@@ -1697,7 +1697,7 @@ onMounted(() => {
   .header-content {
     flex-direction: column;
     text-align: center;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .header-stats {
@@ -1729,7 +1729,7 @@ onMounted(() => {
   }
 
   .main-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .content-section {
@@ -1753,7 +1753,7 @@ onMounted(() => {
   }
 
   .header-stats {
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   .filter-section {
