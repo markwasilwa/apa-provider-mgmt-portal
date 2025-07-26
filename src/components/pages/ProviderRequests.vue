@@ -67,6 +67,10 @@
             </select>
             <span class="select-icon">⌄</span>
           </div>
+          <button class="add-btn" @click="showCreateModal = true">
+            <PlusIcon class="btn-icon" />
+            Create Request
+          </button>
         </div>
       </div>
 
@@ -270,12 +274,173 @@
         <p>{{ toastMessage }}</p>
       </div>
     </div>
+
+    <!-- Create Provider Registration Request Modal -->
+    <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <PlusIcon class="modal-icon" />
+            Create Provider Registration Request
+          </h3>
+          <button class="modal-close" @click="closeCreateModal">×</button>
+        </div>
+        <form @submit.prevent="createRequest" class="modal-form">
+          <!-- Provider Information Section -->
+          <div class="form-section">
+            <h4 class="form-section-title">Provider Information</h4>
+            <div class="form-grid">
+              <div class="input-group full-width">
+                <label class="input-label">Provider Name</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.providerName" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter provider name"
+                  >
+                  <BuildingOffice2Icon class="input-icon" />
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Category</label>
+                <div class="input-wrapper">
+                  <select v-model="requestForm.category" required class="modern-select">
+                    <option value="">Select a category</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="Clinic">Clinic</option>
+                    <option value="Pharmacy">Pharmacy</option>
+                    <option value="Diagnostic">Diagnostic</option>
+                    <option value="Dental">Dental</option>
+                    <option value="Mental Health">Mental Health</option>
+                  </select>
+                  <ChevronDownIcon class="input-icon" />
+                </div>
+                <span class="input-help">Select the type of healthcare facility</span>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Location</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.location" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter location"
+                  >
+                  <MapPinIcon class="input-icon" />
+                </div>
+                <span class="input-help">City, State or Region</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information Section -->
+          <div class="form-section">
+            <h4 class="form-section-title">Contact Information</h4>
+            <div class="form-grid">
+              <div class="input-group">
+                <label class="input-label">Contact Email</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="email" 
+                    v-model="requestForm.contactEmail" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter contact email"
+                  >
+                  <EnvelopeIcon class="input-icon" />
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Phone Number</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="tel" 
+                    v-model="requestForm.phone" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter phone number"
+                  >
+                  <PhoneIcon class="input-icon" />
+                </div>
+                <span class="input-help">Include country code</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- License Information Section -->
+          <div class="form-section">
+            <h4 class="form-section-title">License Information</h4>
+            <div class="form-grid">
+              <div class="input-group">
+                <label class="input-label">License Number</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.licenseNumber" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter license number"
+                  >
+                  <IdentificationIcon class="input-icon" />
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">License Expiry Date</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    v-model="requestForm.licenseExpiry" 
+                    required 
+                    class="modern-input"
+                  >
+                  <CalendarIcon class="input-icon" />
+                </div>
+                <span class="input-help">License must be valid</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-section form-actions">
+            <div class="action-buttons">
+              <button type="button" @click="closeCreateModal" class="btn-secondary">
+                <XMarkIcon class="btn-icon" />
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">
+                <PlusIcon class="btn-icon" />
+                Create Request
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { EyeIcon, CheckIcon, XMarkIcon, MagnifyingGlassIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, DocumentTextIcon, ClipboardDocumentListIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { 
+  EyeIcon, 
+  CheckIcon, 
+  XMarkIcon, 
+  MagnifyingGlassIcon, 
+  EnvelopeIcon, 
+  PhoneIcon, 
+  MapPinIcon, 
+  DocumentTextIcon, 
+  ClipboardDocumentListIcon, 
+  CheckCircleIcon, 
+  PlusIcon,
+  BuildingOffice2Icon,
+  ChevronDownIcon,
+  IdentificationIcon,
+  CalendarIcon
+} from '@heroicons/vue/24/outline'
 
 // Form states
 const searchTerm = ref('')
@@ -285,6 +450,16 @@ const selectedRequest = ref(null)
 const showToast = ref(false)
 const toastMessage = ref('')
 const expandedRequestIds = ref([])
+const showCreateModal = ref(false)
+const requestForm = ref({
+  providerName: '',
+  category: '',
+  location: '',
+  contactEmail: '',
+  phone: '',
+  licenseNumber: '',
+  licenseExpiry: ''
+})
 
 // Requests data
 const requests = ref([
@@ -527,6 +702,51 @@ const showToastMessage = (message) => {
   setTimeout(() => {
     showToast.value = false
   }, 3000)
+}
+
+// Close create modal
+const closeCreateModal = () => {
+  showCreateModal.value = false
+  // Reset form
+  requestForm.value = {
+    providerName: '',
+    category: '',
+    location: '',
+    contactEmail: '',
+    phone: '',
+    licenseNumber: '',
+    licenseExpiry: ''
+  }
+}
+
+// Create new request
+const createRequest = () => {
+  // Generate a new request ID
+  const newId = `REQ-${new Date().getFullYear()}-${String(requests.value.length + 1).padStart(3, '0')}`
+
+  // Create new request object
+  const newRequest = {
+    id: newId,
+    providerName: requestForm.value.providerName,
+    category: requestForm.value.category,
+    location: requestForm.value.location,
+    contactEmail: requestForm.value.contactEmail,
+    phone: requestForm.value.phone,
+    licenseNumber: requestForm.value.licenseNumber,
+    licenseExpiry: requestForm.value.licenseExpiry,
+    dateSubmitted: new Date().toISOString().split('T')[0],
+    lastUpdated: new Date().toISOString().split('T')[0],
+    status: 'Pending'
+  }
+
+  // Add to requests array
+  requests.value.unshift(newRequest)
+
+  // Show success message
+  showToastMessage(`Request ${newId} has been created successfully`)
+
+  // Close modal
+  closeCreateModal()
 }
 </script>
 
@@ -1410,6 +1630,317 @@ const showToastMessage = (message) => {
 
   .detail-grid {
     gap: 1.5rem;
+  }
+}
+
+/* Add Button Styles */
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  margin-left: 1rem;
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal.modern {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-form {
+  padding: 1.25rem;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group.full-width {
+  grid-column: span 2;
+}
+
+.input-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn-secondary,
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 0.4rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #d1d5db 100%);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal.modern {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-form {
+    padding: 1rem;
+  }
+
+  .form-section {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* Enhanced Form Styles */
+.form-section {
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 1rem;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.form-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0 0 0.75rem 0;
+  padding-left: 0.5rem;
+  border-left: 3px solid #3b82f6;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  right: 1rem;
+  color: #94a3b8;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+}
+
+.modern-input,
+.modern-select {
+  padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.4rem;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.modern-input:focus,
+.modern-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.modern-input::placeholder {
+  color: #94a3b8;
+}
+
+.input-help {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.form-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: none;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Responsive adjustments for the form */
+@media (max-width: 640px) {
+  .form-section-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .modern-input,
+  .modern-select {
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .input-label {
+    font-size: 0.7rem;
+  }
+
+  .input-help {
+    font-size: 0.65rem;
+    margin-top: 0.2rem;
+  }
+
+  .form-section {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .action-buttons {
+    flex-direction: column-reverse;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem 1rem;
   }
 }
 </style>
