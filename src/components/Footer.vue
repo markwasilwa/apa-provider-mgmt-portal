@@ -9,44 +9,44 @@
           </div>
           <p class="footer-tagline">Your trusted healthcare insurance partner</p>
         </div>
-        
+
         <div class="footer-section">
           <h4 class="footer-title">Contact Information</h4>
           <div class="contact-info">
             <div class="contact-item">
-              <span class="contact-icon">📧</span>
+              <EnvelopeIcon class="contact-icon" />
               <span>info@apainsurance.com</span>
             </div>
             <div class="contact-item">
-              <span class="contact-icon">📞</span>
+              <PhoneIcon class="contact-icon" />
               <span>+254 700 000 000</span>
             </div>
             <div class="contact-item">
-              <span class="contact-icon">📍</span>
+              <MapPinIcon class="contact-icon" />
               <span>APA Centre, Nairobi, Kenya</span>
             </div>
           </div>
         </div>
-        
+
         <div class="footer-section">
           <h4 class="footer-title">Provider Support</h4>
           <div class="contact-info">
             <div class="contact-item">
-              <span class="contact-icon">🏥</span>
+              <BuildingOffice2Icon class="contact-icon" />
               <span>providers@apainsurance.com</span>
             </div>
             <div class="contact-item">
-              <span class="contact-icon">⏰</span>
+              <ClockIcon class="contact-icon" />
               <span>Mon - Fri: 8:00 AM - 6:00 PM</span>
             </div>
             <div class="contact-item">
-              <span class="contact-icon">🆘</span>
+              <ExclamationTriangleIcon class="contact-icon" />
               <span>24/7 Emergency Support</span>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div class="footer-bottom">
         <p>&copy; {{ currentYear }} APA Insurance Company. All rights reserved.</p>
         <p class="footer-disclaimer">Provider Management Portal - Internal Use Only</p>
@@ -57,6 +57,14 @@
 
 <script setup>
 import { computed } from 'vue'
+import { 
+  EnvelopeIcon, 
+  PhoneIcon, 
+  MapPinIcon, 
+  BuildingOffice2Icon, 
+  ClockIcon, 
+  ExclamationTriangleIcon 
+} from '@heroicons/vue/24/outline'
 
 const currentYear = computed(() => new Date().getFullYear())
 </script>
@@ -133,8 +141,8 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .contact-icon {
-  font-size: 1rem;
-  width: 20px;
+  width: 1.25rem;
+  height: 1.25rem;
   text-align: center;
 }
 
@@ -160,11 +168,11 @@ const currentYear = computed(() => new Date().getFullYear())
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .footer-section {
     text-align: center;
   }
-  
+
   .footer-logo {
     justify-content: center;
   }

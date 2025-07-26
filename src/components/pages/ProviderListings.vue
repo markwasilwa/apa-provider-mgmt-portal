@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="title-group">
           <h1 class="main-title">
-            <span class="icon">🏥</span>
+            <BuildingOffice2Icon class="icon" />
             Provider Listings Directory
           </h1>
           <p class="subtitle">Comprehensive directory of all registered healthcare providers in the APA Insurance network</p>
@@ -32,7 +32,7 @@
       <div class="content-header">
         <div class="search-section">
           <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
+            <MagnifyingGlassIcon class="search-icon" />
             <input 
               type="text" 
               v-model="searchTerm" 
@@ -52,7 +52,7 @@
               <option value="Dental">Dental</option>
               <option value="Mental Health">Mental Health</option>
             </select>
-            <span class="select-icon">⌄</span>
+            <ChevronDownIcon class="select-icon" />
           </div>
           <div class="select-wrapper">
             <select v-model="statusFilter" class="modern-select">
@@ -60,7 +60,7 @@
               <option value="Active">Active</option>
               <option value="Suspended">Suspended</option>
             </select>
-            <span class="select-icon">⌄</span>
+            <ChevronDownIcon class="select-icon" />
           </div>
           <div class="view-mode-toggle">
             <button 
@@ -69,7 +69,7 @@
               class="view-mode-btn"
               title="Compact List View"
             >
-              <span class="view-mode-icon">📋</span>
+              <ListBulletIcon class="view-mode-icon" />
             </button>
             <button 
               @click="viewMode = 'cards'" 
@@ -77,7 +77,7 @@
               class="view-mode-btn"
               title="Compact Cards View"
             >
-              <span class="view-mode-icon">🗂️</span>
+              <RectangleStackIcon class="view-mode-icon" />
             </button>
           </div>
         </div>
@@ -87,7 +87,7 @@
       <div class="table-container">
         <div class="table-header">
           <h2 class="table-title">
-            <span class="table-icon">{{ viewMode === 'list' ? '📋' : '🗂️' }}</span>
+            <component :is="viewMode === 'list' ? ListBulletIcon : RectangleStackIcon" class="table-icon" />
             Healthcare Providers
           </h2>
           <span class="provider-count">{{ totalProviders }} providers</span>
@@ -119,8 +119,6 @@
                 <th class="th-category">Category</th>
                 <th class="th-location">Location</th>
                 <th class="th-contact">Contact Info</th>
-                <th class="th-rating">Rating</th>
-                <th class="th-stats">Statistics</th>
                 <th class="th-status">Status</th>
                 <th class="th-actions">Actions</th>
               </tr>
@@ -129,7 +127,7 @@
               <tr v-for="provider in filteredProviders" :key="provider.id" class="provider-row">
                 <td class="td-icon">
                   <div class="provider-icon-wrapper">
-                    <span class="provider-icon">{{ provider.icon }}</span>
+                    <BuildingOffice2Icon class="provider-icon" />
                   </div>
                 </td>
                 <td class="td-name">
@@ -143,39 +141,19 @@
                 </td>
                 <td class="td-location">
                   <div class="location-cell">
-                    <span class="location-icon">📍</span>
+                    <MapPinIcon class="location-icon" />
                     <span class="location-text">{{ provider.location }}</span>
                   </div>
                 </td>
                 <td class="td-contact">
                   <div class="contact-cell">
                     <div class="contact-item">
-                      <span class="contact-icon">📞</span>
+                      <PhoneIcon class="contact-icon" />
                       <span class="contact-text">{{ provider.phone }}</span>
                     </div>
                     <div class="contact-item">
-                      <span class="contact-icon">📧</span>
+                      <EnvelopeIcon class="contact-icon" />
                       <span class="contact-text">{{ provider.email }}</span>
-                    </div>
-                  </div>
-                </td>
-                <td class="td-rating">
-                  <div class="rating-cell">
-                    <div class="rating-stars">
-                      <span class="star">⭐</span>
-                      <span class="rating-value">{{ provider.rating }}</span>
-                    </div>
-                  </div>
-                </td>
-                <td class="td-stats">
-                  <div class="stats-cell">
-                    <div class="stat-item">
-                      <span class="stat-number">{{ provider.patientsServed }}</span>
-                      <span class="stat-label">patients</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="stat-number">{{ provider.yearsActive }}y</span>
-                      <span class="stat-label">active</span>
                     </div>
                   </div>
                 </td>
@@ -187,13 +165,13 @@
                 <td class="td-actions">
                   <div class="action-buttons">
                     <button class="action-btn view" @click="viewDetails(provider)" title="View Details">
-                      <span class="action-icon">👁️</span>
+                      <EyeIcon class="action-icon" />
                     </button>
                     <button class="action-btn edit" @click="editProvider(provider)" title="Edit Provider">
-                      <span class="action-icon">✏️</span>
+                      <PencilIcon class="action-icon" />
                     </button>
                     <button class="action-btn contact" @click="contactProvider(provider)" title="Contact Provider">
-                      <span class="action-icon">📞</span>
+                      <PhoneIcon class="action-icon" />
                     </button>
                   </div>
                 </td>
@@ -213,7 +191,7 @@
             >
               <div class="card-header">
                 <div class="card-icon-wrapper">
-                  <span class="card-icon">{{ provider.icon }}</span>
+                  <BuildingOffice2Icon class="card-icon" />
                 </div>
                 <span class="status-badge modern compact" :class="getStatusClass(provider.status)">
                   {{ provider.status }}
@@ -225,31 +203,17 @@
                   <span class="category-badge compact">{{ provider.category }}</span>
                 </div>
                 <div class="card-location">
-                  <span class="location-icon">📍</span>
+                  <MapPinIcon class="location-icon" />
                   <span class="location-text">{{ provider.location }}</span>
-                </div>
-                <div class="card-rating">
-                  <span class="star">⭐</span>
-                  <span class="rating-value">{{ provider.rating }}</span>
                 </div>
               </div>
               <div class="card-footer">
-                <div class="card-stats">
-                  <div class="stat-item compact">
-                    <span class="stat-number">{{ provider.patientsServed }}</span>
-                    <span class="stat-label">patients</span>
-                  </div>
-                  <div class="stat-item compact">
-                    <span class="stat-number">{{ provider.yearsActive }}y</span>
-                    <span class="stat-label">active</span>
-                  </div>
-                </div>
                 <div class="card-actions">
                   <button class="action-btn edit" @click.stop="editProvider(provider)" title="Edit Provider">
-                    <span class="action-icon">✏️</span>
+                    <PencilIcon class="action-icon" />
                   </button>
                   <button class="action-btn contact" @click.stop="contactProvider(provider)" title="Contact Provider">
-                    <span class="action-icon">📞</span>
+                    <PhoneIcon class="action-icon" />
                   </button>
                 </div>
               </div>
@@ -296,7 +260,7 @@
       <div class="details-panel" v-if="selectedProvider">
         <div class="panel-header">
           <h3 class="panel-title">
-            <span class="panel-icon">{{ selectedProvider.icon }}</span>
+            <BuildingOffice2Icon class="panel-icon" />
             {{ selectedProvider.name }}
           </h3>
           <button class="close-panel" @click="selectedProvider = null">×</button>
@@ -316,27 +280,12 @@
               <span class="detail-value">{{ selectedProvider.location }}</span>
             </div>
             <div class="detail-item">
-              <label class="detail-label">Rating</label>
-              <div class="rating-display">
-                <span class="star">⭐</span>
-                <span class="rating-value">{{ selectedProvider.rating }}</span>
-              </div>
-            </div>
-            <div class="detail-item">
               <label class="detail-label">Phone</label>
               <a :href="`tel:${selectedProvider.phone}`" class="detail-link">{{ selectedProvider.phone }}</a>
             </div>
             <div class="detail-item">
               <label class="detail-label">Email</label>
               <a :href="`mailto:${selectedProvider.email}`" class="detail-link">{{ selectedProvider.email }}</a>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Patients Served</label>
-              <span class="detail-value highlight">{{ selectedProvider.patientsServed }}</span>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Years Active</label>
-              <span class="detail-value highlight">{{ selectedProvider.yearsActive }} years</span>
             </div>
             <div class="detail-item full-width">
               <label class="detail-label">Status</label>
@@ -351,7 +300,9 @@
 
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
-      <div class="toast-icon">✅</div>
+      <div class="toast-icon">
+        <CheckCircleIcon class="toast-icon-svg" />
+      </div>
       <div class="toast-content">
         <h4>Success!</h4>
         <p>{{ toastMessage }}</p>
@@ -363,6 +314,20 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { ProviderAPIService, transformProviderData } from '@/services/api'
+import { 
+  BuildingOffice2Icon, 
+  MagnifyingGlassIcon, 
+  ChevronDownIcon,
+  ListBulletIcon,
+  RectangleStackIcon,
+  MapPinIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  StarIcon,
+  EyeIcon,
+  PencilIcon,
+  CheckCircleIcon
+} from '@heroicons/vue/24/outline'
 
 // Form states
 const searchTerm = ref('')
@@ -724,7 +689,7 @@ onMounted(() => {
 .header-section {
   background: white;
   border-bottom: 1px solid #e2e8f0;
-  padding: 0.5rem 0;
+  padding: 0.3rem 0;
 }
 
 .header-content {
@@ -742,21 +707,22 @@ onMounted(() => {
 
 .main-title {
   color: #1e293b;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .icon {
-  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .subtitle {
   color: #64748b;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   margin: 0;
 }
 
@@ -791,15 +757,15 @@ onMounted(() => {
 .content-section {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.2rem;
 }
 
 .content-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
+  margin-bottom: 1.2rem;
+  gap: 0.8rem;
 }
 
 .search-section {
@@ -818,6 +784,8 @@ onMounted(() => {
   left: 1rem;
   color: #6b7280;
   z-index: 1;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .search-input {
@@ -872,7 +840,8 @@ onMounted(() => {
   transform: translateY(-50%);
   color: #6b7280;
   pointer-events: none;
-  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* Table Container */
@@ -887,7 +856,7 @@ onMounted(() => {
 
 .table-header {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -905,7 +874,8 @@ onMounted(() => {
 }
 
 .table-icon {
-  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .provider-count {
@@ -929,7 +899,7 @@ onMounted(() => {
 
 .providers-table th,
 .providers-table td {
-  padding: 1rem;
+  padding: 0.6rem;
   text-align: left;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -953,41 +923,31 @@ onMounted(() => {
 
 /* Table Column Widths */
 .th-icon {
-  width: 60px;
+  width: 50px;
 }
 
 .th-name {
-  width: 220px;
-}
-
-.th-category {
-  width: 120px;
-}
-
-.th-location {
-  width: 150px;
-}
-
-.th-contact {
   width: 200px;
 }
 
-.th-rating {
-  width: 80px;
-  text-align: center;
-}
-
-.th-stats {
-  width: 120px;
-  text-align: center;
-}
-
-.th-status {
+.th-category {
   width: 100px;
 }
 
+.th-location {
+  width: 140px;
+}
+
+.th-contact {
+  width: 180px;
+}
+
+.th-status {
+  width: 90px;
+}
+
 .th-actions {
-  width: 120px;
+  width: 110px;
   text-align: center;
 }
 
@@ -996,14 +956,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   background: #f1f5f9;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
 }
 
 .provider-icon {
-  font-size: 1.5rem;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .name-cell {
@@ -1012,10 +973,10 @@ onMounted(() => {
 }
 
 .provider-name {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.2rem 0;
 }
 
 .provider-license {
@@ -1033,9 +994,9 @@ onMounted(() => {
   display: inline-block;
   background: #e0e7ff;
   color: #3730a3;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -1049,6 +1010,8 @@ onMounted(() => {
 
 .location-icon {
   color: #6b7280;
+  width: 1rem;
+  height: 1rem;
 }
 
 .location-text {
@@ -1069,9 +1032,9 @@ onMounted(() => {
 }
 
 .contact-icon {
-  font-size: 0.75rem;
   color: #6b7280;
-  width: 16px;
+  width: 1rem;
+  height: 1rem;
 }
 
 .contact-text {
@@ -1092,6 +1055,8 @@ onMounted(() => {
 
 .star {
   color: #fbbf24;
+  width: 1rem;
+  height: 1rem;
 }
 
 .rating-value {
@@ -1128,9 +1093,9 @@ onMounted(() => {
 
 /* Status Badges */
 .status-badge.modern {
-  padding: 0.375rem 0.875rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.4rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -1189,7 +1154,8 @@ onMounted(() => {
 }
 
 .action-icon {
-  font-size: 0.875rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Details Panel */
@@ -1222,7 +1188,8 @@ onMounted(() => {
 }
 
 .panel-icon {
-  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .close-panel {
@@ -1478,7 +1445,14 @@ onMounted(() => {
 }
 
 .toast-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-icon-svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .toast-content h4 {
@@ -1526,7 +1500,8 @@ onMounted(() => {
 }
 
 .view-mode-icon {
-  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* Cards View */
@@ -1556,7 +1531,7 @@ onMounted(() => {
 }
 
 .card-header {
-  padding: 1rem;
+  padding: 0.7rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1574,25 +1549,26 @@ onMounted(() => {
 }
 
 .card-icon {
-  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .card-body {
-  padding: 1rem;
+  padding: 0.7rem;
 }
 
 .card-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.3rem 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .card-category {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .category-badge.compact {
@@ -1603,9 +1579,9 @@ onMounted(() => {
 .card-location {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.8rem;
+  gap: 0.4rem;
+  margin-bottom: 0;
+  font-size: 0.75rem;
   color: #4b5563;
 }
 
@@ -1616,10 +1592,10 @@ onMounted(() => {
 }
 
 .card-footer {
-  padding: 1rem;
+  padding: 0.7rem;
   border-top: 1px solid #f1f5f9;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
 }
 
