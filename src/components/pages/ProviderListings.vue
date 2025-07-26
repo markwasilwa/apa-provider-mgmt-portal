@@ -72,11 +72,28 @@
             <span class="table-icon">📋</span>
             Healthcare Providers
           </h2>
-          <span class="provider-count">{{ filteredProviders.length }} providers</span>
+          <span class="provider-count">{{ totalProviders }} providers</span>
         </div>
         
         <div class="table-wrapper">
-          <table class="providers-table">
+          <!-- Loading State -->
+          <div v-if="loading" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading providers...</p>
+          </div>
+          
+          <!-- Error State -->
+          <div v-else-if="error" class="error-state">
+            <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <h3>Error Loading Providers</h3>
+            <p>{{ error }}</p>
+            <button @click="loadProviders" class="retry-btn">Retry</button>
+          </div>
+          
+          <!-- Table -->
+          <table v-else class="providers-table">
             <thead>
               <tr>
                 <th class="th-icon"></th>
@@ -166,6 +183,40 @@
             </tbody>
           </table>
         </div>
+        
+        <!-- Pagination -->
+        <div v-if="!loading && !error && totalPages > 1" class="pagination-section">
+          <div class="pagination-info">
+            <span>Page {{ currentPage + 1 }} of {{ totalPages }} ({{ totalProviders }} total providers)</span>
+          </div>
+          <div class="pagination-controls">
+            <button @click="prevPage" :disabled="currentPage === 0" class="pagination-btn">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Previous
+            </button>
+            
+            <div class="page-numbers">
+              <button 
+                v-for="page in Math.min(5, totalPages)" 
+                :key="page - 1"
+                @click="goToPage(page - 1)"
+                :class="{ active: currentPage === page - 1 }"
+                class="page-number"
+              >
+                {{ page }}
+              </button>
+            </div>
+            
+            <button @click="nextPage" :disabled="currentPage >= totalPages - 1" class="pagination-btn">
+              Next
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Provider Details Panel -->
@@ -237,7 +288,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { ProviderAPIService, transformProviderData } from '@/services/api'
 
 // Form states
 const searchTerm = ref('')
@@ -247,8 +299,17 @@ const selectedProvider = ref(null)
 const showToast = ref(false)
 const toastMessage = ref('')
 
-// Providers data
-const providers = ref([
+// API states
+const providers = ref([])
+const loading = ref(false)
+const error = ref(null)
+const currentPage = ref(0)
+const pageSize = ref(20)
+const totalPages = ref(0)
+const totalElements = ref(0)
+
+// Mock providers data (fallback)
+const mockProviders = ref([
   {
     id: 1,
     name: 'Nairobi General Hospital',
@@ -391,8 +452,83 @@ const providers = ref([
   }
 ])
 
+// Load providers from API
+const loadProviders = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await ProviderAPIService.getProviderEntities({
+      page: currentPage.value,
+      size: pageSize.value,
+      sortBy: 'companyName',
+      sortDirection: 'ASC'
+    })
+    
+    if (response.status === 0 && response.content) {
+      const transformedProviders = response.content.content.map(transformProviderData)
+      providers.value = transformedProviders
+      totalPages.value = response.content.page.totalPages
+      totalElements.value = response.content.page.totalElements
+    } else {
+      throw new Error(response.message || 'Failed to load providers')
+    }
+  } catch (err) {
+    error.value = err.message
+    console.error('Error loading providers:', err)
+    // Fallback to mock data
+    providers.value = mockProviders.value
+    totalElements.value = mockProviders.value.length
+    showToastMessage(`Using offline data - API unavailable`)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Search providers
+const searchProviders = async (searchTerm) => {
+  if (!searchTerm.trim()) {
+    await loadProviders()
+    return
+  }
+  
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await ProviderAPIService.searchProviders(searchTerm, {
+      page: currentPage.value,
+      size: pageSize.value
+    })
+    
+    if (response.status === 0 && response.content) {
+      const transformedProviders = response.content.content.map(transformProviderData)
+      providers.value = transformedProviders
+      totalPages.value = response.content.page.totalPages
+      totalElements.value = response.content.page.totalElements
+    } else {
+      throw new Error(response.message || 'Search failed')
+    }
+  } catch (err) {
+    error.value = err.message
+    console.error('Error searching providers:', err)
+    // Fallback to local search on mock data
+    const search = searchTerm.toLowerCase()
+    const filtered = mockProviders.value.filter(provider => 
+      provider.name.toLowerCase().includes(search) ||
+      provider.location.toLowerCase().includes(search) ||
+      provider.category.toLowerCase().includes(search)
+    )
+    providers.value = filtered
+    totalElements.value = filtered.length
+    showToastMessage(`Search completed using offline data`)
+  } finally {
+    loading.value = false
+  }
+}
+
 // Computed properties
-const totalProviders = computed(() => providers.value.length)
+const totalProviders = computed(() => totalElements.value || providers.value.length)
 
 const activeProviders = computed(() => {
   return providers.value.filter(p => p.status === 'Active').length
@@ -459,6 +595,47 @@ const showToastMessage = (message) => {
     showToast.value = false
   }, 3000)
 }
+
+// Page navigation
+const goToPage = (page) => {
+  if (page >= 0 && page < totalPages.value) {
+    currentPage.value = page
+    loadProviders()
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value - 1) {
+    goToPage(currentPage.value + 1)
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 0) {
+    goToPage(currentPage.value - 1)
+  }
+}
+
+// Watchers
+let searchTimeout = null
+
+watch(searchTerm, (newSearch) => {
+  // Debounce search
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 0
+    if (newSearch.trim()) {
+      searchProviders(newSearch)
+    } else {
+      loadProviders()
+    }
+  }, 500)
+})
+
+// Initialize
+onMounted(() => {
+  loadProviders()
+})
 </script>
 
 <style scoped>
@@ -1042,6 +1219,156 @@ const showToastMessage = (message) => {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+/* Loading and Error States */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+  text-align: center;
+}
+
+.error-icon {
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1rem;
+  color: #fbbf24;
+}
+
+.error-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+  font-size: 1.25rem;
+}
+
+.error-state p {
+  margin: 0 0 1.5rem 0;
+  color: #6b7280;
+}
+
+.retry-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #2563eb;
+}
+
+/* Pagination */
+.pagination-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.pagination-info {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-number {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-number:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.page-number.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
 }
 
 /* Toast Notification */

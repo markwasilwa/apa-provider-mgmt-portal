@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="title-group">
           <h1 class="main-title">
-            <span class="icon">📋</span>
+            <ClipboardDocumentListIcon class="icon" />
             Provider Categories Management
           </h1>
           <p class="subtitle">Manage and organize different healthcare provider types and their associated facilities</p>
@@ -32,7 +32,7 @@
       <div class="content-header">
         <div class="search-section">
           <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
+            <MagnifyingGlassIcon class="search-icon" />
             <input 
               type="text" 
               v-model="searchTerm" 
@@ -43,11 +43,11 @@
         </div>
         <div class="action-section">
           <button class="filter-btn" @click="toggleFilter">
-            <span class="btn-icon">🔽</span>
+            <FunnelIcon class="btn-icon" />
             Filter
           </button>
           <button class="add-btn" @click="showAddModal = true">
-            <span class="btn-icon">➕</span>
+            <PlusIcon class="btn-icon" />
             Add Category
           </button>
         </div>
@@ -57,7 +57,7 @@
       <div class="table-container">
         <div class="table-header">
           <h2 class="table-title">
-            <span class="table-icon">📊</span>
+            <ChartBarIcon class="table-icon" />
             Provider Categories
           </h2>
           <span class="category-count">{{ filteredCategories.length }} categories</span>
@@ -112,13 +112,13 @@
                 <td class="td-actions">
                   <div class="action-buttons">
                     <button class="action-btn view" @click="viewCategory(category)" title="View Details">
-                      <span class="action-icon">👁️</span>
+                      <EyeIcon class="action-icon" />
                     </button>
                     <button class="action-btn edit" @click="editCategory(category)" title="Edit Category">
-                      <span class="action-icon">✏️</span>
+                      <PencilIcon class="action-icon" />
                     </button>
                     <button class="action-btn delete" @click="deleteCategory(category.id)" title="Delete Category">
-                      <span class="action-icon">🗑️</span>
+                      <TrashIcon class="action-icon" />
                     </button>
                   </div>
                 </td>
@@ -175,7 +175,7 @@
       <div class="modal modern" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">
-            <span class="modal-icon">{{ editingCategory ? '✏️' : '➕' }}</span>
+            <component :is="editingCategory ? PencilIcon : PlusIcon" class="modal-icon" />
             {{ editingCategory ? 'Edit Category' : 'Add New Category' }}
           </h3>
           <button class="modal-close" @click="closeModal">×</button>
@@ -217,7 +217,7 @@
                 type="text" 
                 v-model="categoryForm.icon" 
                 class="modern-input"
-                placeholder="🏥"
+                placeholder="Icon emoji"
                 maxlength="2"
               >
             </div>
@@ -248,7 +248,9 @@
 
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
-      <div class="toast-icon">✅</div>
+      <div class="toast-icon">
+        <CheckCircleIcon class="toast-icon-svg" />
+      </div>
       <div class="toast-content">
         <h4>Success!</h4>
         <p>{{ toastMessage }}</p>
@@ -259,6 +261,19 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { 
+  ClipboardDocumentListIcon,
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+  PlusIcon,
+  ChartBarIcon,
+  BuildingOffice2Icon,
+  PencilIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  FunnelIcon,
+  EyeIcon
+} from '@heroicons/vue/24/outline'
 
 // Form states
 const showAddModal = ref(false)
@@ -442,7 +457,9 @@ const showToastMessage = (message) => {
 }
 
 .icon {
-  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+  color: #1e293b;
 }
 
 .subtitle {
@@ -502,6 +519,8 @@ const showToastMessage = (message) => {
 .search-icon {
   position: absolute;
   left: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   color: #6b7280;
   z-index: 1;
 }
@@ -566,7 +585,9 @@ const showToastMessage = (message) => {
 }
 
 .btn-icon {
-  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
 }
 
 /* Table Container */
@@ -599,7 +620,10 @@ const showToastMessage = (message) => {
 }
 
 .table-icon {
-  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
+  color: #3b82f6;
 }
 
 .category-count {
@@ -801,7 +825,8 @@ const showToastMessage = (message) => {
 }
 
 .action-icon {
-  font-size: 0.875rem;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 /* Details Panel */
@@ -944,7 +969,9 @@ const showToastMessage = (message) => {
 }
 
 .modal-icon {
-  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
 }
 
 .modal-close {
@@ -1104,7 +1131,15 @@ const showToastMessage = (message) => {
 }
 
 .toast-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-icon-svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #10b981;
 }
 
 .toast-content h4 {

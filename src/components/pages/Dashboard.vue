@@ -7,7 +7,9 @@
 
     <div class="stats-grid">
       <div class="stat-card" v-for="stat in stats" :key="stat.title">
-        <div class="stat-icon">{{ stat.icon }}</div>
+        <div class="stat-icon">
+          <component :is="stat.icon" class="icon" />
+        </div>
         <div class="stat-content">
           <h3 class="stat-value">{{ stat.value }}</h3>
           <p class="stat-title">{{ stat.title }}</p>
@@ -43,7 +45,9 @@
         <h3 class="chart-title">Recent Activity</h3>
         <div class="activity-list">
           <div class="activity-item" v-for="activity in recentActivities" :key="activity.id">
-            <div class="activity-icon">{{ activity.icon }}</div>
+            <div class="activity-icon">
+              <component :is="activity.icon" class="icon" />
+            </div>
             <div class="activity-content">
               <p class="activity-text">{{ activity.text }}</p>
               <span class="activity-time">{{ activity.time }}</span>
@@ -57,33 +61,42 @@
 
 <script setup>
 import { ref } from 'vue'
+import { 
+  BuildingOffice2Icon, 
+  ClipboardDocumentListIcon, 
+  CheckCircleIcon, 
+  ClockIcon,
+  PlusIcon,
+  DocumentTextIcon,
+  ChartBarIcon
+} from '@heroicons/vue/24/outline'
 
 const stats = ref([
   {
     title: 'Total Providers',
     value: '1,245',
-    icon: '🏥',
+    icon: BuildingOffice2Icon,
     change: '+12%',
     changeType: 'positive'
   },
   {
     title: 'Active Requests',
     value: '87',
-    icon: '📋',
+    icon: ClipboardDocumentListIcon,
     change: '-5%',
     changeType: 'negative'
   },
   {
     title: 'Completed Visits',
     value: '456',
-    icon: '✅',
+    icon: CheckCircleIcon,
     change: '+23%',
     changeType: 'positive'
   },
   {
     title: 'Pending Approvals',
     value: '23',
-    icon: '⏳',
+    icon: ClockIcon,
     change: '+8%',
     changeType: 'positive'
   }
@@ -92,25 +105,25 @@ const stats = ref([
 const recentActivities = ref([
   {
     id: 1,
-    icon: '🏥',
+    icon: BuildingOffice2Icon,
     text: 'New provider "Nairobi General Hospital" registered',
     time: '2 hours ago'
   },
   {
     id: 2,
-    icon: '✅',
+    icon: CheckCircleIcon,
     text: 'Provider visit completed at Aga Khan Hospital',
     time: '4 hours ago'
   },
   {
     id: 3,
-    icon: '📋',
+    icon: ClipboardDocumentListIcon,
     text: 'Provider request approved for Kenyatta Hospital',
     time: '6 hours ago'
   },
   {
     id: 4,
-    icon: '📊',
+    icon: ChartBarIcon,
     text: 'Monthly report generated successfully',
     time: '1 day ago'
   }
@@ -158,10 +171,18 @@ const recentActivities = ref([
 }
 
 .stat-icon {
-  font-size: 2.5rem;
   padding: 1rem;
   background: #f1f5f9;
   border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #3b82f6;
 }
 
 .stat-content {
@@ -265,11 +286,18 @@ const recentActivities = ref([
   padding: 0.75rem;
   background: #f8fafc;
   border-radius: 0.5rem;
-  border-left: 3px solid #3b82f6;
 }
 
 .activity-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-icon .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
 }
 
 .activity-content {

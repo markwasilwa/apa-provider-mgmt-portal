@@ -3,39 +3,39 @@
     <div class="nav-container">
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'dashboard' }" @click="setActive('dashboard')">
+          <router-link to="/dashboard" class="nav-link" active-class="active">
             Dashboard
-          </a>
+          </router-link>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'category' }" @click="setActive('category')">
+          <router-link to="/provider-category" class="nav-link" active-class="active">
             Provider Category
-          </a>
+          </router-link>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'requests' }" @click="setActive('requests')">
+          <router-link to="/provider-requests" class="nav-link" active-class="active">
             Provider Requests
-          </a>
+          </router-link>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'visits' }" @click="setActive('visits')">
+          <router-link to="/provider-visits" class="nav-link" active-class="active">
             Provider Visits
-          </a>
+          </router-link>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'listings' }" @click="setActive('listings')">
+          <router-link to="/provider-listings" class="nav-link" active-class="active">
             Provider Listings
-          </a>
+          </router-link>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'reports' }" @click="setActive('reports')">
+          <router-link to="/reports" class="nav-link" active-class="active">
             Reports
-          </a>
+          </router-link>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" :class="{ active: activeItem === 'password' }" @click="setActive('password')">
+          <router-link to="/change-password" class="nav-link" active-class="active">
             Change Password
-          </a>
+          </router-link>
         </li>
       </ul>
     </div>
@@ -43,16 +43,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const activeItem = ref('dashboard')
-
-const emit = defineEmits(['navigate'])
-
-const setActive = (item) => {
-  activeItem.value = item
-  emit('navigate', item)
-}
+// Router navigation is handled automatically by router-link components
 </script>
 
 <style scoped>
