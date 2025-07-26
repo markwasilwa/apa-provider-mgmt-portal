@@ -619,14 +619,14 @@ onMounted(() => {
 /* Reports Grid Styles */
 .reports-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
 }
 
 .report-card {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -640,7 +640,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem;
+  padding: 0.75rem;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
 }
@@ -649,15 +649,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
   background: #e0f2fe;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
 }
 
 .report-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   color: #3b82f6;
 }
 
@@ -686,56 +686,56 @@ onMounted(() => {
 }
 
 .report-body {
-  padding: 1.25rem;
+  padding: 0.75rem;
 }
 
 .report-title {
-  font-size: 1.125rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .report-type-badge {
   display: inline-block;
   background: #e0f2fe;
   color: #3b82f6;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .report-description {
   color: #6b7280;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin-bottom: 1.25rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
 }
 
 .report-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
   color: #6b7280;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 .meta-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   color: #6b7280;
 }
 
 .report-footer {
-  padding: 1rem 1.25rem;
+  padding: 0.5rem 0.75rem;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
 }
@@ -743,16 +743,16 @@ onMounted(() => {
 .action-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.375rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.25rem;
   background: white;
   border: 1px solid #e2e8f0;
   cursor: pointer;
@@ -776,8 +776,8 @@ onMounted(() => {
 }
 
 .action-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Toast Notification */
@@ -863,6 +863,13 @@ onMounted(() => {
     align-items: stretch;
   }
 
+  .reports-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
   .reports-grid {
     grid-template-columns: 1fr;
   }

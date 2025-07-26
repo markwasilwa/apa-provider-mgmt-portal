@@ -5,7 +5,6 @@
       <div class="header-content">
         <div class="title-group">
           <h1 class="main-title">
-            <ChartBarIcon class="icon" />
             Providers Portal
           </h1>
           <p class="subtitle">Overview of system metrics and key performance indicators</p>
