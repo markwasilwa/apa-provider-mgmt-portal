@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="title-group">
           <h1 class="main-title">
-            <span class="icon">📋</span>
+            <ClipboardDocumentListIcon class="icon" />
             Provider Registration Requests
           </h1>
           <p class="subtitle">Review and process new healthcare provider registration applications and licensing requests</p>
@@ -36,7 +36,7 @@
       <div class="content-header">
         <div class="search-section">
           <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
+            <MagnifyingGlassIcon class="search-icon" />
             <input 
               type="text" 
               v-model="searchTerm" 
@@ -74,7 +74,7 @@
       <div class="table-container">
         <div class="table-header">
           <h2 class="table-title">
-            <span class="table-icon">📄</span>
+            <DocumentTextIcon class="table-icon" />
             Registration Requests
           </h2>
           <span class="request-count">{{ filteredRequests.length }} requests</span>
@@ -95,174 +95,170 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="request in filteredRequests" :key="request.id" class="request-row">
-                <td class="td-id">
-                  <div class="id-cell">
-                    <span class="request-id">{{ request.id }}</span>
-                  </div>
-                </td>
-                <td class="td-provider">
-                  <div class="provider-cell">
-                    <h4 class="provider-name">{{ request.providerName }}</h4>
-                    <div class="contact-info">
-                      <span class="contact-item">
-                        <span class="contact-icon">📧</span>
-                        {{ request.contactEmail }}
-                      </span>
-                      <span class="contact-item">
-                        <span class="contact-icon">📞</span>
-                        {{ request.phone }}
-                      </span>
+              <template v-for="request in filteredRequests" :key="request.id">
+                <tr class="request-row">
+                  <td class="td-id">
+                    <div class="id-cell">
+                      <span class="request-id">{{ request.id }}</span>
                     </div>
-                  </div>
-                </td>
-                <td class="td-category">
-                  <span class="category-badge">{{ request.category }}</span>
-                </td>
-                <td class="td-location">
-                  <div class="location-cell">
-                    <span class="location-icon">📍</span>
-                    <span class="location-text">{{ request.location }}</span>
-                  </div>
-                </td>
-                <td class="td-license">
-                  <div class="license-cell">
-                    <span class="license-number">{{ request.licenseNumber }}</span>
-                    <span class="license-expiry">Expires: {{ formatDate(request.licenseExpiry) }}</span>
-                  </div>
-                </td>
-                <td class="td-dates">
-                  <div class="dates-cell">
-                    <span class="date-submitted">Submitted: {{ formatDate(request.dateSubmitted) }}</span>
-                    <span class="date-updated">Updated: {{ formatDate(request.lastUpdated) }}</span>
-                  </div>
-                </td>
-                <td class="td-status">
-                  <span class="status-badge modern" :class="getStatusClass(request.status)">
-                    {{ request.status }}
-                  </span>
-                </td>
-                <td class="td-actions">
-                  <div class="action-buttons">
-                    <button class="action-btn view" @click="viewRequest(request)" title="View Details">
-                      <span class="action-icon">👁️</span>
-                    </button>
-                    <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Pending'">
-                      <span class="action-icon">✅</span>
-                    </button>
-                    <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Pending'">
-                      <span class="action-icon">❌</span>
-                    </button>
-                    <button class="action-btn review" @click="setUnderReview(request.id)" title="Set Under Review" v-if="request.status === 'Pending'">
-                      <span class="action-icon">🔍</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td class="td-provider">
+                    <div class="provider-cell">
+                      <h4 class="provider-name">{{ request.providerName }}</h4>
+                      <div class="contact-info">
+                        <span class="contact-item">
+                          <EnvelopeIcon class="contact-icon" />
+                          {{ request.contactEmail }}
+                        </span>
+                        <span class="contact-item">
+                          <PhoneIcon class="contact-icon" />
+                          {{ request.phone }}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="td-category">
+                    <span class="category-badge">{{ request.category }}</span>
+                  </td>
+                  <td class="td-location">
+                    <div class="location-cell">
+                      <MapPinIcon class="location-icon" />
+                      <span class="location-text">{{ request.location }}</span>
+                    </div>
+                  </td>
+                  <td class="td-license">
+                    <div class="license-cell">
+                      <span class="license-number">{{ request.licenseNumber }}</span>
+                      <span class="license-expiry">Expires: {{ formatDate(request.licenseExpiry) }}</span>
+                    </div>
+                  </td>
+                  <td class="td-dates">
+                    <div class="dates-cell">
+                      <span class="date-submitted">Submitted: {{ formatDate(request.dateSubmitted) }}</span>
+                      <span class="date-updated">Updated: {{ formatDate(request.lastUpdated) }}</span>
+                    </div>
+                  </td>
+                  <td class="td-status">
+                    <span class="status-badge modern" :class="getStatusClass(request.status)">
+                      {{ request.status }}
+                    </span>
+                  </td>
+                  <td class="td-actions">
+                    <div class="action-buttons">
+                      <button class="action-btn view" @click="viewRequest(request)" title="View Details">
+                        <EyeIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Pending'">
+                        <CheckIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Pending'">
+                        <XMarkIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Set Under Review" v-if="request.status === 'Pending'">
+                        <MagnifyingGlassIcon class="action-icon" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="expandedRequestIds.includes(request.id)" class="details-row">
+                  <td colspan="8">
+                    <div class="inline-details">
+                      <div class="detail-grid">
+                        <div class="detail-section">
+                          <h4 class="section-title">Provider Information</h4>
+                          <div class="detail-item">
+                            <label class="detail-label">Provider Name</label>
+                            <span class="detail-value">{{ request.providerName }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Category</label>
+                            <span class="category-badge">{{ request.category }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Location</label>
+                            <span class="detail-value">{{ request.location }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Contact Email</label>
+                            <a :href="`mailto:${request.contactEmail}`" class="detail-link">{{ request.contactEmail }}</a>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Phone Number</label>
+                            <a :href="`tel:${request.phone}`" class="detail-link">{{ request.phone }}</a>
+                          </div>
+                        </div>
+
+                        <div class="detail-section">
+                          <h4 class="section-title">License Information</h4>
+                          <div class="detail-item">
+                            <label class="detail-label">License Number</label>
+                            <span class="detail-value highlight">{{ request.licenseNumber }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">License Expiry</label>
+                            <span class="detail-value" :class="{ 'text-danger': isLicenseExpiringSoon(request.licenseExpiry) }">
+                              {{ formatDate(request.licenseExpiry) }}
+                            </span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">License Status</label>
+                            <span class="detail-value" :class="isLicenseValid(request.licenseExpiry) ? 'text-success' : 'text-danger'">
+                              {{ isLicenseValid(request.licenseExpiry) ? 'Valid' : 'Expired' }}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div class="detail-section">
+                          <h4 class="section-title">Request Timeline</h4>
+                          <div class="detail-item">
+                            <label class="detail-label">Request Status</label>
+                            <span class="status-badge modern" :class="getStatusClass(request.status)">
+                              {{ request.status }}
+                            </span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Date Submitted</label>
+                            <span class="detail-value">{{ formatDate(request.dateSubmitted) }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Last Updated</label>
+                            <span class="detail-value">{{ formatDate(request.lastUpdated) }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <label class="detail-label">Processing Time</label>
+                            <span class="detail-value">{{ getProcessingTime(request.dateSubmitted) }} days</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="inline-actions" v-if="request.status === 'Pending'">
+                        <button @click="approveRequest(request.id)" class="btn-success">
+                          <CheckIcon class="btn-icon" />
+                          Approve Request
+                        </button>
+                        <button @click="setUnderReview(request.id)" class="btn-info">
+                          <MagnifyingGlassIcon class="btn-icon" />
+                          Set Under Review
+                        </button>
+                        <button @click="rejectRequest(request.id)" class="btn-danger">
+                          <XMarkIcon class="btn-icon" />
+                          Reject Request
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Request Details Panel -->
-      <div class="details-panel" v-if="selectedRequest">
-        <div class="panel-header">
-          <h3 class="panel-title">
-            <span class="panel-icon">📋</span>
-            Request Details - {{ selectedRequest.id }}
-          </h3>
-          <button class="close-panel" @click="selectedRequest = null">×</button>
-        </div>
-        <div class="panel-content">
-          <div class="detail-grid">
-            <div class="detail-section">
-              <h4 class="section-title">Provider Information</h4>
-              <div class="detail-item">
-                <label class="detail-label">Provider Name</label>
-                <span class="detail-value">{{ selectedRequest.providerName }}</span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Category</label>
-                <span class="category-badge">{{ selectedRequest.category }}</span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Location</label>
-                <span class="detail-value">{{ selectedRequest.location }}</span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Contact Email</label>
-                <a :href="`mailto:${selectedRequest.contactEmail}`" class="detail-link">{{ selectedRequest.contactEmail }}</a>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Phone Number</label>
-                <a :href="`tel:${selectedRequest.phone}`" class="detail-link">{{ selectedRequest.phone }}</a>
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <h4 class="section-title">License Information</h4>
-              <div class="detail-item">
-                <label class="detail-label">License Number</label>
-                <span class="detail-value highlight">{{ selectedRequest.licenseNumber }}</span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">License Expiry</label>
-                <span class="detail-value" :class="{ 'text-danger': isLicenseExpiringSoon(selectedRequest.licenseExpiry) }">
-                  {{ formatDate(selectedRequest.licenseExpiry) }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">License Status</label>
-                <span class="detail-value" :class="isLicenseValid(selectedRequest.licenseExpiry) ? 'text-success' : 'text-danger'">
-                  {{ isLicenseValid(selectedRequest.licenseExpiry) ? 'Valid' : 'Expired' }}
-                </span>
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <h4 class="section-title">Request Timeline</h4>
-              <div class="detail-item">
-                <label class="detail-label">Request Status</label>
-                <span class="status-badge modern" :class="getStatusClass(selectedRequest.status)">
-                  {{ selectedRequest.status }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Date Submitted</label>
-                <span class="detail-value">{{ formatDate(selectedRequest.dateSubmitted) }}</span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Last Updated</label>
-                <span class="detail-value">{{ formatDate(selectedRequest.lastUpdated) }}</span>
-              </div>
-              <div class="detail-item">
-                <label class="detail-label">Processing Time</label>
-                <span class="detail-value">{{ getProcessingTime(selectedRequest.dateSubmitted) }} days</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel-actions" v-if="selectedRequest.status === 'Pending'">
-            <button @click="processRequest('approve')" class="btn-success">
-              <span class="btn-icon">✅</span>
-              Approve Request
-            </button>
-            <button @click="processRequest('review')" class="btn-info">
-              <span class="btn-icon">🔍</span>
-              Set Under Review
-            </button>
-            <button @click="processRequest('reject')" class="btn-danger">
-              <span class="btn-icon">❌</span>
-              Reject Request
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
-      <div class="toast-icon">✅</div>
+      <CheckCircleIcon class="toast-icon" />
       <div class="toast-content">
         <h4>Success!</h4>
         <p>{{ toastMessage }}</p>
@@ -273,6 +269,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { EyeIcon, CheckIcon, XMarkIcon, MagnifyingGlassIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, DocumentTextIcon, ClipboardDocumentListIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 // Form states
 const searchTerm = ref('')
@@ -281,6 +278,7 @@ const categoryFilter = ref('all')
 const selectedRequest = ref(null)
 const showToast = ref(false)
 const toastMessage = ref('')
+const expandedRequestIds = ref([])
 
 // Requests data
 const requests = ref([
@@ -423,7 +421,12 @@ const filteredRequests = computed(() => {
 
 // Methods
 const viewRequest = (request) => {
-  selectedRequest.value = request
+  const index = expandedRequestIds.value.indexOf(request.id)
+  if (index === -1) {
+    expandedRequestIds.value.push(request.id)
+  } else {
+    expandedRequestIds.value.splice(index, 1)
+  }
 }
 
 const approveRequest = (requestId) => {
@@ -455,6 +458,9 @@ const setUnderReview = (requestId) => {
   }
 }
 
+// This function is no longer needed since we're showing details inline
+// Keeping it for reference in case we need to revert
+/*
 const processRequest = (action) => {
   if (selectedRequest.value) {
     if (action === 'approve') {
@@ -467,6 +473,7 @@ const processRequest = (action) => {
     selectedRequest.value = null
   }
 }
+*/
 
 const getStatusClass = (status) => {
   const statusMap = {
@@ -1199,6 +1206,65 @@ const showToastMessage = (message) => {
   margin: 0;
   color: #6b7280;
   font-size: 0.75rem;
+}
+
+/* Inline Details Styles */
+.details-row {
+  background-color: #f8fafc;
+}
+
+.details-row td {
+  padding: 0;
+}
+
+.inline-details {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.inline-details .detail-grid {
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.inline-details .section-title {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.inline-details .detail-value {
+  font-size: 0.95rem;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.action-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.search-icon, .location-icon, .contact-icon, .table-icon, .panel-icon, .toast-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
 }
 
 /* Responsive Design */

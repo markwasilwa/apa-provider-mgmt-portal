@@ -8,11 +8,6 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/provider-category" class="nav-link" active-class="active">
-            Provider Category
-          </router-link>
-        </li>
-        <li class="nav-item">
           <router-link to="/provider-requests" class="nav-link" active-class="active">
             Provider Requests
           </router-link>
@@ -25,6 +20,11 @@
         <li class="nav-item">
           <router-link to="/provider-listings" class="nav-link" active-class="active">
             Provider Listings
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <router-link to="/provider-category" class="nav-link" active-class="active">
+            Provider Category
           </router-link>
         </li>
         <li class="nav-item">
