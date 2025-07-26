@@ -213,6 +213,14 @@
                             {{ provider.status }}
                           </span>
                         </div>
+                        <div class="inline-detail-item" v-if="provider.roles && provider.roles.length">
+                          <label class="detail-label">Roles</label>
+                          <div class="roles-list">
+                            <span v-for="(role, index) in provider.roles" :key="index" class="role-badge">
+                              {{ role.roleDescription }}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -268,6 +276,14 @@
                     <div class="card-detail-item">
                       <label class="detail-label">Email</label>
                       <a :href="`mailto:${provider.email}`" class="detail-link" @click.stop>{{ provider.email }}</a>
+                    </div>
+                    <div class="card-detail-item" v-if="provider.roles && provider.roles.length">
+                      <label class="detail-label">Roles</label>
+                      <div class="roles-list">
+                        <span v-for="(role, index) in provider.roles" :key="index" class="role-badge">
+                          {{ role.roleDescription }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1808,5 +1824,24 @@ onMounted(() => {
   .view-mode-btn {
     flex: 1;
   }
+}
+/* Role Badges */
+.roles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.role-badge {
+  display: inline-block;
+  background: #f0fdf4;
+  color: #166534;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 </style>
