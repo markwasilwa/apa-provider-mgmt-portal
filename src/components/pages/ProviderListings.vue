@@ -50,6 +50,7 @@
               <option value="Pharmacy">Pharmacy</option>
               <option value="Diagnostic">Diagnostic</option>
               <option value="Dental">Dental</option>
+              <option value="Eye Care">Eye Care</option>
               <option value="Mental Health">Mental Health</option>
             </select>
             <ChevronDownIcon class="select-icon" />
@@ -124,58 +125,99 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="provider in filteredProviders" :key="provider.id" class="provider-row">
-                <td class="td-icon">
-                  <div class="provider-icon-wrapper">
-                    <BuildingOffice2Icon class="provider-icon" />
-                  </div>
-                </td>
-                <td class="td-name">
-                  <div class="name-cell">
-                    <h4 class="provider-name">{{ provider.name }}</h4>
-                    <p class="provider-license">{{ provider.licenseNumber }}</p>
-                  </div>
-                </td>
-                <td class="td-category">
-                  <span class="category-badge">{{ provider.category }}</span>
-                </td>
-                <td class="td-location">
-                  <div class="location-cell">
-                    <MapPinIcon class="location-icon" />
-                    <span class="location-text">{{ provider.location }}</span>
-                  </div>
-                </td>
-                <td class="td-contact">
-                  <div class="contact-cell">
-                    <div class="contact-item">
-                      <PhoneIcon class="contact-icon" />
-                      <span class="contact-text">{{ provider.phone }}</span>
+              <template v-for="provider in filteredProviders" :key="provider.id">
+                <tr class="provider-row" :class="{ 'selected': selectedProvider && selectedProvider.id === provider.id }">
+                  <td class="td-icon">
+                    <div class="provider-icon-wrapper">
+                      <BuildingOffice2Icon class="provider-icon" />
                     </div>
-                    <div class="contact-item">
-                      <EnvelopeIcon class="contact-icon" />
-                      <span class="contact-text">{{ provider.email }}</span>
+                  </td>
+                  <td class="td-name">
+                    <div class="name-cell">
+                      <h4 class="provider-name">{{ provider.name }}</h4>
+                      <p class="provider-license">{{ provider.licenseNumber }}</p>
                     </div>
-                  </div>
-                </td>
-                <td class="td-status">
-                  <span class="status-badge modern" :class="getStatusClass(provider.status)">
-                    {{ provider.status }}
-                  </span>
-                </td>
-                <td class="td-actions">
-                  <div class="action-buttons">
-                    <button class="action-btn view" @click="viewDetails(provider)" title="View Details">
-                      <EyeIcon class="action-icon" />
-                    </button>
-                    <button class="action-btn edit" @click="editProvider(provider)" title="Edit Provider">
-                      <PencilIcon class="action-icon" />
-                    </button>
-                    <button class="action-btn contact" @click="contactProvider(provider)" title="Contact Provider">
-                      <PhoneIcon class="action-icon" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td class="td-category">
+                    <span class="category-badge">{{ provider.category }}</span>
+                  </td>
+                  <td class="td-location">
+                    <div class="location-cell">
+                      <MapPinIcon class="location-icon" />
+                      <span class="location-text">{{ provider.location }}</span>
+                    </div>
+                  </td>
+                  <td class="td-contact">
+                    <div class="contact-cell">
+                      <div class="contact-item">
+                        <PhoneIcon class="contact-icon" />
+                        <span class="contact-text">{{ provider.phone }}</span>
+                      </div>
+                      <div class="contact-item">
+                        <EnvelopeIcon class="contact-icon" />
+                        <span class="contact-text">{{ provider.email }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="td-status">
+                    <span class="status-badge modern" :class="getStatusClass(provider.status)">
+                      {{ provider.status }}
+                    </span>
+                  </td>
+                  <td class="td-actions">
+                    <div class="action-buttons">
+                      <button class="action-btn view" @click="viewDetails(provider)" :class="{ 'active': selectedProvider && selectedProvider.id === provider.id }" title="View Details">
+                        <EyeIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn edit" @click="editProvider(provider)" title="Edit Provider">
+                        <PencilIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn contact" @click="contactProvider(provider)" title="Contact Provider">
+                        <PhoneIcon class="action-icon" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Inline Details Row -->
+                <tr v-if="selectedProvider && selectedProvider.id === provider.id" class="details-row">
+                  <td colspan="7">
+                    <div class="inline-details">
+                      <div class="inline-details-header">
+                        <h4 class="inline-details-title">Provider Details</h4>
+                        <button class="close-details" @click="selectedProvider = null">×</button>
+                      </div>
+                      <div class="inline-details-content">
+                        <div class="inline-detail-item">
+                          <label class="detail-label">License Number</label>
+                          <span class="detail-value">{{ provider.licenseNumber }}</span>
+                        </div>
+                        <div class="inline-detail-item">
+                          <label class="detail-label">Category</label>
+                          <span class="category-badge">{{ provider.category }}</span>
+                        </div>
+                        <div class="inline-detail-item">
+                          <label class="detail-label">Location</label>
+                          <span class="detail-value">{{ provider.location }}</span>
+                        </div>
+                        <div class="inline-detail-item">
+                          <label class="detail-label">Phone</label>
+                          <a :href="`tel:${provider.phone}`" class="detail-link">{{ provider.phone }}</a>
+                        </div>
+                        <div class="inline-detail-item">
+                          <label class="detail-label">Email</label>
+                          <a :href="`mailto:${provider.email}`" class="detail-link">{{ provider.email }}</a>
+                        </div>
+                        <div class="inline-detail-item">
+                          <label class="detail-label">Status</label>
+                          <span class="status-badge modern" :class="getStatusClass(provider.status)">
+                            {{ provider.status }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -187,6 +229,7 @@
               v-for="provider in filteredProviders" 
               :key="provider.id" 
               class="provider-card"
+              :class="{ 'selected': selectedProvider && selectedProvider.id === provider.id }"
               @click="viewDetails(provider)"
             >
               <div class="card-header">
@@ -206,9 +249,34 @@
                   <MapPinIcon class="location-icon" />
                   <span class="location-text">{{ provider.location }}</span>
                 </div>
+
+                <!-- Inline Card Details -->
+                <div v-if="selectedProvider && selectedProvider.id === provider.id" class="card-details">
+                  <div class="card-details-header">
+                    <h5 class="card-details-title">Provider Details</h5>
+                    <button class="close-details" @click.stop="selectedProvider = null">×</button>
+                  </div>
+                  <div class="card-details-content">
+                    <div class="card-detail-item">
+                      <label class="detail-label">License Number</label>
+                      <span class="detail-value">{{ provider.licenseNumber }}</span>
+                    </div>
+                    <div class="card-detail-item">
+                      <label class="detail-label">Phone</label>
+                      <a :href="`tel:${provider.phone}`" class="detail-link" @click.stop>{{ provider.phone }}</a>
+                    </div>
+                    <div class="card-detail-item">
+                      <label class="detail-label">Email</label>
+                      <a :href="`mailto:${provider.email}`" class="detail-link" @click.stop>{{ provider.email }}</a>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="card-footer">
                 <div class="card-actions">
+                  <button class="action-btn view" @click.stop="viewDetails(provider)" :class="{ 'active': selectedProvider && selectedProvider.id === provider.id }" title="View Details">
+                    <EyeIcon class="action-icon" />
+                  </button>
                   <button class="action-btn edit" @click.stop="editProvider(provider)" title="Edit Provider">
                     <PencilIcon class="action-icon" />
                   </button>
@@ -256,46 +324,6 @@
         </div>
       </div>
 
-      <!-- Provider Details Panel -->
-      <div class="details-panel" v-if="selectedProvider">
-        <div class="panel-header">
-          <h3 class="panel-title">
-            <BuildingOffice2Icon class="panel-icon" />
-            {{ selectedProvider.name }}
-          </h3>
-          <button class="close-panel" @click="selectedProvider = null">×</button>
-        </div>
-        <div class="panel-content">
-          <div class="detail-grid">
-            <div class="detail-item">
-              <label class="detail-label">License Number</label>
-              <span class="detail-value">{{ selectedProvider.licenseNumber }}</span>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Category</label>
-              <span class="category-badge">{{ selectedProvider.category }}</span>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Location</label>
-              <span class="detail-value">{{ selectedProvider.location }}</span>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Phone</label>
-              <a :href="`tel:${selectedProvider.phone}`" class="detail-link">{{ selectedProvider.phone }}</a>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Email</label>
-              <a :href="`mailto:${selectedProvider.email}`" class="detail-link">{{ selectedProvider.email }}</a>
-            </div>
-            <div class="detail-item full-width">
-              <label class="detail-label">Status</label>
-              <span class="status-badge modern" :class="getStatusClass(selectedProvider.status)">
-                {{ selectedProvider.status }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Success Toast -->
@@ -501,7 +529,7 @@ const loadProviders = async () => {
       page: currentPage.value,
       size: pageSize.value,
       sortBy: 'companyName',
-      sortDirection: 'ASC'
+      sortDir: 'asc'
     })
 
     if (response.status === 0 && response.content) {
@@ -537,7 +565,9 @@ const searchProviders = async (searchTerm) => {
   try {
     const response = await ProviderAPIService.searchProviders(searchTerm, {
       page: currentPage.value,
-      size: pageSize.value
+      size: pageSize.value,
+      sortBy: 'companyName',
+      sortDir: 'asc'
     })
 
     if (response.status === 0 && response.content) {
@@ -1158,93 +1188,130 @@ onMounted(() => {
   height: 1rem;
 }
 
-/* Details Panel */
-.details-panel {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 2rem;
+/* Inline Details Styles */
+/* Table Row Details */
+.provider-row.selected {
+  background-color: #f0f9ff;
 }
 
-.panel-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
+.details-row {
+  background-color: #f8fafc;
+}
+
+.inline-details {
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin: 0.5rem;
+}
+
+.inline-details-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.panel-title {
-  font-size: 1.25rem;
+.inline-details-title {
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.panel-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.close-panel {
-  width: 32px;
-  height: 32px;
+.close-details {
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: #6b7280;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
-.close-panel:hover {
+.close-details:hover {
   background: #f3f4f6;
   color: #374151;
 }
 
-.panel-content {
-  padding: 2rem;
+.inline-details-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.detail-item {
+.inline-detail-item {
+  flex: 1 1 calc(33.333% - 1rem);
+  min-width: 150px;
   display: flex;
   flex-direction: column;
 }
 
-.detail-item.full-width {
-  grid-column: span 3;
+/* Card Details */
+.provider-card.selected {
+  box-shadow: 0 0 0 2px #3b82f6, 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
+.card-details {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.card-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.card-details-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.card-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Common Detail Styles */
 .detail-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .detail-value {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: #1e293b;
   font-weight: 500;
 }
 
 .detail-value.highlight {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #3b82f6;
 }
@@ -1254,11 +1321,18 @@ onMounted(() => {
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
+  font-size: 0.85rem;
 }
 
 .detail-link:hover {
   color: #1d4ed8;
   text-decoration: underline;
+}
+
+/* Active View Button */
+.action-btn.view.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
 .rating-display {
