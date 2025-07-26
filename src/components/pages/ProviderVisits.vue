@@ -100,7 +100,7 @@
             </button>
           </div>
         </div>
-        
+
         <div class="scheduled-list">
           <div class="list-header">
             <div class="header-col provider-col">Provider</div>
@@ -130,7 +130,7 @@
             </div>
           </div>
         </div>
-        
+
         <div v-if="scheduledVisits.length === 0" class="empty-state">
           <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -180,7 +180,7 @@
               <div class="agreement-content">
                 <p>By proceeding, you acknowledge that you have read and understood the conflict of interest policy and have no existing conflicts with the selected provider.</p>
               </div>
-              
+
               <div class="consent-options">
                 <label class="consent-option" :class="{ active: scheduleForm.consent === 'agree' }">
                   <input type="radio" v-model="scheduleForm.consent" value="agree" required>
@@ -220,54 +220,6 @@
     </div>
 
 
-    <!-- Analytics View -->
-    <div v-else-if="activeTab === 'analytics'" class="analytics-view">
-      <div class="analytics-container">
-        <h2 class="section-title">Visit Analytics</h2>
-        <div class="analytics-grid">
-          <div class="chart-card">
-            <h3>Visit Completion Rate</h3>
-            <div class="chart-placeholder">
-              <div class="progress-ring">
-                <div class="progress-value">85%</div>
-              </div>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h3>Monthly Visit Trends</h3>
-            <div class="chart-placeholder">
-              <div class="trend-line">📈 Trending upward</div>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h3>Provider Response Time</h3>
-            <div class="chart-placeholder">
-              <div class="metric-value">2.3 days</div>
-              <div class="metric-label">Average</div>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h3>Visit Outcomes</h3>
-            <div class="chart-placeholder">
-              <div class="outcome-stats">
-                <div class="outcome-item">
-                  <span class="outcome-dot success"></span>
-                  <span>Approved: 78%</span>
-                </div>
-                <div class="outcome-item">
-                  <span class="outcome-dot warning"></span>
-                  <span>Pending: 15%</span>
-                </div>
-                <div class="outcome-item">
-                  <span class="outcome-dot error"></span>
-                  <span>Rejected: 7%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Success Toast -->
     <div v-if="updateSuccess" class="toast success-toast">
@@ -314,11 +266,6 @@ const menuTabs = ref([
     id: 'schedule',
     name: 'Schedule Visit',
     iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-  },
-  {
-    id: 'analytics',
-    name: 'Analytics',
-    iconPath: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
   }
 ])
 
@@ -430,14 +377,14 @@ const scheduleVisit = () => {
     const provider = providers.value.find(p => p.id == scheduleForm.value.providerId)
     if (provider) {
       provider.meetingDate = scheduleForm.value.meetingDate
-      
+
       // Reset form
       scheduleForm.value = {
         providerId: '',
         meetingDate: '',
         consent: ''
       }
-      
+
       alert('Visit scheduled successfully!')
     }
   } else {
@@ -476,7 +423,7 @@ const updateVisit = () => {
   if (provider) {
     // Update provider meeting date
     provider.meetingDate = updateForm.value.meetingDate
-    
+
     // Find existing visit or create new one
     let visit = allVisits.value.find(v => v.providerName === provider.name)
     if (!visit) {
@@ -498,13 +445,13 @@ const updateVisit = () => {
       if (updateForm.value.providerImage) visit.providerImage = updateForm.value.providerImage
       visit.status = 'Updated'
     }
-    
+
     // Show success message
     updateSuccess.value = true
     setTimeout(() => {
       updateSuccess.value = false
     }, 3000)
-    
+
     // Reset form
     updateForm.value = {
       providerId: '',
@@ -528,7 +475,7 @@ const editVisit = (visit) => {
   if (provider) {
     updateForm.value.providerId = provider.id
     updateForm.value.meetingDate = visit.meetingDate
-    
+
     const fullVisit = allVisits.value.find(v => v.providerName === visit.providerName)
     if (fullVisit) {
       updateForm.value.comments = fullVisit.comments || ''
@@ -1341,8 +1288,7 @@ const getProgressText = (status) => {
 }
 
 /* Quick Actions View */
-.quick-actions-view,
-.analytics-view {
+.quick-actions-view {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
@@ -1402,107 +1348,6 @@ const getProgressText = (status) => {
   margin: 0;
 }
 
-/* Analytics View */
-.analytics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.chart-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-}
-
-.chart-card h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 1rem;
-}
-
-.chart-placeholder {
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8fafc;
-  border-radius: 0.5rem;
-  border: 2px dashed #d1d5db;
-}
-
-.progress-ring {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: conic-gradient(#3b82f6 0deg 306deg, #e5e7eb 306deg 360deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.progress-value {
-  background: white;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: #3b82f6;
-}
-
-.trend-line {
-  font-size: 1.5rem;
-  color: #10b981;
-}
-
-.metric-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #3b82f6;
-  margin-bottom: 0.25rem;
-}
-
-.metric-label {
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.outcome-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.outcome-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.outcome-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.outcome-dot.success {
-  background: #10b981;
-}
-
-.outcome-dot.warning {
-  background: #f59e0b;
-}
-
-.outcome-dot.error {
-  background: #ef4444;
-}
 
 /* Scheduled Visits View */
 .scheduled-visits-view {
@@ -1701,13 +1546,13 @@ const getProgressText = (status) => {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
-  
+
   .header-content {
     flex-direction: column;
     text-align: center;
     gap: 1rem;
   }
-  
+
   .header-stats {
     justify-content: center;
   }
@@ -1717,89 +1562,85 @@ const getProgressText = (status) => {
   .provider-visits-container {
     padding: 0;
   }
-  
+
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .main-title {
     font-size: 1.5rem;
   }
-  
+
   .content-grid {
     padding: 1rem;
   }
-  
+
   .modern-form {
     padding: 1.25rem;
   }
-  
+
   .file-upload-group {
     grid-template-columns: 1fr;
   }
-  
+
   .consent-options {
     flex-direction: column;
   }
-  
+
   .header-stats {
     gap: 0.75rem;
   }
-  
+
   .menu-tabs {
     flex-wrap: wrap;
   }
-  
+
   .menu-tab {
     padding: 0.75rem 1rem;
   }
-  
+
   .tab-text {
     font-size: 0.75rem;
   }
-  
-  .quick-actions-view,
-  .analytics-view {
+
+  .quick-actions-view {
     padding: 1.5rem 1rem;
   }
-  
+
   .actions-grid {
     flex-direction: column;
     align-items: center;
   }
-  
-  .analytics-grid {
-    grid-template-columns: 1fr;
-  }
-  
+
+
   .action-card {
     max-width: 100%;
     width: 100%;
   }
-  
+
   .scheduled-list .list-header,
   .scheduled-list .list-item {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .list-header {
     display: none;
   }
-  
+
   .list-item {
     flex-direction: column;
     align-items: stretch;
     padding: 1rem;
   }
-  
+
   .item-col {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.25rem 0;
   }
-  
+
   .item-col::before {
     content: attr(data-label);
     font-weight: 600;
@@ -1808,37 +1649,37 @@ const getProgressText = (status) => {
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  
+
   .provider-col::before {
     content: 'Provider:';
   }
-  
+
   .date-col::before {
     content: 'Date:';
   }
-  
+
   .status-col::before {
     content: 'Status:';
   }
-  
+
   .actions-col::before {
     content: 'Actions:';
   }
-  
+
   .actions-col {
     justify-content: flex-end;
   }
-  
+
   .section-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .section-actions {
     justify-content: center;
   }
-  
+
   .action-card {
     padding: 1.5rem;
   }
@@ -1850,11 +1691,11 @@ const getProgressText = (status) => {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .card-header {
     padding: 0.875rem 1rem;
   }
-  
+
   .modern-form {
     padding: 1rem;
   }
