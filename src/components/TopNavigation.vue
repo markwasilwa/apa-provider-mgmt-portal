@@ -2,7 +2,7 @@
   <nav class="top-nav">
     <div class="nav-container">
       <div class="logo">
-        <img src="/favicon.ico" alt="APA Insurance" class="logo-img">
+        <img src="@/assets/happiness.jpeg" alt="APA Insurance" class="logo-img">
         <span class="logo-text">APA Insurance</span>
       </div>
       <div class="auth-section">

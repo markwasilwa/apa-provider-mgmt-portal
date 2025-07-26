@@ -4,7 +4,7 @@
       <div class="footer-content">
         <div class="footer-section">
           <div class="footer-logo">
-            <img src="/favicon.ico" alt="APA Insurance" class="footer-logo-img">
+            <img src="@/assets/happiness.jpeg" alt="APA Insurance" class="footer-logo-img">
             <span class="footer-logo-text">APA Insurance</span>
           </div>
           <p class="footer-tagline">Your trusted healthcare insurance partner</p>
