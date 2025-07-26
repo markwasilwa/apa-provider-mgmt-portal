@@ -189,6 +189,74 @@
         <img :src="imageModal.src" alt="Provider Image" class="modal-image">
       </div>
     </div>
+
+    <!-- Edit Visit Modal -->
+    <div v-if="editModal.show" class="modal-overlay" @click="closeEditModal">
+      <div class="edit-modal" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">Edit Provider Visit</h3>
+          <button class="modal-close" @click="closeEditModal">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="updateVisit" class="modern-form">
+            <div class="input-group">
+              <label class="input-label">Provider</label>
+              <div class="select-wrapper">
+                <select v-model="updateForm.providerId" required class="modern-select">
+                  <option value="">Choose a provider...</option>
+                  <option v-for="provider in providers" :key="provider.id" :value="provider.id">
+                    {{ provider.name }}
+                  </option>
+                </select>
+                <span class="select-icon">⌄</span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Visit Date</label>
+              <input type="date" v-model="updateForm.meetingDate" required class="modern-input date-input">
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Comments</label>
+              <textarea v-model="updateForm.comments" class="modern-textarea" placeholder="Enter visit notes or comments..."></textarea>
+            </div>
+
+            <div class="file-upload-group">
+              <div class="file-upload-item">
+                <label class="file-upload-label">
+                  <svg class="file-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span class="file-text">Upload Visit Report</span>
+                  <span class="file-hint">PDF, DOC, DOCX (Max 5MB)</span>
+                  <input type="file" class="file-input" @change="e => handleFileUpload(e, 'visitReport')" accept=".pdf,.doc,.docx">
+                </label>
+              </div>
+              <div class="file-upload-item">
+                <label class="file-upload-label">
+                  <svg class="file-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="file-text">Upload Provider Image</span>
+                  <span class="file-hint">JPG, PNG, GIF (Max 2MB)</span>
+                  <input type="file" class="file-input" @change="e => handleFileUpload(e, 'providerImage')" accept="image/*">
+                </label>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="secondary-btn" @click="closeEditModal">Cancel</button>
+              <button type="submit" class="primary-btn">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -372,6 +440,9 @@ const updateVisit = () => {
       visit.status = 'Updated'
     }
 
+    // Close the edit modal
+    closeEditModal()
+
     // Show success message
     updateSuccess.value = true
     setTimeout(() => {
@@ -389,13 +460,18 @@ const updateVisit = () => {
   }
 }
 
-// Image modal state
+// Modal states
 const imageModal = ref({
   show: false,
   src: ''
 })
 
-// Edit visit (populate update form)
+const editModal = ref({
+  show: false,
+  visit: null
+})
+
+// Edit visit (populate update form and show modal)
 const editVisit = (visit) => {
   const provider = providers.value.find(p => p.name === visit.providerName)
   if (provider) {
@@ -405,7 +481,23 @@ const editVisit = (visit) => {
     const fullVisit = allVisits.value.find(v => v.providerName === visit.providerName)
     if (fullVisit) {
       updateForm.value.comments = fullVisit.comments || ''
+      updateForm.value.visitReport = fullVisit.visitReport || null
+      updateForm.value.providerImage = fullVisit.providerImage || null
     }
+
+    // Show edit modal
+    editModal.value = {
+      show: true,
+      visit: visit
+    }
+  }
+}
+
+// Close edit modal
+const closeEditModal = () => {
+  editModal.value = {
+    show: false,
+    visit: null
   }
 }
 
@@ -1095,7 +1187,7 @@ const getProgressText = (status) => {
   font-size: 0.75rem;
 }
 
-/* Image Modal */
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1109,6 +1201,7 @@ const getProgressText = (status) => {
   z-index: 2000;
 }
 
+/* Image Modal */
 .image-modal {
   position: relative;
   max-width: 90vw;
@@ -1140,6 +1233,51 @@ const getProgressText = (status) => {
   height: 1rem;
 }
 
+/* Edit Modal */
+.edit-modal {
+  position: relative;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  background: #f8fafc;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(90vh - 140px);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
 /* Section Title */
 .section-title {
   font-size: 1.5rem;
@@ -1151,7 +1289,7 @@ const getProgressText = (status) => {
 
 /* Scheduled Visits View */
 .scheduled-visits-view {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
@@ -1212,7 +1350,7 @@ const getProgressText = (status) => {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 0.8fr;
+  grid-template-columns: 3fr 2fr 1.5fr 1fr;
   gap: 1rem;
   font-weight: 600;
   font-size: 0.875rem;
@@ -1225,7 +1363,7 @@ const getProgressText = (status) => {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #f1f5f9;
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 0.8fr;
+  grid-template-columns: 3fr 2fr 1.5fr 1fr;
   gap: 1rem;
   align-items: center;
   cursor: pointer;
