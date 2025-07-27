@@ -1782,13 +1782,13 @@ const createRequest = () => {
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: #e2e8f0;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, #e2e8f0 0%, #d1d5db 100%);
+  background: #d1d5db;
   transform: translateY(-1px);
 }
 
