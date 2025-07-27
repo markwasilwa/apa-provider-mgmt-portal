@@ -209,6 +209,17 @@
                                 <label class="detail-label">Phone Number</label>
                                 <a :href="`tel:${request.phone}`" class="detail-link">{{ request.phone }}</a>
                               </div>
+
+                              <!-- Documents Section - Only shown when documents exist -->
+                              <div v-if="request.documents && Object.keys(request.documents).length > 0" class="detail-item">
+                                <label class="detail-label">Supporting Documents</label>
+                                <div class="documents-list">
+                                  <div v-for="(fileName, docId) in request.documents" :key="docId" class="document-badge">
+                                    <span class="document-type">{{ getDocumentTypeName(request.category, docId) }}</span>
+                                    <span class="document-name">{{ fileName }}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
 
                             <div class="detail-section">
@@ -373,6 +384,38 @@
                                     class="modern-input"
                                     placeholder="Enter image path"
                                   >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Document Upload Section - Only shown when category is selected -->
+                          <div v-if="editCategoryDocuments.length > 0" class="detail-grid">
+                            <div class="detail-section" style="grid-column: span 3;">
+                              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                <h4 class="section-title" style="margin-bottom: 0; font-size: 0.9rem;">Supporting Documents</h4>
+                                <span class="section-description" style="margin-bottom: 0; font-style: italic;">Update supporting documents</span>
+                              </div>
+
+                              <div class="document-upload-grid">
+                                <div v-for="doc in editCategoryDocuments" :key="doc.id" class="document-upload-item">
+                                  <label class="document-label">
+                                    {{ doc.name }}
+                                    <span v-if="doc.required" class="document-note">(Recommended)</span>
+                                  </label>
+                                  <div class="file-upload-wrapper">
+                                    <input 
+                                      type="file" 
+                                      :id="`edit-document-${doc.id}-${request.id}`"
+                                      @change="e => handleEditFileUpload(e, request, doc.id)"
+                                      class="file-upload-input"
+                                    >
+                                    <label :for="`edit-document-${doc.id}-${request.id}`" class="file-upload-button">
+                                      <span v-if="!request.documents[doc.id]">Choose File</span>
+                                      <span v-else class="file-selected">{{ request.documents[doc.id] }}</span>
+                                    </label>
+                                  </div>
+                                  <span class="document-help-text">Optional</span>
                                 </div>
                               </div>
                             </div>
@@ -771,6 +814,9 @@ const requestForm = ref({
 // Store the required documents for the selected category
 const categoryDocuments = ref([])
 
+// Store the required documents for the currently edited request
+const editCategoryDocuments = ref([])
+
 // Pagination
 const currentPage = ref(0)
 const pageSize = ref(20)
@@ -836,7 +882,8 @@ const fetchProviderRequests = async () => {
       meetingDate: item.meetingDate,
       comments: item.comments,
       visitReport: item.visitReport,
-      providerImage: item.providerImage
+      providerImage: item.providerImage,
+      documents: item.documents || {}
     }))
   } catch (error) {
     console.error('Error fetching provider requests:', error)
@@ -938,6 +985,33 @@ watch(() => requestForm.value.category, (newCategory) => {
     requestForm.value.documents = {}
   }
 })
+
+// Watch for category changes in the edited request to update required documents
+watch(() => {
+  // Only watch if a request is being edited
+  if (editingRequestId.value === null) return null
+
+  // Find the request being edited
+  const editedRequest = requests.value.find(r => r.id === editingRequestId.value)
+  if (!editedRequest) return null
+
+  return editedRequest.category
+}, (newCategory) => {
+  if (newCategory) {
+    editCategoryDocuments.value = SettingsService.getDocumentsForCategory(newCategory)
+
+    // Find the request being edited
+    const editedRequest = requests.value.find(r => r.id === editingRequestId.value)
+    if (!editedRequest) return
+
+    // Initialize documents object if it doesn't exist
+    if (!editedRequest.documents) {
+      editedRequest.documents = {}
+    }
+  } else {
+    editCategoryDocuments.value = []
+  }
+}, { immediate: true })
 
 // Methods
 const viewRequest = (request) => {
@@ -1096,11 +1170,25 @@ const closeCreateModal = () => {
   categoryDocuments.value = []
 }
 
-// Handle file upload for documents
+// Handle file upload for documents in create form
 const handleFileUpload = (event, documentId) => {
   const file = event.target.files[0]
   if (file) {
     requestForm.value.documents[documentId] = file
+  }
+}
+
+// Handle file upload for documents in edit form
+const handleEditFileUpload = (event, request, documentId) => {
+  const file = event.target.files[0]
+  if (file) {
+    // Initialize documents object if it doesn't exist
+    if (!request.documents) {
+      request.documents = {}
+    }
+
+    // Store the file name in the documents object
+    request.documents[documentId] = file.name
   }
 }
 
@@ -1110,12 +1198,36 @@ const getFileName = (file) => {
   return file.name
 }
 
+// Get document type name based on category and document ID
+const getDocumentTypeName = (category, docId) => {
+  // Convert docId to number if it's a string
+  const documentId = parseInt(docId, 10)
+
+  // Get documents for the category
+  const documents = SettingsService.getDocumentsForCategory(category)
+
+  // Find the document with the matching ID
+  const document = documents.find(doc => doc.id === documentId)
+
+  // Return the document name or a default value
+  return document ? document.name : `Document ${docId}`
+}
+
 // Edit request
 const editRequest = (request) => {
   // First make sure the details are expanded
   if (!expandedRequestIds.value.includes(request.id)) {
     expandedRequestIds.value.push(request.id)
   }
+
+  // Load documents for the request's category
+  editCategoryDocuments.value = SettingsService.getDocumentsForCategory(request.category)
+
+  // Initialize documents object if it doesn't exist
+  if (!request.documents) {
+    request.documents = {}
+  }
+
   // Set the request as being edited
   editingRequestId.value = request.id
 }
@@ -1134,7 +1246,8 @@ const updateRequest = async (request) => {
       meetingDate: request.meetingDate || '',
       comments: request.comments || '',
       visitReport: request.visitReport || '',
-      providerImage: request.providerImage || ''
+      providerImage: request.providerImage || '',
+      documents: request.documents || {}
     }
 
     await ProviderAPIService.updateProviderRequest(request.id, requestData)
@@ -1208,6 +1321,115 @@ const createRequest = async () => {
 </script>
 
 <style scoped>
+/* Document Styles */
+.documents-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.document-badge {
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  max-width: 150px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.document-type {
+  font-weight: 600;
+  color: #0284c7;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-name {
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Document Upload Styles */
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.document-upload-item {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.document-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.document-note {
+  font-weight: normal;
+  color: #64748b;
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.file-upload-wrapper {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.file-upload-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.file-upload-button {
+  display: block;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.file-upload-button:hover {
+  background-color: #e2e8f0;
+}
+
+.file-selected {
+  color: #0284c7;
+  font-weight: 500;
+}
+
+.document-help-text {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
 /* Container and Layout */
 .provider-requests-container {
   min-height: 100vh;
