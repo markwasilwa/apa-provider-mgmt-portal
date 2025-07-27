@@ -2284,6 +2284,7 @@ onMounted(() => {
   border-radius: 0.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+  max-height: 90vh;
 }
 
 .modal-header {
@@ -2318,25 +2319,25 @@ onMounted(() => {
 }
 
 .modal-body {
-  padding: 0.75rem;
+  padding: 0.5rem;
   overflow-y: auto;
-  height: calc(650px - 100px); /* Adjusted for smaller header and footer */
-  max-height: calc(90vh - 100px);
+  /* Removed fixed height to adapt to content */
+  max-height: calc(90vh - 80px); /* Reduced max-height to match smaller header and footer */
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.75rem;
   border-top: 1px solid #e5e7eb;
   background-color: #f9fafb;
 }
 
 /* Delete Modal Enhanced Styles */
 .delete-header {
-  background-color: #fee2e2;
-  border-bottom: 1px solid #fecaca;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-title-wrapper {
@@ -2348,7 +2349,7 @@ onMounted(() => {
 .delete-icon {
   width: 1.25rem;
   height: 1.25rem;
-  color: #dc2626;
+  color: #6b7280;
 }
 
 .delete-warning {
@@ -2357,9 +2358,9 @@ onMounted(() => {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   padding: 0.5rem 0.75rem;
-  background-color: #fff5f5;
+  background-color: #f9fafb;
   border-radius: 0.5rem;
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid #e5e7eb;
 }
 
 .warning-icon {
@@ -2403,7 +2404,7 @@ onMounted(() => {
 
 .delete-comment-input {
   width: 100%;
-  min-height: 60px;
+  min-height: 40px;
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
@@ -2427,7 +2428,8 @@ onMounted(() => {
 .warning-text {
   color: #dc2626;
   font-weight: 600;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: -0.5rem; /* Negative margin to reduce space after warning text */
   font-size: 0.875rem;
 }
 
