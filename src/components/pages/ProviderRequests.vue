@@ -84,7 +84,13 @@
           <span class="request-count">{{ filteredRequests.length }} requests</span>
         </div>
 
-        <div class="table-wrapper">
+        <!-- Loading Indicator -->
+        <div v-if="loading" class="loading-container">
+          <div class="loading-spinner"></div>
+          <p class="loading-text">Loading provider requests...</p>
+        </div>
+
+        <div v-else class="table-wrapper">
           <table class="requests-table">
             <thead>
               <tr>
@@ -262,6 +268,44 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-container" v-if="totalPages > 0">
+          <div class="pagination-info">
+            Showing {{ requests.length ? (currentPage * pageSize) + 1 : 0 }} - {{ Math.min((currentPage + 1) * pageSize, totalElements) }} of {{ totalElements }} items
+          </div>
+          <div class="pagination-controls">
+            <button 
+              class="pagination-btn" 
+              :disabled="currentPage === 0" 
+              @click="changePage(currentPage - 1)"
+              :class="{ 'disabled': currentPage === 0 }"
+            >
+              Previous
+            </button>
+
+            <div class="pagination-pages">
+              <template v-for="page in paginationRange" :key="page">
+                <button 
+                  class="page-btn" 
+                  :class="{ 'active': page === currentPage + 1 }"
+                  @click="changePage(page - 1)"
+                >
+                  {{ page }}
+                </button>
+              </template>
+            </div>
+
+            <button 
+              class="pagination-btn" 
+              :disabled="currentPage >= totalPages - 1" 
+              @click="changePage(currentPage + 1)"
+              :class="{ 'disabled': currentPage >= totalPages - 1 }"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -423,7 +467,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { 
   EyeIcon, 
   CheckIcon, 
@@ -441,6 +485,7 @@ import {
   IdentificationIcon,
   CalendarIcon
 } from '@heroicons/vue/24/outline'
+import { ProviderAPIService } from '@/services/api'
 
 // Form states
 const searchTerm = ref('')
@@ -461,103 +506,92 @@ const requestForm = ref({
   licenseExpiry: ''
 })
 
+// Pagination
+const currentPage = ref(0)
+const pageSize = ref(20)
+const totalPages = ref(0)
+const totalElements = ref(0)
+
 // Requests data
-const requests = ref([
-  {
-    id: 'REQ-2024-001',
-    providerName: 'Nairobi General Hospital',
-    category: 'Hospital',
-    location: 'Nairobi, Kenya',
-    contactEmail: 'admin@nairobigeneral.co.ke',
-    phone: '+254-700-123456',
-    licenseNumber: 'LIC-NGH-2024-001',
-    licenseExpiry: '2026-12-31',
-    dateSubmitted: '2024-01-15',
-    lastUpdated: '2024-01-16',
-    status: 'Pending'
-  },
-  {
-    id: 'REQ-2024-002',
-    providerName: 'Mombasa Medical Clinic',
-    category: 'Clinic',
-    location: 'Mombasa, Kenya',
-    contactEmail: 'info@mombasamedical.co.ke',
-    phone: '+254-700-789012',
-    licenseNumber: 'LIC-MMC-2024-002',
-    licenseExpiry: '2025-06-30',
-    dateSubmitted: '2024-01-14',
-    lastUpdated: '2024-01-20',
-    status: 'Under Review'
-  },
-  {
-    id: 'REQ-2024-003',
-    providerName: 'Kisumu Pharmacy Plus',
-    category: 'Pharmacy',
-    location: 'Kisumu, Kenya',
-    contactEmail: 'orders@kisumupharmacy.co.ke',
-    phone: '+254-700-345678',
-    licenseNumber: 'LIC-KPP-2024-003',
-    licenseExpiry: '2025-12-31',
-    dateSubmitted: '2024-01-13',
-    lastUpdated: '2024-01-21',
-    status: 'Approved'
-  },
-  {
-    id: 'REQ-2024-004',
-    providerName: 'Eldoret Diagnostic Center',
-    category: 'Diagnostic',
-    location: 'Eldoret, Kenya',
-    contactEmail: 'lab@eldoretdiagnostic.co.ke',
-    phone: '+254-700-901234',
-    licenseNumber: 'LIC-EDC-2024-004',
-    licenseExpiry: '2026-03-31',
-    dateSubmitted: '2024-01-12',
-    lastUpdated: '2024-01-18',
-    status: 'Rejected'
-  },
-  {
-    id: 'REQ-2024-005',
-    providerName: 'Nakuru Dental Care',
-    category: 'Dental',
-    location: 'Nakuru, Kenya',
-    contactEmail: 'appointments@nakurudental.co.ke',
-    phone: '+254-700-567890',
-    licenseNumber: 'LIC-NDC-2024-005',
-    licenseExpiry: '2025-09-30',
-    dateSubmitted: '2024-01-11',
-    lastUpdated: '2024-01-17',
-    status: 'Under Review'
-  },
-  {
-    id: 'REQ-2024-006',
-    providerName: 'Thika Mental Health Center',
-    category: 'Mental Health',
-    location: 'Thika, Kenya',
-    contactEmail: 'care@thikamental.co.ke',
-    phone: '+254-700-555666',
-    licenseNumber: 'LIC-TMH-2024-006',
-    licenseExpiry: '2024-12-31',
-    dateSubmitted: '2024-01-10',
-    lastUpdated: '2024-01-19',
-    status: 'Pending'
-  },
-  {
-    id: 'REQ-2024-007',
-    providerName: 'Karen Medical Centre',
-    category: 'Hospital',
-    location: 'Karen, Nairobi',
-    contactEmail: 'reception@karenmedical.co.ke',
-    phone: '+254-700-999000',
-    licenseNumber: 'LIC-KMC-2024-007',
-    licenseExpiry: '2025-03-15',
-    dateSubmitted: '2024-01-09',
-    lastUpdated: '2024-01-22',
-    status: 'Approved'
+const requests = ref([])
+const loading = ref(false)
+
+// Fetch provider requests from API
+const fetchProviderRequests = async () => {
+  loading.value = true
+  try {
+    const params = {
+      page: currentPage.value,
+      size: pageSize.value,
+      sortBy: 'id',
+      sortDir: 'desc'
+    }
+
+    // Add filters if they are set
+    if (statusFilter.value !== 'all') {
+      params.status = statusFilter.value.toUpperCase()
+    }
+
+    if (categoryFilter.value !== 'all') {
+      params.category = categoryFilter.value
+    }
+
+    if (searchTerm.value) {
+      params.providerName = searchTerm.value
+    }
+
+    const response = await ProviderAPIService.getProviderRequests(params)
+
+    // Update pagination data
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
+
+    // Map API response to component data structure
+    requests.value = response.content.map(item => ({
+      id: item.id,
+      providerName: item.providerName,
+      category: item.category,
+      location: `${item.region}, ${item.country}`,
+      contactEmail: item.emailAddress,
+      phone: item.contacts,
+      licenseNumber: item.scheme || 'N/A',
+      licenseExpiry: item.dateConcluded || new Date().toISOString().split('T')[0],
+      dateSubmitted: item.dateRequested,
+      lastUpdated: item.dateConcluded || item.dateRequested,
+      status: item.status === 'ACCEPTED' ? 'Approved' : 
+              item.status === 'DECLINED' ? 'Rejected' : 
+              item.status === 'PENDING' ? 'Pending' : 'Under Review',
+      query: item.query,
+      requestedBy: item.requestedBy,
+      hodComments: item.hodComments,
+      meetingDate: item.meetingDate,
+      comments: item.comments,
+      visitReport: item.visitReport,
+      providerImage: item.providerImage
+    }))
+  } catch (error) {
+    console.error('Error fetching provider requests:', error)
+    showToastMessage('Failed to load provider requests. Please try again.')
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Load data when component mounts
+onMounted(() => {
+  fetchProviderRequests()
+})
+
+// Pagination methods
+const changePage = (page) => {
+  if (page >= 0 && page < totalPages.value) {
+    currentPage.value = page
+    fetchProviderRequests()
+  }
+}
 
 // Computed properties
-const totalRequests = computed(() => requests.value.length)
+const totalRequests = computed(() => totalElements.value)
 
 const pendingRequests = computed(() => {
   return requests.value.filter(r => r.status === 'Pending').length
@@ -571,34 +605,29 @@ const rejectedRequests = computed(() => {
   return requests.value.filter(r => r.status === 'Rejected').length
 })
 
-const filteredRequests = computed(() => {
-  let filtered = requests.value
+const paginationRange = computed(() => {
+  const range = []
+  const maxVisiblePages = 5
+  const startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+  const endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1)
 
-  // Apply search filter
-  if (searchTerm.value) {
-    const search = searchTerm.value.toLowerCase()
-    filtered = filtered.filter(request => 
-      request.id.toLowerCase().includes(search) ||
-      request.providerName.toLowerCase().includes(search) ||
-      request.contactEmail.toLowerCase().includes(search) ||
-      request.licenseNumber.toLowerCase().includes(search)
-    )
+  for (let i = startPage; i <= endPage; i++) {
+    range.push(i)
   }
 
-  // Apply status filter
-  if (statusFilter.value !== 'all') {
-    filtered = filtered.filter(request => 
-      request.status.toLowerCase().replace(' ', '-') === statusFilter.value
-    )
-  }
-
-  // Apply category filter
-  if (categoryFilter.value !== 'all') {
-    filtered = filtered.filter(request => request.category === categoryFilter.value)
-  }
-
-  return filtered
+  return range
 })
+
+const filteredRequests = computed(() => {
+  // Since we're using server-side filtering, this just returns the current requests
+  return requests.value
+})
+
+// Watch for filter changes to refresh data
+watch([searchTerm, statusFilter, categoryFilter], () => {
+  currentPage.value = 0 // Reset to first page when filters change
+  fetchProviderRequests()
+}, { debounce: 300 })
 
 // Methods
 const viewRequest = (request) => {
@@ -610,32 +639,54 @@ const viewRequest = (request) => {
   }
 }
 
-const approveRequest = (requestId) => {
-  const request = requests.value.find(r => r.id === requestId)
-  if (request) {
-    request.status = 'Approved'
-    request.lastUpdated = new Date().toISOString().split('T')[0]
+const approveRequest = async (requestId) => {
+  try {
+    await ProviderAPIService.approveProviderRequest(requestId, {
+      actionBy: 'admin', // This should be the current user
+      hodComments: 'Approved via portal'
+    })
+
+    // Refresh the data
+    await fetchProviderRequests()
     showToastMessage(`Request ${requestId} has been approved`)
+  } catch (error) {
+    console.error('Error approving request:', error)
+    showToastMessage('Failed to approve request. Please try again.')
   }
 }
 
-const rejectRequest = (requestId) => {
+const rejectRequest = async (requestId) => {
   if (confirm('Are you sure you want to reject this request? This action cannot be undone.')) {
-    const request = requests.value.find(r => r.id === requestId)
-    if (request) {
-      request.status = 'Rejected'
-      request.lastUpdated = new Date().toISOString().split('T')[0]
+    try {
+      await ProviderAPIService.declineProviderRequest(requestId, {
+        actionBy: 'admin', // This should be the current user
+        hodComments: 'Rejected via portal'
+      })
+
+      // Refresh the data
+      await fetchProviderRequests()
       showToastMessage(`Request ${requestId} has been rejected`)
+    } catch (error) {
+      console.error('Error rejecting request:', error)
+      showToastMessage('Failed to reject request. Please try again.')
     }
   }
 }
 
-const setUnderReview = (requestId) => {
-  const request = requests.value.find(r => r.id === requestId)
-  if (request) {
-    request.status = 'Under Review'
-    request.lastUpdated = new Date().toISOString().split('T')[0]
+const setUnderReview = async (requestId) => {
+  try {
+    // Update the request status to "Under Review"
+    await ProviderAPIService.updateProviderRequest(requestId, {
+      status: 'UNDER_REVIEW',
+      actionBy: 'admin' // This should be the current user
+    })
+
+    // Refresh the data
+    await fetchProviderRequests()
     showToastMessage(`Request ${requestId} is now under review`)
+  } catch (error) {
+    console.error('Error setting request under review:', error)
+    showToastMessage('Failed to update request status. Please try again.')
   }
 }
 
@@ -720,33 +771,44 @@ const closeCreateModal = () => {
 }
 
 // Create new request
-const createRequest = () => {
-  // Generate a new request ID
-  const newId = `REQ-${new Date().getFullYear()}-${String(requests.value.length + 1).padStart(3, '0')}`
+const createRequest = async () => {
+  try {
+    // Extract location parts (assuming format: "City, Country")
+    const locationParts = requestForm.value.location.split(',').map(part => part.trim())
+    const region = locationParts[0] || ''
+    const country = locationParts[1] || ''
 
-  // Create new request object
-  const newRequest = {
-    id: newId,
-    providerName: requestForm.value.providerName,
-    category: requestForm.value.category,
-    location: requestForm.value.location,
-    contactEmail: requestForm.value.contactEmail,
-    phone: requestForm.value.phone,
-    licenseNumber: requestForm.value.licenseNumber,
-    licenseExpiry: requestForm.value.licenseExpiry,
-    dateSubmitted: new Date().toISOString().split('T')[0],
-    lastUpdated: new Date().toISOString().split('T')[0],
-    status: 'Pending'
+    // Create request payload
+    const requestPayload = {
+      providerName: requestForm.value.providerName,
+      category: requestForm.value.category,
+      locationAddress: requestForm.value.location,
+      region: region,
+      country: country,
+      emailAddress: requestForm.value.contactEmail,
+      contacts: requestForm.value.phone,
+      scheme: requestForm.value.licenseNumber,
+      dateRequested: new Date().toISOString().split('T')[0],
+      query: 'New provider request',
+      requestedBy: 'Portal User',
+      status: 'PENDING'
+    }
+
+    // Call API to create request
+    const response = await ProviderAPIService.createProviderRequest(requestPayload)
+
+    // Refresh the data
+    await fetchProviderRequests()
+
+    // Show success message
+    showToastMessage(`Request has been created successfully`)
+
+    // Close modal
+    closeCreateModal()
+  } catch (error) {
+    console.error('Error creating request:', error)
+    showToastMessage('Failed to create request. Please try again.')
   }
-
-  // Add to requests array
-  requests.value.unshift(newRequest)
-
-  // Show success message
-  showToastMessage(`Request ${newId} has been created successfully`)
-
-  // Close modal
-  closeCreateModal()
 }
 </script>
 
@@ -1946,5 +2008,114 @@ const createRequest = () => {
     justify-content: center;
     padding: 0.5rem 1rem;
   }
+}
+/* Loading Indicator */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.pagination-info {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.375rem 0.75rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(.disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-pages {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(.active) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.page-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
 }
 </style>
