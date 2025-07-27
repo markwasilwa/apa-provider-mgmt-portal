@@ -158,6 +158,9 @@
                       <button class="action-btn view" @click="viewRequest(request)" title="View Details">
                         <EyeIcon class="action-icon" />
                       </button>
+                      <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="request.status === 'Under Review'">
+                        <PencilIcon class="action-icon" />
+                      </button>
                       <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Pending'">
                         <CheckIcon class="action-icon" />
                       </button>
@@ -174,91 +177,216 @@
                   <td colspan="8">
                     <div class="inline-details">
                       <div class="inline-details-header">
-                        <h4 class="inline-details-title">Provider Request Details</h4>
-                        <button class="close-details" @click="expandedRequestIds = expandedRequestIds.filter(id => id !== request.id)">×</button>
+                        <h4 class="inline-details-title">
+                          {{ editingRequestId === request.id ? 'Edit Provider Request' : 'Provider Request Details' }}
+                        </h4>
+                        <button class="close-details" @click="editingRequestId === request.id ? cancelEdit() : expandedRequestIds = expandedRequestIds.filter(id => id !== request.id)">×</button>
                       </div>
                       <div class="inline-details-content">
-                        <div class="detail-grid">
-                          <div class="detail-section">
-                            <h4 class="section-title">Provider Information</h4>
-                            <div class="detail-item">
-                              <label class="detail-label">Provider Name</label>
-                              <span class="detail-value">{{ request.providerName }}</span>
+                        <!-- View Mode -->
+                        <div v-if="editingRequestId !== request.id">
+                          <div class="detail-grid">
+                            <div class="detail-section">
+                              <h4 class="section-title">Provider Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Provider Name</label>
+                                <span class="detail-value">{{ request.providerName }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Category</label>
+                                <span class="category-badge">{{ request.category }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Location</label>
+                                <span class="detail-value">{{ request.location }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Contact Email</label>
+                                <a :href="`mailto:${request.contactEmail}`" class="detail-link">{{ request.contactEmail }}</a>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Phone Number</label>
+                                <a :href="`tel:${request.phone}`" class="detail-link">{{ request.phone }}</a>
+                              </div>
                             </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Category</label>
-                              <span class="category-badge">{{ request.category }}</span>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">License Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">License Number</label>
+                                <span class="detail-value highlight">{{ request.licenseNumber }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">License Expiry</label>
+                                <span class="detail-value" :class="{ 'text-danger': isLicenseExpiringSoon(request.licenseExpiry) }">
+                                  {{ formatDate(request.licenseExpiry) }}
+                                </span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">License Status</label>
+                                <span class="detail-value" :class="isLicenseValid(request.licenseExpiry) ? 'text-success' : 'text-danger'">
+                                  {{ isLicenseValid(request.licenseExpiry) ? 'Valid' : 'Expired' }}
+                                </span>
+                              </div>
                             </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Location</label>
-                              <span class="detail-value">{{ request.location }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Contact Email</label>
-                              <a :href="`mailto:${request.contactEmail}`" class="detail-link">{{ request.contactEmail }}</a>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Phone Number</label>
-                              <a :href="`tel:${request.phone}`" class="detail-link">{{ request.phone }}</a>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">Request Timeline</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Request Status</label>
+                                <span class="status-badge modern" :class="getStatusClass(request.status)">
+                                  {{ request.status }}
+                                </span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Date Submitted</label>
+                                <span class="detail-value">{{ formatDate(request.dateSubmitted) }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Last Updated</label>
+                                <span class="detail-value">{{ formatDate(request.lastUpdated) }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Processing Time</label>
+                                <span class="detail-value">{{ getProcessingTime(request.dateSubmitted) }} days</span>
+                              </div>
                             </div>
                           </div>
 
-                          <div class="detail-section">
-                            <h4 class="section-title">License Information</h4>
-                            <div class="detail-item">
-                              <label class="detail-label">License Number</label>
-                              <span class="detail-value highlight">{{ request.licenseNumber }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">License Expiry</label>
-                              <span class="detail-value" :class="{ 'text-danger': isLicenseExpiringSoon(request.licenseExpiry) }">
-                                {{ formatDate(request.licenseExpiry) }}
-                              </span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">License Status</label>
-                              <span class="detail-value" :class="isLicenseValid(request.licenseExpiry) ? 'text-success' : 'text-danger'">
-                                {{ isLicenseValid(request.licenseExpiry) ? 'Valid' : 'Expired' }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div class="detail-section">
-                            <h4 class="section-title">Request Timeline</h4>
-                            <div class="detail-item">
-                              <label class="detail-label">Request Status</label>
-                              <span class="status-badge modern" :class="getStatusClass(request.status)">
-                                {{ request.status }}
-                              </span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Date Submitted</label>
-                              <span class="detail-value">{{ formatDate(request.dateSubmitted) }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Last Updated</label>
-                              <span class="detail-value">{{ formatDate(request.lastUpdated) }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Processing Time</label>
-                              <span class="detail-value">{{ getProcessingTime(request.dateSubmitted) }} days</span>
-                            </div>
+                          <div class="inline-actions" v-if="request.status === 'Pending'">
+                            <button @click="approveRequest(request.id)" class="btn-success">
+                              <CheckIcon class="btn-icon" />
+                              Approve Request
+                            </button>
+                            <button @click="setUnderReview(request.id)" class="btn-info">
+                              <MagnifyingGlassIcon class="btn-icon" />
+                              Set Under Review
+                            </button>
+                            <button @click="rejectRequest(request.id)" class="btn-danger">
+                              <XMarkIcon class="btn-icon" />
+                              Reject Request
+                            </button>
                           </div>
                         </div>
 
-                        <div class="inline-actions" v-if="request.status === 'Pending'">
-                          <button @click="approveRequest(request.id)" class="btn-success">
-                            <CheckIcon class="btn-icon" />
-                            Approve Request
-                          </button>
-                          <button @click="setUnderReview(request.id)" class="btn-info">
-                            <MagnifyingGlassIcon class="btn-icon" />
-                            Set Under Review
-                          </button>
-                          <button @click="rejectRequest(request.id)" class="btn-danger">
-                            <XMarkIcon class="btn-icon" />
-                            Reject Request
-                          </button>
+                        <!-- Edit Mode -->
+                        <div v-else class="edit-form">
+                          <div class="detail-grid">
+                            <div class="detail-section">
+                              <h4 class="section-title">Provider Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Provider Name</label>
+                                <span class="detail-value">{{ request.providerName }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Category</label>
+                                <span class="category-badge">{{ request.category }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Location</label>
+                                <span class="detail-value">{{ request.location }}</span>
+                              </div>
+                            </div>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">Status Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Status</label>
+                                <div class="input-wrapper">
+                                  <select v-model="request.status" class="modern-select" disabled>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                  </select>
+                                </div>
+                                <span class="input-help">Status can only be changed using the dedicated approval buttons</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Action By</label>
+                                <div class="input-wrapper">
+                                  <input 
+                                    type="text" 
+                                    v-model="request.actionBy" 
+                                    class="modern-input"
+                                    placeholder="Enter your name"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">Additional Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">HOD Comments</label>
+                                <div class="input-wrapper">
+                                  <textarea 
+                                    v-model="request.hodComments" 
+                                    class="modern-textarea"
+                                    placeholder="Enter HOD comments"
+                                  ></textarea>
+                                </div>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Meeting Date</label>
+                                <div class="input-wrapper">
+                                  <input 
+                                    type="date" 
+                                    v-model="request.meetingDate" 
+                                    class="modern-input"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="detail-grid">
+                            <div class="detail-section">
+                              <h4 class="section-title">Visit Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Comments</label>
+                                <div class="input-wrapper">
+                                  <textarea 
+                                    v-model="request.comments" 
+                                    class="modern-textarea"
+                                    placeholder="Enter comments"
+                                  ></textarea>
+                                </div>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Visit Report</label>
+                                <div class="input-wrapper">
+                                  <textarea 
+                                    v-model="request.visitReport" 
+                                    class="modern-textarea"
+                                    placeholder="Enter visit report"
+                                  ></textarea>
+                                </div>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Provider Image</label>
+                                <div class="input-wrapper">
+                                  <input 
+                                    type="text" 
+                                    v-model="request.providerImage" 
+                                    class="modern-input"
+                                    placeholder="Enter image path"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="inline-actions">
+                            <button @click="cancelEdit()" class="btn-secondary">
+                              <XMarkIcon class="btn-icon" />
+                              Cancel
+                            </button>
+                            <button @click="updateRequest(request)" class="btn-primary">
+                              <CheckIcon class="btn-icon" />
+                              Save Changes
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -318,6 +446,7 @@
         <p>{{ toastMessage }}</p>
       </div>
     </div>
+
 
     <!-- Create Provider Registration Request Modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
@@ -483,7 +612,10 @@ import {
   BuildingOffice2Icon,
   ChevronDownIcon,
   IdentificationIcon,
-  CalendarIcon
+  CalendarIcon,
+  PencilIcon,
+  UserIcon,
+  PhotoIcon
 } from '@heroicons/vue/24/outline'
 import { ProviderAPIService } from '@/services/api'
 
@@ -495,6 +627,7 @@ const selectedRequest = ref(null)
 const showToast = ref(false)
 const toastMessage = ref('')
 const expandedRequestIds = ref([])
+const editingRequestId = ref(null)
 const showCreateModal = ref(false)
 const requestForm = ref({
   providerName: '',
@@ -767,6 +900,45 @@ const closeCreateModal = () => {
     phone: '',
     licenseNumber: '',
     licenseExpiry: ''
+  }
+}
+
+// Edit request
+const editRequest = (request) => {
+  // First make sure the details are expanded
+  if (!expandedRequestIds.value.includes(request.id)) {
+    expandedRequestIds.value.push(request.id)
+  }
+  // Set the request as being edited
+  editingRequestId.value = request.id
+}
+
+const cancelEdit = () => {
+  editingRequestId.value = null
+}
+
+const updateRequest = async (request) => {
+  try {
+    const requestData = {
+      // Don't update status with this endpoint - there's a dedicated button for that
+      actionBy: request.actionBy,
+      hodComments: request.hodComments || '',
+      dateConcluded: request.lastUpdated ? new Date(request.lastUpdated).toISOString() : new Date().toISOString(),
+      meetingDate: request.meetingDate || '',
+      comments: request.comments || '',
+      visitReport: request.visitReport || '',
+      providerImage: request.providerImage || ''
+    }
+
+    await ProviderAPIService.updateProviderRequest(request.id, requestData)
+
+    // Refresh the data
+    await fetchProviderRequests()
+    showToastMessage(`Request for ${request.providerName} has been updated`)
+    editingRequestId.value = null
+  } catch (error) {
+    console.error('Error updating request:', error)
+    showToastMessage('Failed to update request. Please try again.')
   }
 }
 
@@ -1586,6 +1758,44 @@ const createRequest = async () => {
   justify-content: flex-end;
   padding-top: 0.5rem;
   border-top: 1px solid #e2e8f0;
+}
+
+/* Inline Edit Form Styles */
+.edit-form .detail-item {
+  margin-bottom: 0.75rem;
+}
+
+.edit-form .input-wrapper {
+  position: relative;
+  margin-top: 0.25rem;
+}
+
+.edit-form .modern-input,
+.edit-form .modern-select,
+.edit-form .modern-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.edit-form .modern-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.edit-form .modern-input:focus,
+.edit-form .modern-select:focus,
+.edit-form .modern-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-form .detail-grid {
+  margin-bottom: 1rem;
 }
 
 .action-icon {

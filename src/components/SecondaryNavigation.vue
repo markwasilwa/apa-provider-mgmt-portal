@@ -9,22 +9,22 @@
         </li>
         <li class="nav-item">
           <router-link to="/provider-requests" class="nav-link" active-class="active">
-            Provider Requests
+            Requests
           </router-link>
         </li>
         <li class="nav-item">
           <router-link to="/provider-visits" class="nav-link" active-class="active">
-            Provider Visits
+            Visits
           </router-link>
         </li>
         <li class="nav-item">
           <router-link to="/provider-listings" class="nav-link" active-class="active">
-            Provider Listings
+            Actisure Listing
           </router-link>
         </li>
         <li class="nav-item">
           <router-link to="/provider-category" class="nav-link" active-class="active">
-            Provider Category
+            Category & Country
           </router-link>
         </li>
         <li class="nav-item">
