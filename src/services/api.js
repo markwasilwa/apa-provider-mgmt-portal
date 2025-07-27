@@ -467,10 +467,14 @@ export class ProviderAPIService {
     }
   }
 
-  static async deleteVisitMeeting(id) {
+  static async deleteVisitMeeting(id, comment) {
     try {
       const response = await fetch(`${API_BASE_URL}/visit-meetings/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ deletionComment: comment })
       })
 
       if (!response.ok) {
