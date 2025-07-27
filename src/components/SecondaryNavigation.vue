@@ -34,7 +34,7 @@
         </li>
         <li class="nav-item">
           <router-link to="/change-password" class="nav-link" active-class="active">
-            Change Password
+            Settings
           </router-link>
         </li>
       </ul>

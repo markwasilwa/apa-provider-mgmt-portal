@@ -49,10 +49,11 @@
           <div class="select-wrapper">
             <select v-model="statusFilter" class="modern-select">
               <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="under-review">Under Review</option>
+              <option value="draft">Draft</option>
+              <option value="in_progress">Review</option>
+              <option value="accepted">Accepted</option>
+              <option value="declined">Declined</option>
               <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
             </select>
             <span class="select-icon">⌄</span>
           </div>
@@ -158,17 +159,17 @@
                       <button class="action-btn view" @click="viewRequest(request)" title="View Details">
                         <EyeIcon class="action-icon" />
                       </button>
-                      <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="request.status === 'Under Review'">
+                      <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="request.status === 'Review' || request.status === 'Draft'">
                         <PencilIcon class="action-icon" />
                       </button>
-                      <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Pending'">
+                      <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Review'">
                         <CheckIcon class="action-icon" />
                       </button>
-                      <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Pending'">
+                      <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Draft' || request.status === 'Review'">
                         <XMarkIcon class="action-icon" />
                       </button>
-                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Set Under Review" v-if="request.status === 'Pending'">
-                        <MagnifyingGlassIcon class="action-icon" />
+                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Set Under Review" v-if="request.status === 'Draft'">
+                        <ClipboardDocumentListIcon class="action-icon" />
                       </button>
                     </div>
                   </td>
@@ -253,13 +254,13 @@
                             </div>
                           </div>
 
-                          <div class="inline-actions" v-if="request.status === 'Pending'">
-                            <button @click="approveRequest(request.id)" class="btn-success">
+                          <div class="inline-actions" v-if="request.status === 'Draft' || request.status === 'Review'">
+                            <button @click="approveRequest(request.id)" class="btn-success" v-if="request.status === 'Review'">
                               <CheckIcon class="btn-icon" />
                               Approve Request
                             </button>
-                            <button @click="setUnderReview(request.id)" class="btn-info">
-                              <MagnifyingGlassIcon class="btn-icon" />
+                            <button v-if="request.status === 'Draft'" @click="setUnderReview(request.id)" class="btn-info">
+                              <ClipboardDocumentListIcon class="btn-icon" />
                               Set Under Review
                             </button>
                             <button @click="rejectRequest(request.id)" class="btn-danger">
@@ -607,6 +608,38 @@
             </div>
           </div>
 
+          <!-- Document Upload Section - Only shown when category is selected -->
+          <div v-if="categoryDocuments.length > 0" class="detail-grid">
+            <div class="detail-section" style="grid-column: span 3;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <h4 class="section-title" style="margin-bottom: 0; font-size: 0.9rem;">Documents</h4>
+                <span class="section-description" style="margin-bottom: 0; font-style: italic;">All documents optional for draft requests</span>
+              </div>
+
+              <div class="document-upload-grid">
+                <div v-for="doc in categoryDocuments" :key="doc.id" class="document-upload-item">
+                  <label class="document-label">
+                    {{ doc.name }}
+                    <span v-if="doc.required" class="document-note">(Recommended)</span>
+                  </label>
+                  <div class="file-upload-wrapper">
+                    <input 
+                      type="file" 
+                      :id="`document-${doc.id}`"
+                      @change="e => handleFileUpload(e, doc.id)"
+                      class="file-upload-input"
+                    >
+                    <label :for="`document-${doc.id}`" class="file-upload-button">
+                      <span v-if="!requestForm.documents[doc.id]">Choose File</span>
+                      <span v-else class="file-selected">{{ getFileName(requestForm.documents[doc.id]) }}</span>
+                    </label>
+                  </div>
+                  <span class="document-help-text">Optional</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="detail-grid">
             <!-- Query and Comments Section -->
             <div class="detail-section" style="grid-column: span 3;">
@@ -704,6 +737,7 @@ import {
   PhotoIcon
 } from '@heroicons/vue/24/outline'
 import { ProviderAPIService } from '@/services/api'
+import { SettingsService } from '@/services/settings'
 
 // Form states
 const searchTerm = ref('')
@@ -730,8 +764,12 @@ const requestForm = ref({
   meetingDate: '',
   comments: '',
   visitReport: '',
-  providerImage: ''
+  providerImage: '',
+  documents: {}
 })
+
+// Store the required documents for the selected category
+const categoryDocuments = ref([])
 
 // Pagination
 const currentPage = ref(0)
@@ -787,9 +825,11 @@ const fetchProviderRequests = async () => {
       licenseExpiry: item.dateConcluded || new Date().toISOString().split('T')[0],
       dateSubmitted: item.dateRequested,
       lastUpdated: item.dateConcluded || item.dateRequested,
-      status: item.status === 'ACCEPTED' ? 'Approved' : 
-              item.status === 'DECLINED' ? 'Rejected' : 
-              item.status === 'PENDING' ? 'Pending' : 'Under Review',
+      status: item.status === 'ACCEPTED' ? 'Accepted' : 
+              item.status === 'APPROVED' ? 'Approved' : 
+              item.status === 'DECLINED' ? 'Declined' : 
+              item.status === 'DRAFT' ? 'Draft' : 
+              item.status === 'IN_PROGRESS' ? 'Review' : item.status,
       query: item.query,
       requestedBy: item.requestedBy,
       hodComments: item.hodComments,
@@ -847,15 +887,15 @@ const changePage = (page) => {
 const totalRequests = computed(() => totalElements.value)
 
 const pendingRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Under Review').length
+  return requests.value.filter(r => r.status === 'Review' || r.status === 'Draft').length
 })
 
 const approvedRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Approved').length
+  return requests.value.filter(r => r.status === 'Approved' || r.status === 'Accepted').length
 })
 
 const rejectedRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Rejected').length
+  return requests.value.filter(r => r.status === 'Declined').length
 })
 
 const paginationRange = computed(() => {
@@ -881,6 +921,23 @@ watch([searchTerm, statusFilter, categoryFilter], () => {
   currentPage.value = 0 // Reset to first page when filters change
   fetchProviderRequests()
 }, { debounce: 300 })
+
+// Watch for category changes in the form to update required documents
+watch(() => requestForm.value.category, (newCategory) => {
+  if (newCategory) {
+    categoryDocuments.value = SettingsService.getDocumentsForCategory(newCategory)
+
+    // Initialize documents object with empty values
+    const documentsObj = {}
+    categoryDocuments.value.forEach(doc => {
+      documentsObj[doc.id] = null
+    })
+    requestForm.value.documents = documentsObj
+  } else {
+    categoryDocuments.value = []
+    requestForm.value.documents = {}
+  }
+})
 
 // Methods
 const viewRequest = (request) => {
@@ -928,9 +985,9 @@ const rejectRequest = async (requestId) => {
 
 const setUnderReview = async (requestId) => {
   try {
-    // Update the request status to "Under Review"
+    // Update the request status to "IN_PROGRESS" (displayed as "Review")
     await ProviderAPIService.updateProviderRequest(requestId, {
-      status: 'UNDER_REVIEW',
+      status: 'IN_PROGRESS',
       actionBy: 'admin' // This should be the current user
     })
 
@@ -962,18 +1019,17 @@ const processRequest = (action) => {
 
 const getStatusClass = (status) => {
   const statusMap = {
-    'Pending': 'pending',
-    'Under Review': 'under-review',
+    'Draft': 'draft',
+    'Review': 'under-review',
+    'Accepted': 'approved',
     'Approved': 'approved',
-    'Rejected': 'rejected'
+    'Declined': 'rejected'
   }
   return statusMap[status] || 'default'
 }
 
 const getDisplayStatus = (status) => {
-  if (status === 'Under Review') {
-    return 'Review'
-  }
+  // Status is already mapped to display values in the fetchProviderRequests function
   return status
 }
 
@@ -1034,8 +1090,24 @@ const closeCreateModal = () => {
     meetingDate: '',
     comments: '',
     visitReport: '',
-    providerImage: ''
+    providerImage: '',
+    documents: {}
   }
+  categoryDocuments.value = []
+}
+
+// Handle file upload for documents
+const handleFileUpload = (event, documentId) => {
+  const file = event.target.files[0]
+  if (file) {
+    requestForm.value.documents[documentId] = file
+  }
+}
+
+// Get file name for display
+const getFileName = (file) => {
+  if (!file) return ''
+  return file.name
 }
 
 // Edit request
@@ -1080,6 +1152,8 @@ const updateRequest = async (request) => {
 // Create new request
 const createRequest = async () => {
   try {
+    // No validation for required documents - all are optional for DRAFT status
+
     // Create request payload directly from form fields
     const requestPayload = {
       providerName: requestForm.value.providerName,
@@ -1097,8 +1171,23 @@ const createRequest = async () => {
       comments: requestForm.value.comments,
       visitReport: requestForm.value.visitReport,
       providerImage: requestForm.value.providerImage,
-      status: 'IN_PROGRESS'
+      status: 'DRAFT'
     }
+
+    // In a real implementation, you would upload the files to a server
+    // and store the file URLs or references in the request payload.
+    // For this example, we'll just log the file names.
+    const documentFiles = {};
+    Object.entries(requestForm.value.documents).forEach(([docId, file]) => {
+      if (file) {
+        documentFiles[docId] = file.name;
+      }
+    });
+
+    console.log('Document files to upload:', documentFiles);
+
+    // Add document references to the payload
+    requestPayload.documents = documentFiles;
 
     // Call API to create request
     const response = await ProviderAPIService.createProviderRequest(requestPayload)
@@ -1512,6 +1601,11 @@ const createRequest = async () => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+}
+
+.status-badge.draft {
+  background: rgba(156, 163, 175, 0.1);
+  color: #374151;
 }
 
 .status-badge.pending {
@@ -1950,6 +2044,100 @@ const createRequest = async () => {
 .icon {
   width: 24px;
   height: 24px;
+}
+
+/* Document Upload Styles */
+.section-description {
+  color: #64748b;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.document-upload-item {
+  background: #f8fafc;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.document-label {
+  font-weight: 500;
+  color: #334155;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required-indicator {
+  color: #ef4444;
+}
+
+.document-note {
+  color: #3b82f6;
+  font-size: 0.7rem;
+  margin-left: 0.125rem;
+}
+
+.file-upload-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.file-upload-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.file-upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  background: white;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.375rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 1.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-upload-button:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.file-selected {
+  color: #0f172a;
+  font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-help-text {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: -0.125rem;
 }
 
 /* Responsive Design */
