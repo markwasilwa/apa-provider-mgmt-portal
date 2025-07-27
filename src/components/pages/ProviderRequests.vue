@@ -1268,48 +1268,49 @@ const createRequest = () => {
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .detail-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .section-title {
-  font-size: 1.125rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
+  margin-bottom: 0.3rem;
 }
 
 .detail-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 500;
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.01em;
 }
 
 .detail-value {
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: #1e293b;
   font-weight: 500;
 }
 
 .detail-value.highlight {
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #3b82f6;
 }
 
@@ -1317,6 +1318,7 @@ const createRequest = () => {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.8rem;
   transition: color 0.2s ease;
 }
 
@@ -1346,53 +1348,53 @@ const createRequest = () => {
 .btn-danger {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
   border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.875rem;
+  border-radius: 0.3rem;
+  font-weight: 500;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.01em;
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: #4b6858;
+  color: #e2f1e9;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.1);
 }
 
 .btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+  background: #5a7d6a;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
 }
 
 .btn-info {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: #4a5d7c;
+  color: #e2e9f4;
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
 }
 
 .btn-info:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  background: #5a6e8e;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  background: #7c4a4a;
+  color: #f4e2e2;
+  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.1);
 }
 
 .btn-danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+  background: #8e5a5a;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
 }
 
 .btn-icon {
-  font-size: 1rem;
+  width: 14px;
+  height: 14px;
 }
 
 /* Toast Notification */
@@ -1449,10 +1451,10 @@ const createRequest = () => {
 
 .inline-details {
   padding: 0;
-  margin: 0.5rem;
+  margin: 0.25rem;
   background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
   overflow: hidden;
   border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
@@ -1462,27 +1464,27 @@ const createRequest = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.4rem 0.6rem;
   border-bottom: 1px solid #e2e8f0;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 .inline-details-title {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
 }
 
 .close-details {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   border: none;
   background: transparent;
-  color: #6b7280;
-  font-size: 1.25rem;
+  color: #9ca3af;
+  font-size: 1rem;
   cursor: pointer;
-  border-radius: 0.25rem;
+  border-radius: 0.2rem;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -1492,35 +1494,35 @@ const createRequest = () => {
 
 .close-details:hover {
   background: #f3f4f6;
-  color: #374151;
+  color: #6b7280;
 }
 
 .inline-details-content {
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .inline-details .detail-grid {
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .inline-details .section-title {
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.25rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.15rem;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .inline-details .detail-value {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .inline-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   justify-content: flex-end;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #e2e8f0;
 }
 
@@ -1647,15 +1649,16 @@ const createRequest = () => {
   transition: all 0.2s ease;
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: #4a5d7c;
+  color: #e2e9f4;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
   margin-left: 1rem;
 }
 
 .add-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  background: #5a6e8e;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
 }
 
 /* Modal Styles */
@@ -1779,25 +1782,26 @@ const createRequest = () => {
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: #e2e8f0;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, #e2e8f0 0%, #d1d5db 100%);
+  background: #d1d5db;
   transform: translateY(-1px);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: #4a5d7c;
+  color: #e2e9f4;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  background: #5a6e8e;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
 }
 
 @media (max-width: 768px) {
