@@ -6,22 +6,22 @@
         <div class="title-group">
           <h1 class="main-title">
             <DocumentChartBarIcon class="icon" />
-            Reports & Analytics
+            Provider Reports
           </h1>
-          <p class="subtitle">Generate comprehensive reports and analytics for healthcare providers</p>
+          <p class="subtitle">Access key provider information and management tools</p>
         </div>
         <div class="header-stats">
           <div class="stat-item">
             <div class="stat-number">{{ totalReports }}</div>
-            <div class="stat-label">Total Reports</div>
+            <div class="stat-label">Total Tools</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ completedReports }}</div>
-            <div class="stat-label">Completed</div>
+            <div class="stat-label">Available</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ processingReports }}</div>
-            <div class="stat-label">Processing</div>
+            <div class="stat-label">In Progress</div>
           </div>
         </div>
       </div>
@@ -36,7 +36,7 @@
             <input 
               type="text" 
               v-model="searchTerm" 
-              placeholder="Search reports by title, type, description..." 
+              placeholder="Search tools by title, type, description..." 
               class="search-input"
             >
           </div>
@@ -45,10 +45,10 @@
           <div class="select-wrapper">
             <select v-model="selectedReportType" class="modern-select">
               <option value="all">All Report Types</option>
-              <option value="provider-summary">Provider Summary</option>
-              <option value="compliance">Compliance Report</option>
-              <option value="financial">Financial Report</option>
-              <option value="performance">Performance Report</option>
+              <option value="documents">Supporting Documents</option>
+              <option value="requests">Provider Requests</option>
+              <option value="visits">Provider Visits</option>
+              <option value="actisure">Actisure Providers</option>
             </select>
             <ChevronDownIcon class="select-icon" />
           </div>
@@ -64,7 +64,7 @@
           </div>
           <button class="generate-btn" @click="generateReport">
             <PlusIcon class="btn-icon" />
-            Generate New Report
+            Access Tools
           </button>
         </div>
       </div>
@@ -73,26 +73,26 @@
         <div class="section-header">
           <h2 class="section-title">
             <DocumentTextIcon class="table-icon" />
-            Available Reports
+            Provider Management Tools
           </h2>
-          <span class="report-count">{{ filteredReports.length }} reports</span>
+          <span class="report-count">{{ filteredReports.length }} tools</span>
         </div>
 
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading reports...</p>
+          <p>Loading tools...</p>
         </div>
 
         <!-- Error State -->
         <div v-else-if="error" class="error-state">
           <ExclamationTriangleIcon class="error-icon" />
-          <h3>Error Loading Reports</h3>
+          <h3>Error Loading Tools</h3>
           <p>{{ error }}</p>
           <button @click="loadReports" class="retry-btn">Retry</button>
         </div>
 
-        <!-- Reports Grid -->
+        <!-- Tools Grid -->
         <div v-else class="reports-grid">
           <div class="report-card" v-for="report in filteredReports" :key="report.id">
             <div class="report-header">
@@ -124,13 +124,13 @@
             </div>
             <div class="report-footer">
               <div class="action-buttons">
-                <button class="action-btn download" @click="downloadReport(report)" title="Download Report">
+                <button class="action-btn download" @click="downloadReport(report)" title="Download Tool">
                   <ArrowDownTrayIcon class="action-icon" />
                 </button>
-                <button class="action-btn view" @click="viewReport(report)" title="Preview Report">
+                <button class="action-btn view" @click="viewReport(report)" title="Access Tool">
                   <EyeIcon class="action-icon" />
                 </button>
-                <button class="action-btn share" @click="shareReport(report)" title="Share Report">
+                <button class="action-btn share" @click="shareReport(report)" title="Share Tool">
                   <ShareIcon class="action-icon" />
                 </button>
               </div>
@@ -182,9 +182,9 @@ const toastMessage = ref('')
 const reports = ref([
   {
     id: 1,
-    title: 'Monthly Provider Summary',
-    type: 'Provider Summary',
-    description: 'Comprehensive overview of all registered providers and their activities',
+    title: 'Supporting Documents',
+    type: 'Documents',
+    description: 'Access and manage all supporting documents for healthcare providers',
     generatedDate: '2024-02-01',
     recordCount: 1245,
     pageCount: 45,
@@ -193,9 +193,9 @@ const reports = ref([
   },
   {
     id: 2,
-    title: 'Q1 Compliance Report',
-    type: 'Compliance',
-    description: 'Quarterly compliance assessment for all healthcare providers',
+    title: 'Provider Requests',
+    type: 'Requests',
+    description: 'View and manage all provider requests and applications',
     generatedDate: '2024-01-31',
     recordCount: 567,
     pageCount: 23,
@@ -204,47 +204,25 @@ const reports = ref([
   },
   {
     id: 3,
-    title: 'Financial Analysis Report',
-    type: 'Financial',
-    description: 'Revenue and cost analysis for insurance claims processing',
+    title: 'Provider Visits',
+    type: 'Visits',
+    description: 'Track and manage all provider visits and inspections',
     generatedDate: '2024-01-30',
-    recordCount: 2340,
-    pageCount: 67,
-    fileSize: '18.9 MB',
+    recordCount: 890,
+    pageCount: 34,
+    fileSize: '15.2 MB',
     status: 'Completed'
   },
   {
     id: 4,
-    title: 'Provider Performance Metrics',
-    type: 'Performance',
-    description: 'Key performance indicators and benchmarks for all providers',
+    title: 'Actisure (Core) Providers',
+    type: 'Actisure',
+    description: 'Access and manage core provider information from Actisure',
     generatedDate: '2024-01-29',
-    recordCount: 890,
-    pageCount: 34,
-    fileSize: '15.2 MB',
-    status: 'Processing'
-  },
-  {
-    id: 5,
-    title: 'Weekly Visit Summary',
-    type: 'Provider Summary',
-    description: 'Summary of all provider visits and inspections for the week',
-    generatedDate: '2024-01-28',
-    recordCount: 156,
-    pageCount: 12,
-    fileSize: '4.5 MB',
+    recordCount: 2340,
+    pageCount: 67,
+    fileSize: '18.9 MB',
     status: 'Completed'
-  },
-  {
-    id: 6,
-    title: 'Regulatory Compliance Audit',
-    type: 'Compliance',
-    description: 'Detailed audit report for regulatory compliance requirements',
-    generatedDate: '2024-01-27',
-    recordCount: 423,
-    pageCount: 28,
-    fileSize: '9.8 MB',
-    status: 'Failed'
   }
 ])
 const loading = ref(false)
@@ -291,14 +269,14 @@ const loadReports = () => {
   setTimeout(() => {
     loading.value = false
     // If you want to simulate an error, uncomment the line below
-    // error.value = 'Failed to load reports. Server error.'
+    // error.value = 'Failed to load provider tools. Server error.'
   }, 1000)
 }
 
 const generateReport = () => {
-  console.log('Generating new report...')
+  console.log('Accessing provider tools...')
   showToast.value = true
-  toastMessage.value = 'Report generation started. You will be notified when it completes.'
+  toastMessage.value = 'Accessing provider management tools. Please wait...'
 
   setTimeout(() => {
     showToast.value = false
@@ -306,9 +284,9 @@ const generateReport = () => {
 }
 
 const downloadReport = (report) => {
-  console.log('Downloading report:', report.title)
+  console.log('Downloading tool:', report.title)
   showToast.value = true
-  toastMessage.value = `Report "${report.title}" is being downloaded.`
+  toastMessage.value = `Tool "${report.title}" is being downloaded.`
 
   setTimeout(() => {
     showToast.value = false
@@ -316,13 +294,13 @@ const downloadReport = (report) => {
 }
 
 const viewReport = (report) => {
-  console.log('Viewing report:', report.title)
+  console.log('Accessing tool:', report.title)
 }
 
 const shareReport = (report) => {
-  console.log('Sharing report:', report.title)
+  console.log('Sharing tool:', report.title)
   showToast.value = true
-  toastMessage.value = `Report "${report.title}" has been shared.`
+  toastMessage.value = `Tool "${report.title}" has been shared.`
 
   setTimeout(() => {
     showToast.value = false
