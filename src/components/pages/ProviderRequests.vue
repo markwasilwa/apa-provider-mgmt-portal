@@ -165,11 +165,11 @@
                       <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Review'">
                         <CheckIcon class="action-icon" />
                       </button>
+                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Move to Review" v-if="request.status === 'Draft'">
+                        <ArrowRightIcon class="action-icon" />
+                      </button>
                       <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Draft' || request.status === 'Review'">
                         <XMarkIcon class="action-icon" />
-                      </button>
-                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Set Under Review" v-if="request.status === 'Draft'">
-                        <ClipboardDocumentListIcon class="action-icon" />
                       </button>
                     </div>
                   </td>
@@ -271,8 +271,8 @@
                               Approve Request
                             </button>
                             <button v-if="request.status === 'Draft'" @click="setUnderReview(request.id)" class="btn-info">
-                              <ClipboardDocumentListIcon class="btn-icon" />
-                              Set Under Review
+                              <ArrowRightIcon class="btn-icon" />
+                              Move to Review
                             </button>
                             <button @click="rejectRequest(request.id)" class="btn-danger">
                               <XMarkIcon class="btn-icon" />
@@ -488,6 +488,114 @@
       <div class="toast-content">
         <h4>Success!</h4>
         <p>{{ toastMessage }}</p>
+      </div>
+    </div>
+
+    <!-- Move to Review Confirmation Dialog -->
+    <div v-if="showMoveToReviewDialog" class="modal-overlay">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <ArrowRightIcon class="modal-icon" />
+            Move to Review
+          </h3>
+          <button class="modal-close" @click="showMoveToReviewDialog = false; actionComment = ''">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to move this request to review?</p>
+          <div class="detail-item">
+            <label class="detail-label">Comment <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="actionComment" 
+                required 
+                class="modern-textarea"
+                placeholder="Enter comment"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showMoveToReviewDialog = false; actionComment = ''">
+            Cancel
+          </button>
+          <button class="btn-primary" @click="confirmMoveToReview()" :disabled="!actionComment.trim()">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approve Confirmation Dialog -->
+    <div v-if="showApproveDialog" class="modal-overlay">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <CheckIcon class="modal-icon" />
+            Approve Request
+          </h3>
+          <button class="modal-close" @click="showApproveDialog = false; actionComment = ''">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to approve this request?</p>
+          <div class="detail-item">
+            <label class="detail-label">Comment <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="actionComment" 
+                required 
+                class="modern-textarea"
+                placeholder="Enter comment"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showApproveDialog = false; actionComment = ''">
+            Cancel
+          </button>
+          <button class="btn-success" @click="confirmApprove()" :disabled="!actionComment.trim()">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reject Confirmation Dialog -->
+    <div v-if="showRejectDialog" class="modal-overlay">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <XMarkIcon class="modal-icon" />
+            Reject Request
+          </h3>
+          <button class="modal-close" @click="showRejectDialog = false; actionComment = ''">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to reject this request?</p>
+          <div class="detail-item">
+            <label class="detail-label">Comment <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="actionComment" 
+                required 
+                class="modern-textarea"
+                placeholder="Enter comment"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showRejectDialog = false; actionComment = ''">
+            Cancel
+          </button>
+          <button class="btn-danger" @click="confirmReject()" :disabled="!actionComment.trim()">
+            Confirm
+          </button>
+        </div>
       </div>
     </div>
 
@@ -777,7 +885,8 @@ import {
   CalendarIcon,
   PencilIcon,
   UserIcon,
-  PhotoIcon
+  PhotoIcon,
+  ArrowRightIcon
 } from '@heroicons/vue/24/outline'
 import { ProviderAPIService } from '@/services/api'
 import { SettingsService } from '@/services/settings'
@@ -792,6 +901,13 @@ const toastMessage = ref('')
 const expandedRequestIds = ref([])
 const editingRequestId = ref(null)
 const showCreateModal = ref(false)
+
+// Confirmation dialog states
+const showMoveToReviewDialog = ref(false)
+const showApproveDialog = ref(false)
+const showRejectDialog = ref(false)
+const selectedRequestId = ref(null)
+const actionComment = ref('')
 const requestForm = ref({
   providerName: '',
   category: '',
@@ -1023,51 +1139,89 @@ const viewRequest = (request) => {
   }
 }
 
-const approveRequest = async (requestId) => {
+const approveRequest = (requestId) => {
+  selectedRequestId.value = requestId
+  actionComment.value = ''
+  showApproveDialog.value = true
+}
+
+const confirmApprove = async () => {
+  if (!actionComment.value.trim()) return
+
   try {
-    await ProviderAPIService.approveProviderRequest(requestId, {
+    await ProviderAPIService.approveProviderRequest(selectedRequestId.value, {
       actionBy: 'admin', // This should be the current user
-      hodComments: 'Approved via portal'
+      hodComments: actionComment.value
     })
 
     // Refresh the data
     await fetchProviderRequests()
-    showToastMessage(`Request ${requestId} has been approved`)
+    showToastMessage(`Request ${selectedRequestId.value} has been approved`)
+
+    // Close the dialog and reset
+    showApproveDialog.value = false
+    actionComment.value = ''
+    selectedRequestId.value = null
   } catch (error) {
     console.error('Error approving request:', error)
     showToastMessage('Failed to approve request. Please try again.')
   }
 }
 
-const rejectRequest = async (requestId) => {
-  if (confirm('Are you sure you want to reject this request? This action cannot be undone.')) {
-    try {
-      await ProviderAPIService.declineProviderRequest(requestId, {
-        actionBy: 'admin', // This should be the current user
-        hodComments: 'Rejected via portal'
-      })
-
-      // Refresh the data
-      await fetchProviderRequests()
-      showToastMessage(`Request ${requestId} has been rejected`)
-    } catch (error) {
-      console.error('Error rejecting request:', error)
-      showToastMessage('Failed to reject request. Please try again.')
-    }
-  }
+const rejectRequest = (requestId) => {
+  selectedRequestId.value = requestId
+  actionComment.value = ''
+  showRejectDialog.value = true
 }
 
-const setUnderReview = async (requestId) => {
+const confirmReject = async () => {
+  if (!actionComment.value.trim()) return
+
   try {
-    // Update the request status to "IN_PROGRESS" (displayed as "Review")
-    await ProviderAPIService.updateProviderRequest(requestId, {
-      status: 'IN_PROGRESS',
-      actionBy: 'admin' // This should be the current user
+    await ProviderAPIService.declineProviderRequest(selectedRequestId.value, {
+      actionBy: 'admin', // This should be the current user
+      hodComments: actionComment.value
     })
 
     // Refresh the data
     await fetchProviderRequests()
-    showToastMessage(`Request ${requestId} is now under review`)
+    showToastMessage(`Request ${selectedRequestId.value} has been rejected`)
+
+    // Close the dialog and reset
+    showRejectDialog.value = false
+    actionComment.value = ''
+    selectedRequestId.value = null
+  } catch (error) {
+    console.error('Error rejecting request:', error)
+    showToastMessage('Failed to reject request. Please try again.')
+  }
+}
+
+const setUnderReview = (requestId) => {
+  selectedRequestId.value = requestId
+  actionComment.value = ''
+  showMoveToReviewDialog.value = true
+}
+
+const confirmMoveToReview = async () => {
+  if (!actionComment.value.trim()) return
+
+  try {
+    // Update the request status to "IN_PROGRESS" (displayed as "Review")
+    await ProviderAPIService.updateProviderRequest(selectedRequestId.value, {
+      status: 'IN_PROGRESS',
+      actionBy: 'admin', // This should be the current user
+      hodComments: actionComment.value
+    })
+
+    // Refresh the data
+    await fetchProviderRequests()
+    showToastMessage(`Request ${selectedRequestId.value} is now under review`)
+
+    // Close the dialog and reset
+    showMoveToReviewDialog.value = false
+    actionComment.value = ''
+    selectedRequestId.value = null
   } catch (error) {
     console.error('Error setting request under review:', error)
     showToastMessage('Failed to update request status. Please try again.')
@@ -1355,6 +1509,13 @@ const createRequest = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Required field indicator */
+.required {
+  color: #ef4444;
+  font-weight: 600;
+  margin-left: 0.25rem;
 }
 
 /* Document Upload Styles */
