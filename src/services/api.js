@@ -67,6 +67,40 @@ export class ProviderAPIService {
     }
   }
 
+  // Search venues (providers as venues) by company name
+  static async searchVenues(companyName, params = {}) {
+    const queryParams = new URLSearchParams({
+      companyName: companyName,
+      page: params.page || 0,
+      size: params.size || 10,
+      sortBy: params.sortBy || 'companyName',
+      sortDir: params.sortDir || 'asc'
+    })
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/actisure/providers?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return {
+        status: 0,
+        content: {
+          content: data.content,
+          page: {
+            totalPages: data.totalPages,
+            totalElements: data.totalElements
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to search venues:', error)
+      throw error
+    }
+  }
+
   // Provider Requests API methods
   static async getProviderRequests(params = {}) {
     const queryParams = new URLSearchParams({
@@ -269,6 +303,124 @@ export class ProviderAPIService {
       return await response.json()
     } catch (error) {
       console.error(`Failed to fetch visit meeting with ID ${id}:`, error)
+      throw error
+    }
+  }
+
+  static async getVisitMeetingsByProviderId(providerId, params = {}) {
+    const queryParams = new URLSearchParams({
+      page: params.page || 0,
+      size: params.size || 20
+    })
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/visit-meetings/provider/${providerId}?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Failed to fetch visit meetings for provider ID ${providerId}:`, error)
+      throw error
+    }
+  }
+
+  static async getRecentVisitMeetings(params = {}) {
+    const queryParams = new URLSearchParams({
+      page: params.page || 0,
+      size: params.size || 10
+    })
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/visit-meetings/recent?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Failed to fetch recent visit meetings:', error)
+      throw error
+    }
+  }
+
+  static async getVisitMeetingsByDateRange(startDate, endDate, params = {}) {
+    const queryParams = new URLSearchParams({
+      startDate,
+      endDate,
+      page: params.page || 0,
+      size: params.size || 20,
+      filterType: params.filterType || 'visit'
+    })
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/visit-meetings/date-range?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Failed to fetch visit meetings by date range:', error)
+      throw error
+    }
+  }
+
+  static async getVisitMeetingsByDate(date, filterType = 'visit') {
+    const queryParams = new URLSearchParams({
+      filterType
+    })
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/visit-meetings/date/${date}?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Failed to fetch visit meetings for date ${date}:`, error)
+      throw error
+    }
+  }
+
+  static async searchVisitMeetingsByTitle(title, params = {}) {
+    const queryParams = new URLSearchParams({
+      title,
+      page: params.page || 0,
+      size: params.size || 20
+    })
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/visit-meetings/search?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Failed to search visit meetings with title "${title}":`, error)
+      throw error
+    }
+  }
+
+  static async getVisitCountByProvider(providerId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/visit-meetings/statistics/provider/${providerId}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Failed to get visit count for provider ID ${providerId}:`, error)
       throw error
     }
   }
