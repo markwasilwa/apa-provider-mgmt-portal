@@ -179,7 +179,7 @@
                       <button class="action-btn edit" @click="editCategory(category)" title="Edit Category">
                         <PencilIcon class="action-icon" />
                       </button>
-                      <button class="action-btn delete" @click="deleteCategory(category.id)" title="Delete Category">
+                      <button class="action-btn delete" @click="confirmDelete(category)" title="Delete Category">
                         <TrashIcon class="action-icon" />
                       </button>
                     </div>
@@ -237,7 +237,7 @@
                               <PencilIcon class="btn-icon-sm" />
                               Edit
                             </button>
-                            <button @click="deleteCategory(selectedCategory.id)" class="btn-compact btn-delete">
+                            <button @click="confirmDelete(selectedCategory)" class="btn-compact btn-delete">
                               <TrashIcon class="btn-icon-sm" />
                               Delete
                             </button>
@@ -451,6 +451,52 @@
         <p>{{ toastMessage }}</p>
       </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="deleteModal.show" class="modal-overlay" @click="closeDeleteModal">
+      <div class="delete-modal" @click.stop>
+        <div class="modal-header delete-header">
+          <div class="modal-title-wrapper">
+            <TrashIcon class="delete-icon" />
+            <h3 class="modal-title">Confirm Delete</h3>
+          </div>
+          <button class="modal-close" @click="closeDeleteModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="delete-warning">
+            <p>Are you sure you want to delete this category?</p>
+          </div>
+
+          <div class="delete-details">
+            <div class="detail-item">
+              <span class="detail-label">Category Name:</span>
+              <span class="detail-value">{{ deleteModal.categoryName || 'Unknown Category' }}</span>
+            </div>
+          </div>
+
+          <div class="delete-comment-section">
+            <label class="input-label">Deletion Comment <span class="required">*</span></label>
+            <textarea 
+              v-model="deleteModal.comment" 
+              class="modern-input delete-comment-input" 
+              placeholder="Please provide a reason for deletion"
+              required
+            ></textarea>
+            <p class="comment-hint">This comment will be recorded with the deletion action.</p>
+          </div>
+
+          <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" @click="closeDeleteModal">
+            Cancel
+          </button>
+          <button class="danger-btn" @click="deleteCategory" :disabled="!deleteModal.comment">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -644,13 +690,44 @@ const editCategory = (category) => {
   isInlineEditing.value = true
 }
 
-const deleteCategory = (categoryId) => {
-  if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
-    const index = categories.value.findIndex(cat => cat.id === categoryId)
+// Confirm delete
+const deleteModal = ref({
+  show: false,
+  categoryId: null,
+  categoryName: '',
+  comment: ''
+})
+
+const confirmDelete = (category) => {
+  deleteModal.value = {
+    show: true,
+    categoryId: category.id,
+    categoryName: category.name,
+    comment: ''
+  }
+}
+
+const closeDeleteModal = () => {
+  deleteModal.value.show = false
+  deleteModal.value.comment = '' // Reset comment when closing
+}
+
+const deleteCategory = async () => {
+  try {
+    if (!deleteModal.value.comment.trim()) {
+      showToastMessage('Please provide a reason for deletion', 'error')
+      return
+    }
+
+    const index = categories.value.findIndex(cat => cat.id === deleteModal.value.categoryId)
     if (index !== -1) {
       categories.value.splice(index, 1)
       showToastMessage('Category deleted successfully')
     }
+    closeDeleteModal()
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    showToastMessage('Failed to delete category', 'error')
   }
 }
 
@@ -2040,5 +2117,192 @@ const showToastMessage = (message) => {
   .modal-actions {
     flex-direction: column;
   }
+}
+
+/* Delete Modal Styles */
+.delete-modal {
+  width: 100%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  max-height: 90vh;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem; /* More compact padding */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.modal-body {
+  padding: 0.75rem 1rem; /* Added proper padding */
+  overflow-y: auto;
+  max-height: calc(90vh - 80px); /* Adjusted for smaller header and footer */
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.delete-header {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.375rem 0.75rem; /* More compact header */
+}
+
+.modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.delete-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+}
+
+.delete-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border-left: 4px solid #e5e7eb;
+}
+
+.delete-details {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-item {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #4b5563;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: #111827;
+  font-weight: 500;
+}
+
+.delete-comment-section {
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem; /* Added padding */
+}
+
+.delete-comment-input {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.comment-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.warning-text {
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.required {
+  color: #dc2626;
+}
+
+/* Button Styles */
+.secondary-btn {
+  padding: 0.625rem 1.25rem;
+  background-color: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondary-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.danger-btn {
+  padding: 0.625rem 1.25rem;
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.danger-btn:hover {
+  background-color: #dc2626;
+}
+
+.danger-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
