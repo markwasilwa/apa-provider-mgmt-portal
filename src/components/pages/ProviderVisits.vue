@@ -283,10 +283,6 @@
                                   <div class="search-result-item no-results">No providers found</div>
                                 </div>
                               </div>
-                              <div v-if="selectedProvider" class="selected-compact">
-                                <span>{{ selectedProvider.providerName }}</span>
-                                <button type="button" class="clear-compact" @click="clearProviderSelection">×</button>
-                              </div>
                             </div>
                             <div class="compact-field">
                               <label class="compact-label">Visit Date <span class="required">*</span></label>
@@ -338,10 +334,6 @@
                                 <div v-else-if="showVenueResults && venueSearchTerm && venueSearchTerm.length >= 2 && filteredVenues.length === 0" class="search-results compact-dropdown">
                                   <div class="search-result-item no-results">No venues found</div>
                                 </div>
-                              </div>
-                              <div v-if="selectedVenue" class="selected-compact">
-                                <span>{{ selectedVenue.companyName || `${selectedVenue.firstName} ${selectedVenue.surname}`.trim() }}</span>
-                                <button type="button" class="clear-compact" @click="clearVenueSelection">×</button>
                               </div>
                             </div>
                           </div>
@@ -476,8 +468,9 @@
                         required 
                         class="modern-input compact-input"
                         placeholder="Search provider..."
+                        :disabled="visitModal.isEdit"
                       >
-                      <div v-if="showProviderResults && providerSearchTerm && filteredProviders.length > 0" class="search-results">
+                      <div v-if="!visitModal.isEdit && showProviderResults && providerSearchTerm && filteredProviders.length > 0" class="search-results">
                         <div 
                           v-for="provider in filteredProviders" 
                           :key="provider.id" 
@@ -487,13 +480,9 @@
                           {{ provider.providerName || provider.name }}
                         </div>
                       </div>
-                      <div v-else-if="showProviderResults && providerSearchTerm && providerSearchTerm.length >= 2 && filteredProviders.length === 0" class="search-results">
+                      <div v-else-if="!visitModal.isEdit && showProviderResults && providerSearchTerm && providerSearchTerm.length >= 2 && filteredProviders.length === 0" class="search-results">
                         <div class="search-result-item no-results">No providers found</div>
                       </div>
-                    </div>
-                    <div v-if="selectedProvider" class="selected-item compact-selected">
-                      <span>{{ selectedProvider.providerName || selectedProvider.name }}</span>
-                      <button type="button" class="clear-selection" @click="selectedProvider = null; visitForm.providerId = ''; providerSearchTerm = ''">×</button>
                     </div>
                   </div>
                   <div class="input-group">
@@ -1120,13 +1109,13 @@ const editVisit = (visit, useModal = false) => {
       editingVisitId.value = null;
       return;
     }
-    
+
     // Clear any existing editing state first
     editingVisitId.value = null;
-    
+
     // Ensure the visit details are visible
     selectedVisit.value = visit;
-    
+
     // Set the editing visit ID to enable inline editing
     editingVisitId.value = visit.id;
 
@@ -1204,7 +1193,7 @@ const setProviderSearchState = (visit) => {
 // Cancel inline edit
 const cancelEdit = () => {
   editingVisitId.value = null;
-  
+
   // Clear form state
   selectedProvider.value = null;
   providerSearchTerm.value = '';
@@ -1213,7 +1202,7 @@ const cancelEdit = () => {
   showProviderResults.value = false;
   showVenueResults.value = false;
   showCommentsInline.value = false;
-  
+
   // Keep the visit details visible but exit edit mode
   // selectedVisit.value remains unchanged so details stay visible
 }
@@ -2877,7 +2866,7 @@ onMounted(() => {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .inline-edit-beautiful .comments-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -3320,21 +3309,21 @@ onMounted(() => {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .comments-grid {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .compact-actions {
     flex-direction: column-reverse;
     gap: 0.375rem;
   }
-  
+
   .btn-compact {
     justify-content: center;
   }
-  
+
   .compact-edit-form {
     padding: 0.75rem;
   }
