@@ -501,13 +501,16 @@
               <div class="detail-item">
                 <label class="detail-label">Country</label>
                 <div class="input-wrapper">
-                  <input 
-                    type="text" 
+                  <select 
                     v-model="requestForm.country" 
                     required 
-                    class="modern-input"
-                    placeholder="Enter country"
+                    class="modern-select"
                   >
+                    <option value="">Select a country</option>
+                    <option v-for="country in countries" :key="country.id" :value="country.country">
+                      {{ country.country }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div class="detail-item">
@@ -740,6 +743,7 @@ const totalElements = ref(0)
 const requests = ref([])
 const loading = ref(false)
 const categories = ref([])
+const countries = ref([])
 
 // Fetch provider requests from API
 const fetchProviderRequests = async () => {
@@ -813,10 +817,22 @@ const fetchCategories = async () => {
   }
 }
 
+// Fetch countries from API
+const fetchCountries = async () => {
+  try {
+    const countriesData = await ProviderAPIService.getProviderCountries()
+    countries.value = countriesData
+  } catch (error) {
+    console.error('Error fetching countries:', error)
+    showToastMessage('Failed to load countries. Please try again.')
+  }
+}
+
 // Load data when component mounts
 onMounted(() => {
   fetchProviderRequests()
   fetchCategories()
+  fetchCountries()
 })
 
 // Pagination methods
