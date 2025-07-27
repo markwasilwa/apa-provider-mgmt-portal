@@ -197,7 +197,8 @@
                       <button class="close-details" @click="selectedCategory = null">×</button>
                     </div>
                     <div class="inline-details-content">
-                      <div class="detail-grid">
+                      <!-- View Mode -->
+                      <div v-if="!isInlineEditing" class="detail-grid">
                         <div class="detail-section">
                           <h4 class="section-title">Basic Information</h4>
                           <div class="detail-item">
@@ -242,6 +243,73 @@
                             </button>
                           </div>
                         </div>
+                      </div>
+
+                      <!-- Edit Mode -->
+                      <div v-else class="inline-edit-form">
+                        <form @submit.prevent="saveCategory" class="compact-form">
+                          <div class="form-grid compact">
+                            <div class="input-group">
+                              <label class="input-label">Category Name</label>
+                              <input 
+                                type="text" 
+                                v-model="categoryForm.name" 
+                                required 
+                                class="modern-input"
+                                placeholder="Enter category name"
+                              >
+                            </div>
+                            <div class="input-group">
+                              <label class="input-label">Category Code</label>
+                              <input 
+                                type="text" 
+                                v-model="categoryForm.code" 
+                                required 
+                                class="modern-input"
+                                placeholder="e.g., HOSP, INDV"
+                              >
+                            </div>
+                            <div class="input-group">
+                              <label class="input-label">Icon (Emoji)</label>
+                              <input 
+                                type="text" 
+                                v-model="categoryForm.icon" 
+                                class="modern-input"
+                                placeholder="Icon emoji"
+                                maxlength="2"
+                              >
+                            </div>
+                            <div class="input-group">
+                              <label class="input-label">Status</label>
+                              <div class="select-wrapper">
+                                <select v-model="categoryForm.status" class="modern-select">
+                                  <option value="Active">Active</option>
+                                  <option value="Under Review">Under Review</option>
+                                  <option value="Inactive">Inactive</option>
+                                </select>
+                                <span class="select-icon">⌄</span>
+                              </div>
+                            </div>
+                            <div class="input-group full-width">
+                              <label class="input-label">Description</label>
+                              <textarea 
+                                v-model="categoryForm.description" 
+                                rows="2" 
+                                class="modern-textarea"
+                                placeholder="Enter category description"
+                              ></textarea>
+                            </div>
+                          </div>
+                          <div class="form-actions">
+                            <button type="button" @click="closeModal" class="btn-compact btn-secondary">
+                              Cancel
+                            </button>
+                            <button type="submit" class="btn-compact btn-primary">
+                              <span class="btn-icon-sm">💾</span>
+                              Update
+                            </button>
+                          </div>
+                        </form>
                       </div>
                     </div>
                   </div>
@@ -411,6 +479,7 @@ const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editingCategory = ref(null)
 const selectedCategory = ref(null)
+const isInlineEditing = ref(false)
 const searchTerm = ref('')
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -569,7 +638,14 @@ const viewCategory = (category) => {
 const editCategory = (category) => {
   editingCategory.value = category
   categoryForm.value = { ...category }
-  showEditModal.value = true
+
+  // If the category is already selected for viewing, use inline editing
+  if (selectedCategory.value && selectedCategory.value.id === category.id) {
+    isInlineEditing.value = true
+  } else {
+    // Otherwise use the modal
+    showEditModal.value = true
+  }
 }
 
 const deleteCategory = (categoryId) => {
@@ -605,6 +681,7 @@ const saveCategory = () => {
 const closeModal = () => {
   showAddModal.value = false
   showEditModal.value = false
+  isInlineEditing.value = false
   editingCategory.value = null
   categoryForm.value = {
     name: '',
@@ -1207,6 +1284,89 @@ const showToastMessage = (message) => {
   font-size: 0.9rem;
   font-weight: 700;
   color: #3b82f6;
+}
+
+/* Inline Edit Form Styles */
+.inline-edit-form {
+  width: 100%;
+}
+
+.compact-form {
+  padding: 0.5rem;
+}
+
+.form-grid.compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-grid.compact .input-group {
+  margin-bottom: 0;
+}
+
+.form-grid.compact .input-group.full-width {
+  grid-column: span 4;
+}
+
+.form-grid.compact .input-label {
+  font-size: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-grid.compact .modern-input,
+.form-grid.compact .modern-select,
+.form-grid.compact .modern-textarea {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  border-width: 1px;
+}
+
+.form-grid.compact .select-icon {
+  right: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-compact.btn-secondary {
+  background: #f1f5f9;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-compact.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-compact.btn-primary {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.btn-compact.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
 .detail-description {
