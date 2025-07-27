@@ -556,8 +556,8 @@ const loadCategories = async () => {
       code: `CAT-${category.id}`,
       description: category.categoryName,
       icon: getCategoryIcon(category.categoryName),
-      activeProviders: Math.floor(Math.random() * 500) + 100, // Placeholder data
-      totalRegistered: Math.floor(Math.random() * 1000) + 200, // Placeholder data
+      activeProviders: category.status === 1 ? 100 : 0, // Fixed value for active providers
+      totalRegistered: 200, // Fixed value for total registered
       status: category.status === 1 ? 'Active' : 'Inactive'
     }))
 
