@@ -97,6 +97,22 @@ export class ProviderAPIService {
     }
   }
 
+  static async getCategoriesFromRequests() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/provider-categories?page=0&size=1000`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.content
+    } catch (error) {
+      console.error('Failed to fetch categories from requests:', error)
+      throw error
+    }
+  }
+
   static async getProviderRequestById(id) {
     try {
       const response = await fetch(`${API_BASE_URL}/provider-requests/${id}`)

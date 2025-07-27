@@ -169,9 +169,6 @@
                       <button class="action-btn view" @click="viewDetails(provider)" :class="{ 'active': selectedProvider && selectedProvider.id === provider.id }" title="View Details">
                         <EyeIcon class="action-icon" />
                       </button>
-                      <button class="action-btn edit" @click="editProvider(provider)" title="Edit Provider">
-                        <PencilIcon class="action-icon" />
-                      </button>
                       <button class="action-btn contact" @click="contactProvider(provider)" title="Contact Provider">
                         <PhoneIcon class="action-icon" />
                       </button>
@@ -293,9 +290,6 @@
                   <button class="action-btn view" @click.stop="viewDetails(provider)" :class="{ 'active': selectedProvider && selectedProvider.id === provider.id }" title="View Details">
                     <EyeIcon class="action-icon" />
                   </button>
-                  <button class="action-btn edit" @click.stop="editProvider(provider)" title="Edit Provider">
-                    <PencilIcon class="action-icon" />
-                  </button>
                   <button class="action-btn contact" @click.stop="contactProvider(provider)" title="Contact Provider">
                     <PhoneIcon class="action-icon" />
                   </button>
@@ -352,6 +346,7 @@
         <p>{{ toastMessage }}</p>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -369,7 +364,6 @@ import {
   EnvelopeIcon,
   StarIcon,
   EyeIcon,
-  PencilIcon,
   CheckCircleIcon
 } from '@heroicons/vue/24/outline'
 
@@ -656,9 +650,6 @@ const viewDetails = (provider) => {
   selectedProvider.value = provider
 }
 
-const editProvider = (provider) => {
-  showToastMessage(`Editing ${provider.name}`)
-}
 
 const contactProvider = (provider) => {
   showToastMessage(`Contacting ${provider.name}`)
@@ -1843,5 +1834,211 @@ onMounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+}
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal.modern {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-form {
+  padding: 1.25rem;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
+}
+
+.form-section {
+  margin-bottom: 1.5rem;
+}
+
+.form-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group.full-width {
+  grid-column: span 2;
+}
+
+.input-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modern-input.disabled {
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.modern-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modern-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-help {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-secondary,
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
 }
 </style>

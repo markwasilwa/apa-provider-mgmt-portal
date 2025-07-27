@@ -17,7 +17,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ pendingRequests }}</div>
-            <div class="stat-label">Pending</div>
+            <div class="stat-label">Review</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ approvedRequests }}</div>
@@ -49,10 +49,11 @@
           <div class="select-wrapper">
             <select v-model="statusFilter" class="modern-select">
               <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="under-review">Under Review</option>
+              <option value="draft">Draft</option>
+              <option value="in_progress">Review</option>
+              <option value="accepted">Accepted</option>
+              <option value="declined">Declined</option>
               <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
             </select>
             <span class="select-icon">⌄</span>
           </div>
@@ -84,7 +85,13 @@
           <span class="request-count">{{ filteredRequests.length }} requests</span>
         </div>
 
-        <div class="table-wrapper">
+        <!-- Loading Indicator -->
+        <div v-if="loading" class="loading-container">
+          <div class="loading-spinner"></div>
+          <p class="loading-text">Loading provider requests...</p>
+        </div>
+
+        <div v-else class="table-wrapper">
           <table class="requests-table">
             <thead>
               <tr>
@@ -144,7 +151,7 @@
                   </td>
                   <td class="td-status">
                     <span class="status-badge modern" :class="getStatusClass(request.status)">
-                      {{ request.status }}
+                      {{ getDisplayStatus(request.status) }}
                     </span>
                   </td>
                   <td class="td-actions">
@@ -152,14 +159,17 @@
                       <button class="action-btn view" @click="viewRequest(request)" title="View Details">
                         <EyeIcon class="action-icon" />
                       </button>
-                      <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Pending'">
+                      <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="request.status === 'Review' || request.status === 'Draft'">
+                        <PencilIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Review'">
                         <CheckIcon class="action-icon" />
                       </button>
-                      <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Pending'">
-                        <XMarkIcon class="action-icon" />
+                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Move to Review" v-if="request.status === 'Draft'">
+                        <ArrowRightIcon class="action-icon" />
                       </button>
-                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Set Under Review" v-if="request.status === 'Pending'">
-                        <MagnifyingGlassIcon class="action-icon" />
+                      <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Draft' || request.status === 'Review'">
+                        <XMarkIcon class="action-icon" />
                       </button>
                     </div>
                   </td>
@@ -168,91 +178,259 @@
                   <td colspan="8">
                     <div class="inline-details">
                       <div class="inline-details-header">
-                        <h4 class="inline-details-title">Provider Request Details</h4>
-                        <button class="close-details" @click="expandedRequestIds = expandedRequestIds.filter(id => id !== request.id)">×</button>
+                        <h4 class="inline-details-title">
+                          {{ editingRequestId === request.id ? 'Edit Provider Request' : 'Provider Request Details' }}
+                        </h4>
+                        <button class="close-details" @click="editingRequestId === request.id ? cancelEdit() : expandedRequestIds = expandedRequestIds.filter(id => id !== request.id)">×</button>
                       </div>
                       <div class="inline-details-content">
-                        <div class="detail-grid">
-                          <div class="detail-section">
-                            <h4 class="section-title">Provider Information</h4>
-                            <div class="detail-item">
-                              <label class="detail-label">Provider Name</label>
-                              <span class="detail-value">{{ request.providerName }}</span>
+                        <!-- View Mode -->
+                        <div v-if="editingRequestId !== request.id">
+                          <div class="detail-grid">
+                            <div class="detail-section">
+                              <h4 class="section-title">Provider Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Provider Name</label>
+                                <span class="detail-value">{{ request.providerName }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Category</label>
+                                <span class="category-badge">{{ request.category }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Location</label>
+                                <span class="detail-value">{{ request.location }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Contact Email</label>
+                                <a :href="`mailto:${request.contactEmail}`" class="detail-link">{{ request.contactEmail }}</a>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Phone Number</label>
+                                <a :href="`tel:${request.phone}`" class="detail-link">{{ request.phone }}</a>
+                              </div>
+
+                              <!-- Documents Section - Only shown when documents exist -->
+                              <div v-if="request.documents && Object.keys(request.documents).length > 0" class="detail-item">
+                                <label class="detail-label">Supporting Documents</label>
+                                <div class="documents-list">
+                                  <div v-for="(fileName, docId) in request.documents" :key="docId" class="document-badge">
+                                    <span class="document-type">{{ getDocumentTypeName(request.category, docId) }}</span>
+                                    <span class="document-name">{{ fileName }}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Category</label>
-                              <span class="category-badge">{{ request.category }}</span>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">License Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">License Number</label>
+                                <span class="detail-value highlight">{{ request.licenseNumber }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">License Expiry</label>
+                                <span class="detail-value" :class="{ 'text-danger': isLicenseExpiringSoon(request.licenseExpiry) }">
+                                  {{ formatDate(request.licenseExpiry) }}
+                                </span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">License Status</label>
+                                <span class="detail-value" :class="isLicenseValid(request.licenseExpiry) ? 'text-success' : 'text-danger'">
+                                  {{ isLicenseValid(request.licenseExpiry) ? 'Valid' : 'Expired' }}
+                                </span>
+                              </div>
                             </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Location</label>
-                              <span class="detail-value">{{ request.location }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Contact Email</label>
-                              <a :href="`mailto:${request.contactEmail}`" class="detail-link">{{ request.contactEmail }}</a>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Phone Number</label>
-                              <a :href="`tel:${request.phone}`" class="detail-link">{{ request.phone }}</a>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">Request Timeline</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Request Status</label>
+                                <span class="status-badge modern" :class="getStatusClass(request.status)">
+                                  {{ getDisplayStatus(request.status) }}
+                                </span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Date Submitted</label>
+                                <span class="detail-value">{{ formatDate(request.dateSubmitted) }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Last Updated</label>
+                                <span class="detail-value">{{ formatDate(request.lastUpdated) }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Processing Time</label>
+                                <span class="detail-value">{{ getProcessingTime(request.dateSubmitted) }} days</span>
+                              </div>
                             </div>
                           </div>
 
-                          <div class="detail-section">
-                            <h4 class="section-title">License Information</h4>
-                            <div class="detail-item">
-                              <label class="detail-label">License Number</label>
-                              <span class="detail-value highlight">{{ request.licenseNumber }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">License Expiry</label>
-                              <span class="detail-value" :class="{ 'text-danger': isLicenseExpiringSoon(request.licenseExpiry) }">
-                                {{ formatDate(request.licenseExpiry) }}
-                              </span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">License Status</label>
-                              <span class="detail-value" :class="isLicenseValid(request.licenseExpiry) ? 'text-success' : 'text-danger'">
-                                {{ isLicenseValid(request.licenseExpiry) ? 'Valid' : 'Expired' }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div class="detail-section">
-                            <h4 class="section-title">Request Timeline</h4>
-                            <div class="detail-item">
-                              <label class="detail-label">Request Status</label>
-                              <span class="status-badge modern" :class="getStatusClass(request.status)">
-                                {{ request.status }}
-                              </span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Date Submitted</label>
-                              <span class="detail-value">{{ formatDate(request.dateSubmitted) }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Last Updated</label>
-                              <span class="detail-value">{{ formatDate(request.lastUpdated) }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <label class="detail-label">Processing Time</label>
-                              <span class="detail-value">{{ getProcessingTime(request.dateSubmitted) }} days</span>
-                            </div>
+                          <div class="inline-actions" v-if="request.status === 'Draft' || request.status === 'Review'">
+                            <button @click="approveRequest(request.id)" class="btn-success" v-if="request.status === 'Review'">
+                              <CheckIcon class="btn-icon" />
+                              Approve Request
+                            </button>
+                            <button v-if="request.status === 'Draft'" @click="setUnderReview(request.id)" class="btn-info">
+                              <ArrowRightIcon class="btn-icon" />
+                              Move to Review
+                            </button>
+                            <button @click="rejectRequest(request.id)" class="btn-danger">
+                              <XMarkIcon class="btn-icon" />
+                              Reject Request
+                            </button>
                           </div>
                         </div>
 
-                        <div class="inline-actions" v-if="request.status === 'Pending'">
-                          <button @click="approveRequest(request.id)" class="btn-success">
-                            <CheckIcon class="btn-icon" />
-                            Approve Request
-                          </button>
-                          <button @click="setUnderReview(request.id)" class="btn-info">
-                            <MagnifyingGlassIcon class="btn-icon" />
-                            Set Under Review
-                          </button>
-                          <button @click="rejectRequest(request.id)" class="btn-danger">
-                            <XMarkIcon class="btn-icon" />
-                            Reject Request
-                          </button>
+                        <!-- Edit Mode -->
+                        <div v-else class="edit-form">
+                          <div class="detail-grid">
+                            <div class="detail-section">
+                              <h4 class="section-title">Provider Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Provider Name</label>
+                                <span class="detail-value">{{ request.providerName }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Category</label>
+                                <span class="category-badge">{{ request.category }}</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Location</label>
+                                <span class="detail-value">{{ request.location }}</span>
+                              </div>
+                            </div>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">Status Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Status</label>
+                                <div class="input-wrapper">
+                                  <select v-model="request.status" class="modern-select" disabled>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                  </select>
+                                </div>
+                                <span class="input-help">Status can only be changed using the dedicated approval buttons</span>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Action By</label>
+                                <div class="input-wrapper">
+                                  <input 
+                                    type="text" 
+                                    v-model="request.actionBy" 
+                                    class="modern-input"
+                                    placeholder="Enter your name"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="detail-section">
+                              <h4 class="section-title">Additional Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">HOD Comments</label>
+                                <div class="input-wrapper">
+                                  <textarea 
+                                    v-model="request.hodComments" 
+                                    class="modern-textarea"
+                                    placeholder="Enter HOD comments"
+                                  ></textarea>
+                                </div>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Meeting Date</label>
+                                <div class="input-wrapper">
+                                  <input 
+                                    type="date" 
+                                    v-model="request.meetingDate" 
+                                    class="modern-input"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="detail-grid">
+                            <div class="detail-section">
+                              <h4 class="section-title">Visit Information</h4>
+                              <div class="detail-item">
+                                <label class="detail-label">Comments</label>
+                                <div class="input-wrapper">
+                                  <textarea 
+                                    v-model="request.comments" 
+                                    class="modern-textarea"
+                                    placeholder="Enter comments"
+                                  ></textarea>
+                                </div>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Visit Report</label>
+                                <div class="input-wrapper">
+                                  <textarea 
+                                    v-model="request.visitReport" 
+                                    class="modern-textarea"
+                                    placeholder="Enter visit report"
+                                  ></textarea>
+                                </div>
+                              </div>
+                              <div class="detail-item">
+                                <label class="detail-label">Provider Image</label>
+                                <div class="input-wrapper">
+                                  <input 
+                                    type="text" 
+                                    v-model="request.providerImage" 
+                                    class="modern-input"
+                                    placeholder="Enter image path"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Document Upload Section - Only shown when category is selected -->
+                          <div v-if="editCategoryDocuments.length > 0" class="detail-grid">
+                            <div class="detail-section" style="grid-column: span 3;">
+                              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                <h4 class="section-title" style="margin-bottom: 0; font-size: 0.9rem;">Supporting Documents</h4>
+                                <span class="section-description" style="margin-bottom: 0; font-style: italic;">Update supporting documents</span>
+                              </div>
+
+                              <div class="document-upload-grid">
+                                <div v-for="doc in editCategoryDocuments" :key="doc.id" class="document-upload-item">
+                                  <label class="document-label">
+                                    {{ doc.name }}
+                                    <span v-if="doc.required" class="document-note">(Recommended)</span>
+                                  </label>
+                                  <div class="file-upload-wrapper">
+                                    <input 
+                                      type="file" 
+                                      :id="`edit-document-${doc.id}-${request.id}`"
+                                      @change="e => handleEditFileUpload(e, request, doc.id)"
+                                      class="file-upload-input"
+                                    >
+                                    <label :for="`edit-document-${doc.id}-${request.id}`" class="file-upload-button">
+                                      <span v-if="!request.documents[doc.id]">Choose File</span>
+                                      <span v-else class="file-selected">{{ request.documents[doc.id] }}</span>
+                                    </label>
+                                  </div>
+                                  <span class="document-help-text">Optional</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="inline-actions">
+                            <button @click="cancelEdit()" class="btn-secondary">
+                              <XMarkIcon class="btn-icon" />
+                              Cancel
+                            </button>
+                            <button @click="updateRequest(request)" class="btn-primary">
+                              <CheckIcon class="btn-icon" />
+                              Save Changes
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -261,6 +439,44 @@
               </template>
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-container" v-if="totalPages > 0">
+          <div class="pagination-info">
+            Showing {{ requests.length ? (currentPage * pageSize) + 1 : 0 }} - {{ Math.min((currentPage + 1) * pageSize, totalElements) }} of {{ totalElements }} items
+          </div>
+          <div class="pagination-controls">
+            <button 
+              class="pagination-btn" 
+              :disabled="currentPage === 0" 
+              @click="changePage(currentPage - 1)"
+              :class="{ 'disabled': currentPage === 0 }"
+            >
+              Previous
+            </button>
+
+            <div class="pagination-pages">
+              <template v-for="page in paginationRange" :key="page">
+                <button 
+                  class="page-btn" 
+                  :class="{ 'active': page === currentPage + 1 }"
+                  @click="changePage(page - 1)"
+                >
+                  {{ page }}
+                </button>
+              </template>
+            </div>
+
+            <button 
+              class="pagination-btn" 
+              :disabled="currentPage >= totalPages - 1" 
+              @click="changePage(currentPage + 1)"
+              :class="{ 'disabled': currentPage >= totalPages - 1 }"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 
@@ -275,9 +491,118 @@
       </div>
     </div>
 
+    <!-- Move to Review Confirmation Dialog -->
+    <div v-if="showMoveToReviewDialog" class="modal-overlay">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <ArrowRightIcon class="modal-icon" />
+            Move to Review
+          </h3>
+          <button class="modal-close" @click="showMoveToReviewDialog = false; actionComment = ''">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to move this request to review?</p>
+          <div class="detail-item">
+            <label class="detail-label">Comment <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="actionComment" 
+                required 
+                class="modern-textarea"
+                placeholder="Enter comment"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showMoveToReviewDialog = false; actionComment = ''">
+            Cancel
+          </button>
+          <button class="btn-primary" @click="confirmMoveToReview()" :disabled="!actionComment.trim()">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approve Confirmation Dialog -->
+    <div v-if="showApproveDialog" class="modal-overlay">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <CheckIcon class="modal-icon" />
+            Approve Request
+          </h3>
+          <button class="modal-close" @click="showApproveDialog = false; actionComment = ''">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to approve this request?</p>
+          <div class="detail-item">
+            <label class="detail-label">Comment <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="actionComment" 
+                required 
+                class="modern-textarea"
+                placeholder="Enter comment"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showApproveDialog = false; actionComment = ''">
+            Cancel
+          </button>
+          <button class="btn-success" @click="confirmApprove()" :disabled="!actionComment.trim()">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reject Confirmation Dialog -->
+    <div v-if="showRejectDialog" class="modal-overlay">
+      <div class="modal modern" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <XMarkIcon class="modal-icon" />
+            Reject Request
+          </h3>
+          <button class="modal-close" @click="showRejectDialog = false; actionComment = ''">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to reject this request?</p>
+          <div class="detail-item">
+            <label class="detail-label">Comment <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="actionComment" 
+                required 
+                class="modern-textarea"
+                placeholder="Enter comment"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showRejectDialog = false; actionComment = ''">
+            Cancel
+          </button>
+          <button class="btn-danger" @click="confirmReject()" :disabled="!actionComment.trim()">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Create Provider Registration Request Modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
-      <div class="modal modern" @click.stop>
+      <div class="modal modern" style="max-width: 1000px;" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">
             <PlusIcon class="modal-icon" />
@@ -286,12 +611,12 @@
           <button class="modal-close" @click="closeCreateModal">×</button>
         </div>
         <form @submit.prevent="createRequest" class="modal-form">
-          <!-- Provider Information Section -->
-          <div class="form-section">
-            <h4 class="form-section-title">Provider Information</h4>
-            <div class="form-grid">
-              <div class="input-group full-width">
-                <label class="input-label">Provider Name</label>
+          <div class="detail-grid">
+            <!-- Provider Information Section -->
+            <div class="detail-section">
+              <h4 class="section-title">Provider Information</h4>
+              <div class="detail-item">
+                <label class="detail-label">Provider Name</label>
                 <div class="input-wrapper">
                   <input 
                     type="text" 
@@ -300,121 +625,239 @@
                     class="modern-input"
                     placeholder="Enter provider name"
                   >
-                  <BuildingOffice2Icon class="input-icon" />
                 </div>
               </div>
-              <div class="input-group">
-                <label class="input-label">Category</label>
+              <div class="detail-item">
+                <label class="detail-label">Category</label>
                 <div class="input-wrapper">
                   <select v-model="requestForm.category" required class="modern-select">
                     <option value="">Select a category</option>
-                    <option value="Hospital">Hospital</option>
-                    <option value="Clinic">Clinic</option>
-                    <option value="Pharmacy">Pharmacy</option>
-                    <option value="Diagnostic">Diagnostic</option>
-                    <option value="Dental">Dental</option>
-                    <option value="Mental Health">Mental Health</option>
+                    <option v-for="category in categories" :key="category.id" :value="category.categoryName">
+                      {{ category.categoryName }}
+                    </option>
                   </select>
-                  <ChevronDownIcon class="input-icon" />
                 </div>
-                <span class="input-help">Select the type of healthcare facility</span>
               </div>
-              <div class="input-group">
-                <label class="input-label">Location</label>
+              <div class="detail-item">
+                <label class="detail-label">Location Address</label>
                 <div class="input-wrapper">
                   <input 
                     type="text" 
-                    v-model="requestForm.location" 
+                    v-model="requestForm.locationAddress" 
                     required 
                     class="modern-input"
-                    placeholder="Enter location"
+                    placeholder="Enter full address"
                   >
-                  <MapPinIcon class="input-icon" />
                 </div>
-                <span class="input-help">City, State or Region</span>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Country</label>
+                <div class="input-wrapper">
+                  <select 
+                    v-model="requestForm.country" 
+                    required 
+                    class="modern-select"
+                  >
+                    <option value="">Select a country</option>
+                    <option v-for="country in countries" :key="country.id" :value="country.country">
+                      {{ country.country }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Region</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.region" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter region/city"
+                  >
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Contact Information Section -->
-          <div class="form-section">
-            <h4 class="form-section-title">Contact Information</h4>
-            <div class="form-grid">
-              <div class="input-group">
-                <label class="input-label">Contact Email</label>
+            <!-- Contact Information Section -->
+            <div class="detail-section">
+              <h4 class="section-title">Contact Information</h4>
+              <div class="detail-item">
+                <label class="detail-label">Email Address</label>
                 <div class="input-wrapper">
                   <input 
                     type="email" 
-                    v-model="requestForm.contactEmail" 
+                    v-model="requestForm.emailAddress" 
                     required 
                     class="modern-input"
                     placeholder="Enter contact email"
                   >
-                  <EnvelopeIcon class="input-icon" />
                 </div>
               </div>
-              <div class="input-group">
-                <label class="input-label">Phone Number</label>
+              <div class="detail-item">
+                <label class="detail-label">Phone Number</label>
                 <div class="input-wrapper">
                   <input 
                     type="tel" 
-                    v-model="requestForm.phone" 
+                    v-model="requestForm.contacts" 
                     required 
                     class="modern-input"
                     placeholder="Enter phone number"
                   >
-                  <PhoneIcon class="input-icon" />
                 </div>
-                <span class="input-help">Include country code</span>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Requested By</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.requestedBy" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter requester name"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="detail-section">
+              <h4 class="section-title">Additional Information</h4>
+              <div class="detail-item">
+                <label class="detail-label">Scheme</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.scheme" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter scheme"
+                  >
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Date Requested</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    v-model="requestForm.dateRequested" 
+                    required 
+                    class="modern-input"
+                  >
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Meeting Date</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    v-model="requestForm.meetingDate" 
+                    class="modern-input"
+                  >
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- License Information Section -->
-          <div class="form-section">
-            <h4 class="form-section-title">License Information</h4>
-            <div class="form-grid">
-              <div class="input-group">
-                <label class="input-label">License Number</label>
+          <!-- Document Upload Section - Only shown when category is selected -->
+          <div v-if="categoryDocuments.length > 0" class="detail-grid">
+            <div class="detail-section" style="grid-column: span 3;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <h4 class="section-title" style="margin-bottom: 0; font-size: 0.9rem;">Documents</h4>
+                <span class="section-description" style="margin-bottom: 0; font-style: italic;">All documents optional for draft requests</span>
+              </div>
+
+              <div class="document-upload-grid">
+                <div v-for="doc in categoryDocuments" :key="doc.id" class="document-upload-item">
+                  <label class="document-label">
+                    {{ doc.name }}
+                    <span v-if="doc.required" class="document-note">(Recommended)</span>
+                  </label>
+                  <div class="file-upload-wrapper">
+                    <input 
+                      type="file" 
+                      :id="`document-${doc.id}`"
+                      @change="e => handleFileUpload(e, doc.id)"
+                      class="file-upload-input"
+                    >
+                    <label :for="`document-${doc.id}`" class="file-upload-button">
+                      <span v-if="!requestForm.documents[doc.id]">Choose File</span>
+                      <span v-else class="file-selected">{{ getFileName(requestForm.documents[doc.id]) }}</span>
+                    </label>
+                  </div>
+                  <span class="document-help-text">Optional</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <!-- Query and Comments Section -->
+            <div class="detail-section" style="grid-column: span 3;">
+              <h4 class="section-title">Query and Comments</h4>
+              <div class="detail-item">
+                <label class="detail-label">Query</label>
+                <div class="input-wrapper">
+                  <textarea 
+                    v-model="requestForm.query" 
+                    required 
+                    class="modern-textarea"
+                    placeholder="Enter request query"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Comments</label>
+                <div class="input-wrapper">
+                  <textarea 
+                    v-model="requestForm.comments" 
+                    class="modern-textarea"
+                    placeholder="Enter comments"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Uploads Section -->
+            <div class="detail-section" style="grid-column: span 3;">
+              <h4 class="section-title">File Uploads</h4>
+              <div class="detail-item">
+                <label class="detail-label">Visit Report</label>
                 <div class="input-wrapper">
                   <input 
                     type="text" 
-                    v-model="requestForm.licenseNumber" 
-                    required 
+                    v-model="requestForm.visitReport" 
                     class="modern-input"
-                    placeholder="Enter license number"
+                    placeholder="Enter visit report path"
                   >
-                  <IdentificationIcon class="input-icon" />
                 </div>
               </div>
-              <div class="input-group">
-                <label class="input-label">License Expiry Date</label>
+              <div class="detail-item">
+                <label class="detail-label">Provider Image</label>
                 <div class="input-wrapper">
                   <input 
-                    type="date" 
-                    v-model="requestForm.licenseExpiry" 
-                    required 
+                    type="text" 
+                    v-model="requestForm.providerImage" 
                     class="modern-input"
+                    placeholder="Enter provider image path"
                   >
-                  <CalendarIcon class="input-icon" />
                 </div>
-                <span class="input-help">License must be valid</span>
               </div>
             </div>
           </div>
 
           <!-- Form Actions -->
-          <div class="form-section form-actions">
-            <div class="action-buttons">
-              <button type="button" @click="closeCreateModal" class="btn-secondary">
-                <XMarkIcon class="btn-icon" />
-                Cancel
-              </button>
-              <button type="submit" class="btn-primary">
-                <PlusIcon class="btn-icon" />
-                Create Request
-              </button>
-            </div>
+          <div class="inline-actions">
+            <button type="button" @click="closeCreateModal" class="btn-secondary">
+              <XMarkIcon class="btn-icon" />
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">
+              <PlusIcon class="btn-icon" />
+              Create Request
+            </button>
           </div>
         </form>
       </div>
@@ -423,7 +866,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { 
   EyeIcon, 
   CheckIcon, 
@@ -439,8 +882,14 @@ import {
   BuildingOffice2Icon,
   ChevronDownIcon,
   IdentificationIcon,
-  CalendarIcon
+  CalendarIcon,
+  PencilIcon,
+  UserIcon,
+  PhotoIcon,
+  ArrowRightIcon
 } from '@heroicons/vue/24/outline'
+import { ProviderAPIService } from '@/services/api'
+import { SettingsService } from '@/services/settings'
 
 // Form states
 const searchTerm = ref('')
@@ -450,155 +899,235 @@ const selectedRequest = ref(null)
 const showToast = ref(false)
 const toastMessage = ref('')
 const expandedRequestIds = ref([])
+const editingRequestId = ref(null)
 const showCreateModal = ref(false)
+
+// Confirmation dialog states
+const showMoveToReviewDialog = ref(false)
+const showApproveDialog = ref(false)
+const showRejectDialog = ref(false)
+const selectedRequestId = ref(null)
+const actionComment = ref('')
 const requestForm = ref({
   providerName: '',
   category: '',
-  location: '',
-  contactEmail: '',
-  phone: '',
-  licenseNumber: '',
-  licenseExpiry: ''
+  locationAddress: '',
+  country: '',
+  region: '',
+  emailAddress: '',
+  contacts: '',
+  requestedBy: '',
+  scheme: '',
+  dateRequested: new Date().toISOString().split('T')[0],
+  query: '',
+  meetingDate: '',
+  comments: '',
+  visitReport: '',
+  providerImage: '',
+  documents: {}
 })
 
+// Store the required documents for the selected category
+const categoryDocuments = ref([])
+
+// Store the required documents for the currently edited request
+const editCategoryDocuments = ref([])
+
+// Pagination
+const currentPage = ref(0)
+const pageSize = ref(20)
+const totalPages = ref(0)
+const totalElements = ref(0)
+
 // Requests data
-const requests = ref([
-  {
-    id: 'REQ-2024-001',
-    providerName: 'Nairobi General Hospital',
-    category: 'Hospital',
-    location: 'Nairobi, Kenya',
-    contactEmail: 'admin@nairobigeneral.co.ke',
-    phone: '+254-700-123456',
-    licenseNumber: 'LIC-NGH-2024-001',
-    licenseExpiry: '2026-12-31',
-    dateSubmitted: '2024-01-15',
-    lastUpdated: '2024-01-16',
-    status: 'Pending'
-  },
-  {
-    id: 'REQ-2024-002',
-    providerName: 'Mombasa Medical Clinic',
-    category: 'Clinic',
-    location: 'Mombasa, Kenya',
-    contactEmail: 'info@mombasamedical.co.ke',
-    phone: '+254-700-789012',
-    licenseNumber: 'LIC-MMC-2024-002',
-    licenseExpiry: '2025-06-30',
-    dateSubmitted: '2024-01-14',
-    lastUpdated: '2024-01-20',
-    status: 'Under Review'
-  },
-  {
-    id: 'REQ-2024-003',
-    providerName: 'Kisumu Pharmacy Plus',
-    category: 'Pharmacy',
-    location: 'Kisumu, Kenya',
-    contactEmail: 'orders@kisumupharmacy.co.ke',
-    phone: '+254-700-345678',
-    licenseNumber: 'LIC-KPP-2024-003',
-    licenseExpiry: '2025-12-31',
-    dateSubmitted: '2024-01-13',
-    lastUpdated: '2024-01-21',
-    status: 'Approved'
-  },
-  {
-    id: 'REQ-2024-004',
-    providerName: 'Eldoret Diagnostic Center',
-    category: 'Diagnostic',
-    location: 'Eldoret, Kenya',
-    contactEmail: 'lab@eldoretdiagnostic.co.ke',
-    phone: '+254-700-901234',
-    licenseNumber: 'LIC-EDC-2024-004',
-    licenseExpiry: '2026-03-31',
-    dateSubmitted: '2024-01-12',
-    lastUpdated: '2024-01-18',
-    status: 'Rejected'
-  },
-  {
-    id: 'REQ-2024-005',
-    providerName: 'Nakuru Dental Care',
-    category: 'Dental',
-    location: 'Nakuru, Kenya',
-    contactEmail: 'appointments@nakurudental.co.ke',
-    phone: '+254-700-567890',
-    licenseNumber: 'LIC-NDC-2024-005',
-    licenseExpiry: '2025-09-30',
-    dateSubmitted: '2024-01-11',
-    lastUpdated: '2024-01-17',
-    status: 'Under Review'
-  },
-  {
-    id: 'REQ-2024-006',
-    providerName: 'Thika Mental Health Center',
-    category: 'Mental Health',
-    location: 'Thika, Kenya',
-    contactEmail: 'care@thikamental.co.ke',
-    phone: '+254-700-555666',
-    licenseNumber: 'LIC-TMH-2024-006',
-    licenseExpiry: '2024-12-31',
-    dateSubmitted: '2024-01-10',
-    lastUpdated: '2024-01-19',
-    status: 'Pending'
-  },
-  {
-    id: 'REQ-2024-007',
-    providerName: 'Karen Medical Centre',
-    category: 'Hospital',
-    location: 'Karen, Nairobi',
-    contactEmail: 'reception@karenmedical.co.ke',
-    phone: '+254-700-999000',
-    licenseNumber: 'LIC-KMC-2024-007',
-    licenseExpiry: '2025-03-15',
-    dateSubmitted: '2024-01-09',
-    lastUpdated: '2024-01-22',
-    status: 'Approved'
+const requests = ref([])
+const loading = ref(false)
+const categories = ref([])
+const countries = ref([])
+
+// Fetch provider requests from API
+const fetchProviderRequests = async () => {
+  loading.value = true
+  try {
+    const params = {
+      page: currentPage.value,
+      size: pageSize.value,
+      sortBy: 'id',
+      sortDir: 'desc'
+    }
+
+    // Add filters if they are set
+    if (statusFilter.value !== 'all') {
+      params.status = statusFilter.value.toUpperCase()
+    }
+
+    if (categoryFilter.value !== 'all') {
+      params.category = categoryFilter.value
+    }
+
+    if (searchTerm.value) {
+      params.providerName = searchTerm.value
+    }
+
+    const response = await ProviderAPIService.getProviderRequests(params)
+
+    // Update pagination data
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
+
+    // Map API response to component data structure
+    requests.value = response.content.map(item => ({
+      id: item.id,
+      providerName: item.providerName,
+      category: item.category,
+      location: `${item.region}, ${item.country}`,
+      contactEmail: item.emailAddress,
+      phone: item.contacts,
+      licenseNumber: item.scheme || 'N/A',
+      licenseExpiry: item.dateConcluded || new Date().toISOString().split('T')[0],
+      dateSubmitted: item.dateRequested,
+      lastUpdated: item.dateConcluded || item.dateRequested,
+      status: item.status === 'ACCEPTED' ? 'Accepted' : 
+              item.status === 'APPROVED' ? 'Approved' : 
+              item.status === 'DECLINED' ? 'Declined' : 
+              item.status === 'DRAFT' ? 'Draft' : 
+              item.status === 'IN_PROGRESS' ? 'Review' : item.status,
+      query: item.query,
+      requestedBy: item.requestedBy,
+      hodComments: item.hodComments,
+      meetingDate: item.meetingDate,
+      comments: item.comments,
+      visitReport: item.visitReport,
+      providerImage: item.providerImage,
+      documents: item.documents || {}
+    }))
+  } catch (error) {
+    console.error('Error fetching provider requests:', error)
+    showToastMessage('Failed to load provider requests. Please try again.')
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Fetch categories from API
+const fetchCategories = async () => {
+  try {
+    const categoriesData = await ProviderAPIService.getCategoriesFromRequests()
+    categories.value = categoriesData
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    showToastMessage('Failed to load categories. Please try again.')
+  }
+}
+
+// Fetch countries from API
+const fetchCountries = async () => {
+  try {
+    const countriesData = await ProviderAPIService.getProviderCountries()
+    countries.value = countriesData
+  } catch (error) {
+    console.error('Error fetching countries:', error)
+    showToastMessage('Failed to load countries. Please try again.')
+  }
+}
+
+// Load data when component mounts
+onMounted(() => {
+  fetchProviderRequests()
+  fetchCategories()
+  fetchCountries()
+})
+
+// Pagination methods
+const changePage = (page) => {
+  if (page >= 0 && page < totalPages.value) {
+    currentPage.value = page
+    fetchProviderRequests()
+  }
+}
 
 // Computed properties
-const totalRequests = computed(() => requests.value.length)
+const totalRequests = computed(() => totalElements.value)
 
 const pendingRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Pending').length
+  return requests.value.filter(r => r.status === 'Review' || r.status === 'Draft').length
 })
 
 const approvedRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Approved').length
+  return requests.value.filter(r => r.status === 'Approved' || r.status === 'Accepted').length
 })
 
 const rejectedRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Rejected').length
+  return requests.value.filter(r => r.status === 'Declined').length
+})
+
+const paginationRange = computed(() => {
+  const range = []
+  const maxVisiblePages = 5
+  const startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+  const endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1)
+
+  for (let i = startPage; i <= endPage; i++) {
+    range.push(i)
+  }
+
+  return range
 })
 
 const filteredRequests = computed(() => {
-  let filtered = requests.value
-
-  // Apply search filter
-  if (searchTerm.value) {
-    const search = searchTerm.value.toLowerCase()
-    filtered = filtered.filter(request => 
-      request.id.toLowerCase().includes(search) ||
-      request.providerName.toLowerCase().includes(search) ||
-      request.contactEmail.toLowerCase().includes(search) ||
-      request.licenseNumber.toLowerCase().includes(search)
-    )
-  }
-
-  // Apply status filter
-  if (statusFilter.value !== 'all') {
-    filtered = filtered.filter(request => 
-      request.status.toLowerCase().replace(' ', '-') === statusFilter.value
-    )
-  }
-
-  // Apply category filter
-  if (categoryFilter.value !== 'all') {
-    filtered = filtered.filter(request => request.category === categoryFilter.value)
-  }
-
-  return filtered
+  // Since we're using server-side filtering, this just returns the current requests
+  return requests.value
 })
+
+// Watch for filter changes to refresh data
+watch([searchTerm, statusFilter, categoryFilter], () => {
+  currentPage.value = 0 // Reset to first page when filters change
+  fetchProviderRequests()
+}, { debounce: 300 })
+
+// Watch for category changes in the form to update required documents
+watch(() => requestForm.value.category, (newCategory) => {
+  if (newCategory) {
+    categoryDocuments.value = SettingsService.getDocumentsForCategory(newCategory)
+
+    // Initialize documents object with empty values
+    const documentsObj = {}
+    categoryDocuments.value.forEach(doc => {
+      documentsObj[doc.id] = null
+    })
+    requestForm.value.documents = documentsObj
+  } else {
+    categoryDocuments.value = []
+    requestForm.value.documents = {}
+  }
+})
+
+// Watch for category changes in the edited request to update required documents
+watch(() => {
+  // Only watch if a request is being edited
+  if (editingRequestId.value === null) return null
+
+  // Find the request being edited
+  const editedRequest = requests.value.find(r => r.id === editingRequestId.value)
+  if (!editedRequest) return null
+
+  return editedRequest.category
+}, (newCategory) => {
+  if (newCategory) {
+    editCategoryDocuments.value = SettingsService.getDocumentsForCategory(newCategory)
+
+    // Find the request being edited
+    const editedRequest = requests.value.find(r => r.id === editingRequestId.value)
+    if (!editedRequest) return
+
+    // Initialize documents object if it doesn't exist
+    if (!editedRequest.documents) {
+      editedRequest.documents = {}
+    }
+  } else {
+    editCategoryDocuments.value = []
+  }
+}, { immediate: true })
 
 // Methods
 const viewRequest = (request) => {
@@ -611,31 +1140,91 @@ const viewRequest = (request) => {
 }
 
 const approveRequest = (requestId) => {
-  const request = requests.value.find(r => r.id === requestId)
-  if (request) {
-    request.status = 'Approved'
-    request.lastUpdated = new Date().toISOString().split('T')[0]
-    showToastMessage(`Request ${requestId} has been approved`)
+  selectedRequestId.value = requestId
+  actionComment.value = ''
+  showApproveDialog.value = true
+}
+
+const confirmApprove = async () => {
+  if (!actionComment.value.trim()) return
+
+  try {
+    await ProviderAPIService.approveProviderRequest(selectedRequestId.value, {
+      actionBy: 'admin', // This should be the current user
+      hodComments: actionComment.value
+    })
+
+    // Refresh the data
+    await fetchProviderRequests()
+    showToastMessage(`Request ${selectedRequestId.value} has been approved`)
+
+    // Close the dialog and reset
+    showApproveDialog.value = false
+    actionComment.value = ''
+    selectedRequestId.value = null
+  } catch (error) {
+    console.error('Error approving request:', error)
+    showToastMessage('Failed to approve request. Please try again.')
   }
 }
 
 const rejectRequest = (requestId) => {
-  if (confirm('Are you sure you want to reject this request? This action cannot be undone.')) {
-    const request = requests.value.find(r => r.id === requestId)
-    if (request) {
-      request.status = 'Rejected'
-      request.lastUpdated = new Date().toISOString().split('T')[0]
-      showToastMessage(`Request ${requestId} has been rejected`)
-    }
+  selectedRequestId.value = requestId
+  actionComment.value = ''
+  showRejectDialog.value = true
+}
+
+const confirmReject = async () => {
+  if (!actionComment.value.trim()) return
+
+  try {
+    await ProviderAPIService.declineProviderRequest(selectedRequestId.value, {
+      actionBy: 'admin', // This should be the current user
+      hodComments: actionComment.value
+    })
+
+    // Refresh the data
+    await fetchProviderRequests()
+    showToastMessage(`Request ${selectedRequestId.value} has been rejected`)
+
+    // Close the dialog and reset
+    showRejectDialog.value = false
+    actionComment.value = ''
+    selectedRequestId.value = null
+  } catch (error) {
+    console.error('Error rejecting request:', error)
+    showToastMessage('Failed to reject request. Please try again.')
   }
 }
 
 const setUnderReview = (requestId) => {
-  const request = requests.value.find(r => r.id === requestId)
-  if (request) {
-    request.status = 'Under Review'
-    request.lastUpdated = new Date().toISOString().split('T')[0]
-    showToastMessage(`Request ${requestId} is now under review`)
+  selectedRequestId.value = requestId
+  actionComment.value = ''
+  showMoveToReviewDialog.value = true
+}
+
+const confirmMoveToReview = async () => {
+  if (!actionComment.value.trim()) return
+
+  try {
+    // Update the request status to "IN_PROGRESS" (displayed as "Review")
+    await ProviderAPIService.updateProviderRequest(selectedRequestId.value, {
+      status: 'IN_PROGRESS',
+      actionBy: 'admin', // This should be the current user
+      hodComments: actionComment.value
+    })
+
+    // Refresh the data
+    await fetchProviderRequests()
+    showToastMessage(`Request ${selectedRequestId.value} is now under review`)
+
+    // Close the dialog and reset
+    showMoveToReviewDialog.value = false
+    actionComment.value = ''
+    selectedRequestId.value = null
+  } catch (error) {
+    console.error('Error setting request under review:', error)
+    showToastMessage('Failed to update request status. Please try again.')
   }
 }
 
@@ -658,12 +1247,18 @@ const processRequest = (action) => {
 
 const getStatusClass = (status) => {
   const statusMap = {
-    'Pending': 'pending',
-    'Under Review': 'under-review',
+    'Draft': 'draft',
+    'Review': 'under-review',
+    'Accepted': 'approved',
     'Approved': 'approved',
-    'Rejected': 'rejected'
+    'Declined': 'rejected'
   }
   return statusMap[status] || 'default'
+}
+
+const getDisplayStatus = (status) => {
+  // Status is already mapped to display values in the fetchProviderRequests function
+  return status
 }
 
 const formatDate = (dateString) => {
@@ -711,46 +1306,291 @@ const closeCreateModal = () => {
   requestForm.value = {
     providerName: '',
     category: '',
-    location: '',
-    contactEmail: '',
-    phone: '',
-    licenseNumber: '',
-    licenseExpiry: ''
+    locationAddress: '',
+    country: '',
+    region: '',
+    emailAddress: '',
+    contacts: '',
+    requestedBy: '',
+    scheme: '',
+    dateRequested: new Date().toISOString().split('T')[0],
+    query: '',
+    meetingDate: '',
+    comments: '',
+    visitReport: '',
+    providerImage: '',
+    documents: {}
+  }
+  categoryDocuments.value = []
+}
+
+// Handle file upload for documents in create form
+const handleFileUpload = (event, documentId) => {
+  const file = event.target.files[0]
+  if (file) {
+    requestForm.value.documents[documentId] = file
+  }
+}
+
+// Handle file upload for documents in edit form
+const handleEditFileUpload = (event, request, documentId) => {
+  const file = event.target.files[0]
+  if (file) {
+    // Initialize documents object if it doesn't exist
+    if (!request.documents) {
+      request.documents = {}
+    }
+
+    // Store the file name in the documents object
+    request.documents[documentId] = file.name
+  }
+}
+
+// Get file name for display
+const getFileName = (file) => {
+  if (!file) return ''
+  return file.name
+}
+
+// Get document type name based on category and document ID
+const getDocumentTypeName = (category, docId) => {
+  // Convert docId to number if it's a string
+  const documentId = parseInt(docId, 10)
+
+  // Get documents for the category
+  const documents = SettingsService.getDocumentsForCategory(category)
+
+  // Find the document with the matching ID
+  const document = documents.find(doc => doc.id === documentId)
+
+  // Return the document name or a default value
+  return document ? document.name : `Document ${docId}`
+}
+
+// Edit request
+const editRequest = (request) => {
+  // First make sure the details are expanded
+  if (!expandedRequestIds.value.includes(request.id)) {
+    expandedRequestIds.value.push(request.id)
+  }
+
+  // Load documents for the request's category
+  editCategoryDocuments.value = SettingsService.getDocumentsForCategory(request.category)
+
+  // Initialize documents object if it doesn't exist
+  if (!request.documents) {
+    request.documents = {}
+  }
+
+  // Set the request as being edited
+  editingRequestId.value = request.id
+}
+
+const cancelEdit = () => {
+  editingRequestId.value = null
+}
+
+const updateRequest = async (request) => {
+  try {
+    const requestData = {
+      // Don't update status with this endpoint - there's a dedicated button for that
+      actionBy: request.actionBy,
+      hodComments: request.hodComments || '',
+      dateConcluded: request.lastUpdated ? new Date(request.lastUpdated).toISOString() : new Date().toISOString(),
+      meetingDate: request.meetingDate || '',
+      comments: request.comments || '',
+      visitReport: request.visitReport || '',
+      providerImage: request.providerImage || '',
+      documents: request.documents || {}
+    }
+
+    await ProviderAPIService.updateProviderRequest(request.id, requestData)
+
+    // Refresh the data
+    await fetchProviderRequests()
+    showToastMessage(`Request for ${request.providerName} has been updated`)
+    editingRequestId.value = null
+  } catch (error) {
+    console.error('Error updating request:', error)
+    showToastMessage('Failed to update request. Please try again.')
   }
 }
 
 // Create new request
-const createRequest = () => {
-  // Generate a new request ID
-  const newId = `REQ-${new Date().getFullYear()}-${String(requests.value.length + 1).padStart(3, '0')}`
+const createRequest = async () => {
+  try {
+    // No validation for required documents - all are optional for DRAFT status
 
-  // Create new request object
-  const newRequest = {
-    id: newId,
-    providerName: requestForm.value.providerName,
-    category: requestForm.value.category,
-    location: requestForm.value.location,
-    contactEmail: requestForm.value.contactEmail,
-    phone: requestForm.value.phone,
-    licenseNumber: requestForm.value.licenseNumber,
-    licenseExpiry: requestForm.value.licenseExpiry,
-    dateSubmitted: new Date().toISOString().split('T')[0],
-    lastUpdated: new Date().toISOString().split('T')[0],
-    status: 'Pending'
+    // Create request payload directly from form fields
+    const requestPayload = {
+      providerName: requestForm.value.providerName,
+      locationAddress: requestForm.value.locationAddress,
+      contacts: requestForm.value.contacts,
+      scheme: requestForm.value.scheme,
+      dateRequested: requestForm.value.dateRequested,
+      query: requestForm.value.query,
+      requestedBy: requestForm.value.requestedBy,
+      emailAddress: requestForm.value.emailAddress,
+      category: requestForm.value.category,
+      country: requestForm.value.country,
+      region: requestForm.value.region,
+      meetingDate: requestForm.value.meetingDate,
+      comments: requestForm.value.comments,
+      visitReport: requestForm.value.visitReport,
+      providerImage: requestForm.value.providerImage,
+      status: 'DRAFT'
+    }
+
+    // In a real implementation, you would upload the files to a server
+    // and store the file URLs or references in the request payload.
+    // For this example, we'll just log the file names.
+    const documentFiles = {};
+    Object.entries(requestForm.value.documents).forEach(([docId, file]) => {
+      if (file) {
+        documentFiles[docId] = file.name;
+      }
+    });
+
+    console.log('Document files to upload:', documentFiles);
+
+    // Add document references to the payload
+    requestPayload.documents = documentFiles;
+
+    // Call API to create request
+    const response = await ProviderAPIService.createProviderRequest(requestPayload)
+
+    // Refresh the data
+    await fetchProviderRequests()
+
+    // Show success message
+    showToastMessage(`Request for ${requestForm.value.providerName} has been created successfully`)
+
+    // Close modal
+    closeCreateModal()
+  } catch (error) {
+    console.error('Error creating request:', error)
+    showToastMessage('Failed to create request. Please try again.')
   }
-
-  // Add to requests array
-  requests.value.unshift(newRequest)
-
-  // Show success message
-  showToastMessage(`Request ${newId} has been created successfully`)
-
-  // Close modal
-  closeCreateModal()
 }
 </script>
 
 <style scoped>
+/* Document Styles */
+.documents-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.document-badge {
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  max-width: 150px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.document-type {
+  font-weight: 600;
+  color: #0284c7;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-name {
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Required field indicator */
+.required {
+  color: #ef4444;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+/* Document Upload Styles */
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.document-upload-item {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.document-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.document-note {
+  font-weight: normal;
+  color: #64748b;
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.file-upload-wrapper {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.file-upload-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.file-upload-button {
+  display: block;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.file-upload-button:hover {
+  background-color: #e2e8f0;
+}
+
+.file-selected {
+  color: #0284c7;
+  font-weight: 500;
+}
+
+.document-help-text {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
 /* Container and Layout */
 .provider-requests-container {
   min-height: 100vh;
@@ -1146,6 +1986,11 @@ const createRequest = () => {
   letter-spacing: 0.025em;
 }
 
+.status-badge.draft {
+  background: rgba(156, 163, 175, 0.1);
+  color: #374151;
+}
+
 .status-badge.pending {
   background: rgba(245, 158, 11, 0.1);
   color: #92400e;
@@ -1348,53 +2193,56 @@ const createRequest = () => {
 .btn-danger {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0.8rem;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0.3rem;
+  border-radius: 0.375rem;
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 0.01em;
 }
 
 .btn-success {
-  background: #4b6858;
-  color: #e2f1e9;
-  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.1);
+  background: #10b981;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-success:hover {
-  background: #5a7d6a;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-info {
-  background: #4a5d7c;
-  color: #e2e9f4;
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-info:hover {
-  background: #5a6e8e;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-danger {
-  background: #7c4a4a;
-  color: #f4e2e2;
-  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.1);
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-danger:hover {
-  background: #8e5a5a;
-  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Toast Notification */
@@ -1526,6 +2374,44 @@ const createRequest = () => {
   border-top: 1px solid #e2e8f0;
 }
 
+/* Inline Edit Form Styles */
+.edit-form .detail-item {
+  margin-bottom: 0.75rem;
+}
+
+.edit-form .input-wrapper {
+  position: relative;
+  margin-top: 0.25rem;
+}
+
+.edit-form .modern-input,
+.edit-form .modern-select,
+.edit-form .modern-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.edit-form .modern-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.edit-form .modern-input:focus,
+.edit-form .modern-select:focus,
+.edit-form .modern-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-form .detail-grid {
+  margin-bottom: 1rem;
+}
+
 .action-icon {
   width: 18px;
   height: 18px;
@@ -1544,6 +2430,100 @@ const createRequest = () => {
 .icon {
   width: 24px;
   height: 24px;
+}
+
+/* Document Upload Styles */
+.section-description {
+  color: #64748b;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.document-upload-item {
+  background: #f8fafc;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.document-label {
+  font-weight: 500;
+  color: #334155;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required-indicator {
+  color: #ef4444;
+}
+
+.document-note {
+  color: #3b82f6;
+  font-size: 0.7rem;
+  margin-left: 0.125rem;
+}
+
+.file-upload-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.file-upload-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.file-upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  background: white;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.375rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 1.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-upload-button:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.file-selected {
+  color: #0f172a;
+  font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-help-text {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: -0.125rem;
 }
 
 /* Responsive Design */
@@ -1677,17 +2657,18 @@ const createRequest = () => {
 
 .modal.modern {
   background: white;
-  border-radius: 1rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  max-width: 600px;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 550px;
   width: 90%;
   max-height: 90vh;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  padding: 0.75rem 1.25rem;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -1695,8 +2676,8 @@ const createRequest = () => {
 }
 
 .modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
   color: #1e293b;
   margin: 0;
   display: flex;
@@ -1705,26 +2686,45 @@ const createRequest = () => {
 }
 
 .modal-icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  color: #4b5563;
 }
 
 .modal-close {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
-  color: #6b7280;
-  font-size: 1.5rem;
+  color: #9ca3af;
+  font-size: 1.25rem;
   cursor: pointer;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .modal-close:hover {
   background: #f3f4f6;
   color: #374151;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  background: white;
+}
+
+.modal-footer {
+  padding: 0.75rem 1.25rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 .modal-form {
@@ -1770,38 +2770,37 @@ const createRequest = () => {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.6rem 1.5rem;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0.4rem;
-  font-weight: 600;
-  font-size: 0.8rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.01em;
 }
 
 .btn-secondary {
-  background: #e2e8f0;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
 }
 
 .btn-secondary:hover {
-  background: #d1d5db;
+  background: #e5e7eb;
   transform: translateY(-1px);
 }
 
 .btn-primary {
-  background: #4a5d7c;
-  color: #e2e9f4;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-primary:hover {
-  background: #5a6e8e;
+  background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 768px) {
@@ -1864,8 +2863,9 @@ const createRequest = () => {
 }
 
 .modern-input,
-.modern-select {
-  padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+.modern-select,
+.modern-textarea {
+  padding: 0.6rem 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.4rem;
   background: #f8fafc;
@@ -1874,15 +2874,27 @@ const createRequest = () => {
   transition: all 0.2s ease;
 }
 
+.modern-input,
+.modern-select {
+  padding-right: 2.5rem;
+}
+
+.modern-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
 .modern-input:focus,
-.modern-select:focus {
+.modern-select:focus,
+.modern-textarea:focus {
   outline: none;
   border-color: #3b82f6;
   background: white;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.modern-input::placeholder {
+.modern-input::placeholder,
+.modern-textarea::placeholder {
   color: #94a3b8;
 }
 
@@ -1915,9 +2927,15 @@ const createRequest = () => {
   }
 
   .modern-input,
-  .modern-select {
-    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  .modern-select,
+  .modern-textarea {
+    padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
+  }
+
+  .modern-input,
+  .modern-select {
+    padding-right: 2.5rem;
   }
 
   .input-label {
@@ -1946,5 +2964,114 @@ const createRequest = () => {
     justify-content: center;
     padding: 0.5rem 1rem;
   }
+}
+/* Loading Indicator */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.pagination-info {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.375rem 0.75rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(.disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-pages {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(.active) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.page-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
 }
 </style>
