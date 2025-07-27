@@ -370,8 +370,8 @@
       <div class="modal modern" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">
-            <component :is="editingCategory ? PencilIcon : PlusIcon" class="modal-icon" />
-            {{ editingCategory ? 'Edit Category' : 'Add New Category' }}
+            <PlusIcon class="modal-icon" />
+            Add New Category
           </h3>
           <button class="modal-close" @click="closeModal">×</button>
         </div>
@@ -429,12 +429,12 @@
             </div>
           </div>
           <div class="modal-actions">
-            <button type="button" @click="closeModal" class="btn-secondary">
+            <button type="button" @click="closeModal" class="btn-compact btn-secondary">
               Cancel
             </button>
-            <button type="submit" class="btn-primary">
-              <span class="btn-icon">💾</span>
-              {{ editingCategory ? 'Update' : 'Create' }} Category
+            <button type="submit" class="btn-compact btn-primary">
+              <span class="btn-icon-sm">💾</span>
+              Create Category
             </button>
           </div>
         </form>
@@ -639,13 +639,9 @@ const editCategory = (category) => {
   editingCategory.value = category
   categoryForm.value = { ...category }
 
-  // If the category is already selected for viewing, use inline editing
-  if (selectedCategory.value && selectedCategory.value.id === category.id) {
-    isInlineEditing.value = true
-  } else {
-    // Otherwise use the modal
-    showEditModal.value = true
-  }
+  // Always use inline editing
+  selectedCategory.value = category
+  isInlineEditing.value = true
 }
 
 const deleteCategory = (categoryId) => {
