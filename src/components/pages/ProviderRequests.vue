@@ -2193,53 +2193,56 @@ const createRequest = async () => {
 .btn-danger {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0.8rem;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0.3rem;
+  border-radius: 0.375rem;
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 0.01em;
 }
 
 .btn-success {
-  background: #4b6858;
-  color: #e2f1e9;
-  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.1);
+  background: #10b981;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-success:hover {
-  background: #5a7d6a;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-info {
-  background: #4a5d7c;
-  color: #e2e9f4;
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-info:hover {
-  background: #5a6e8e;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-danger {
-  background: #7c4a4a;
-  color: #f4e2e2;
-  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.1);
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-danger:hover {
-  background: #8e5a5a;
-  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Toast Notification */
@@ -2654,17 +2657,18 @@ const createRequest = async () => {
 
 .modal.modern {
   background: white;
-  border-radius: 1rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  max-width: 600px;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 550px;
   width: 90%;
   max-height: 90vh;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  padding: 0.75rem 1.25rem;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -2672,8 +2676,8 @@ const createRequest = async () => {
 }
 
 .modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
   color: #1e293b;
   margin: 0;
   display: flex;
@@ -2682,26 +2686,45 @@ const createRequest = async () => {
 }
 
 .modal-icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  color: #4b5563;
 }
 
 .modal-close {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
-  color: #6b7280;
-  font-size: 1.5rem;
+  color: #9ca3af;
+  font-size: 1.25rem;
   cursor: pointer;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .modal-close:hover {
   background: #f3f4f6;
   color: #374151;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  background: white;
+}
+
+.modal-footer {
+  padding: 0.75rem 1.25rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 .modal-form {
@@ -2747,38 +2770,37 @@ const createRequest = async () => {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.6rem 1.5rem;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0.4rem;
-  font-weight: 600;
-  font-size: 0.8rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.01em;
 }
 
 .btn-secondary {
-  background: #e2e8f0;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
 }
 
 .btn-secondary:hover {
-  background: #d1d5db;
+  background: #e5e7eb;
   transform: translateY(-1px);
 }
 
 .btn-primary {
-  background: #4a5d7c;
-  color: #e2e9f4;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-primary:hover {
-  background: #5a6e8e;
+  background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 768px) {
@@ -2841,8 +2863,9 @@ const createRequest = async () => {
 }
 
 .modern-input,
-.modern-select {
-  padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+.modern-select,
+.modern-textarea {
+  padding: 0.6rem 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.4rem;
   background: #f8fafc;
@@ -2851,15 +2874,27 @@ const createRequest = async () => {
   transition: all 0.2s ease;
 }
 
+.modern-input,
+.modern-select {
+  padding-right: 2.5rem;
+}
+
+.modern-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
 .modern-input:focus,
-.modern-select:focus {
+.modern-select:focus,
+.modern-textarea:focus {
   outline: none;
   border-color: #3b82f6;
   background: white;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.modern-input::placeholder {
+.modern-input::placeholder,
+.modern-textarea::placeholder {
   color: #94a3b8;
 }
 
@@ -2892,9 +2927,15 @@ const createRequest = async () => {
   }
 
   .modern-input,
-  .modern-select {
-    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  .modern-select,
+  .modern-textarea {
+    padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
+  }
+
+  .modern-input,
+  .modern-select {
+    padding-right: 2.5rem;
   }
 
   .input-label {
