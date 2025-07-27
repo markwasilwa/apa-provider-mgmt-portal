@@ -450,7 +450,7 @@
 
     <!-- Create Provider Registration Request Modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
-      <div class="modal modern" @click.stop>
+      <div class="modal modern" style="max-width: 1000px;" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">
             <PlusIcon class="modal-icon" />
@@ -459,12 +459,12 @@
           <button class="modal-close" @click="closeCreateModal">×</button>
         </div>
         <form @submit.prevent="createRequest" class="modal-form">
-          <!-- Provider Information Section -->
-          <div class="form-section">
-            <h4 class="form-section-title">Provider Information</h4>
-            <div class="form-grid">
-              <div class="input-group full-width">
-                <label class="input-label">Provider Name</label>
+          <div class="detail-grid">
+            <!-- Provider Information Section -->
+            <div class="detail-section">
+              <h4 class="section-title">Provider Information</h4>
+              <div class="detail-item">
+                <label class="detail-label">Provider Name</label>
                 <div class="input-wrapper">
                   <input 
                     type="text" 
@@ -473,121 +473,204 @@
                     class="modern-input"
                     placeholder="Enter provider name"
                   >
-                  <BuildingOffice2Icon class="input-icon" />
                 </div>
               </div>
-              <div class="input-group">
-                <label class="input-label">Category</label>
+              <div class="detail-item">
+                <label class="detail-label">Category</label>
                 <div class="input-wrapper">
                   <select v-model="requestForm.category" required class="modern-select">
                     <option value="">Select a category</option>
-                    <option value="Hospital">Hospital</option>
-                    <option value="Clinic">Clinic</option>
-                    <option value="Pharmacy">Pharmacy</option>
-                    <option value="Diagnostic">Diagnostic</option>
-                    <option value="Dental">Dental</option>
-                    <option value="Mental Health">Mental Health</option>
+                    <option v-for="category in categories" :key="category.id" :value="category.categoryName">
+                      {{ category.categoryName }}
+                    </option>
                   </select>
-                  <ChevronDownIcon class="input-icon" />
                 </div>
-                <span class="input-help">Select the type of healthcare facility</span>
               </div>
-              <div class="input-group">
-                <label class="input-label">Location</label>
+              <div class="detail-item">
+                <label class="detail-label">Location Address</label>
                 <div class="input-wrapper">
                   <input 
                     type="text" 
-                    v-model="requestForm.location" 
+                    v-model="requestForm.locationAddress" 
                     required 
                     class="modern-input"
-                    placeholder="Enter location"
+                    placeholder="Enter full address"
                   >
-                  <MapPinIcon class="input-icon" />
                 </div>
-                <span class="input-help">City, State or Region</span>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Country</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.country" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter country"
+                  >
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Region</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.region" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter region/city"
+                  >
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Contact Information Section -->
-          <div class="form-section">
-            <h4 class="form-section-title">Contact Information</h4>
-            <div class="form-grid">
-              <div class="input-group">
-                <label class="input-label">Contact Email</label>
+            <!-- Contact Information Section -->
+            <div class="detail-section">
+              <h4 class="section-title">Contact Information</h4>
+              <div class="detail-item">
+                <label class="detail-label">Email Address</label>
                 <div class="input-wrapper">
                   <input 
                     type="email" 
-                    v-model="requestForm.contactEmail" 
+                    v-model="requestForm.emailAddress" 
                     required 
                     class="modern-input"
                     placeholder="Enter contact email"
                   >
-                  <EnvelopeIcon class="input-icon" />
                 </div>
               </div>
-              <div class="input-group">
-                <label class="input-label">Phone Number</label>
+              <div class="detail-item">
+                <label class="detail-label">Phone Number</label>
                 <div class="input-wrapper">
                   <input 
                     type="tel" 
-                    v-model="requestForm.phone" 
+                    v-model="requestForm.contacts" 
                     required 
                     class="modern-input"
                     placeholder="Enter phone number"
                   >
-                  <PhoneIcon class="input-icon" />
                 </div>
-                <span class="input-help">Include country code</span>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Requested By</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.requestedBy" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter requester name"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="detail-section">
+              <h4 class="section-title">Additional Information</h4>
+              <div class="detail-item">
+                <label class="detail-label">Scheme</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="text" 
+                    v-model="requestForm.scheme" 
+                    required 
+                    class="modern-input"
+                    placeholder="Enter scheme"
+                  >
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Date Requested</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    v-model="requestForm.dateRequested" 
+                    required 
+                    class="modern-input"
+                  >
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Meeting Date</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    v-model="requestForm.meetingDate" 
+                    class="modern-input"
+                  >
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- License Information Section -->
-          <div class="form-section">
-            <h4 class="form-section-title">License Information</h4>
-            <div class="form-grid">
-              <div class="input-group">
-                <label class="input-label">License Number</label>
+          <div class="detail-grid">
+            <!-- Query and Comments Section -->
+            <div class="detail-section" style="grid-column: span 3;">
+              <h4 class="section-title">Query and Comments</h4>
+              <div class="detail-item">
+                <label class="detail-label">Query</label>
+                <div class="input-wrapper">
+                  <textarea 
+                    v-model="requestForm.query" 
+                    required 
+                    class="modern-textarea"
+                    placeholder="Enter request query"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+              <div class="detail-item">
+                <label class="detail-label">Comments</label>
+                <div class="input-wrapper">
+                  <textarea 
+                    v-model="requestForm.comments" 
+                    class="modern-textarea"
+                    placeholder="Enter comments"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Uploads Section -->
+            <div class="detail-section" style="grid-column: span 3;">
+              <h4 class="section-title">File Uploads</h4>
+              <div class="detail-item">
+                <label class="detail-label">Visit Report</label>
                 <div class="input-wrapper">
                   <input 
                     type="text" 
-                    v-model="requestForm.licenseNumber" 
-                    required 
+                    v-model="requestForm.visitReport" 
                     class="modern-input"
-                    placeholder="Enter license number"
+                    placeholder="Enter visit report path"
                   >
-                  <IdentificationIcon class="input-icon" />
                 </div>
               </div>
-              <div class="input-group">
-                <label class="input-label">License Expiry Date</label>
+              <div class="detail-item">
+                <label class="detail-label">Provider Image</label>
                 <div class="input-wrapper">
                   <input 
-                    type="date" 
-                    v-model="requestForm.licenseExpiry" 
-                    required 
+                    type="text" 
+                    v-model="requestForm.providerImage" 
                     class="modern-input"
+                    placeholder="Enter provider image path"
                   >
-                  <CalendarIcon class="input-icon" />
                 </div>
-                <span class="input-help">License must be valid</span>
               </div>
             </div>
           </div>
 
           <!-- Form Actions -->
-          <div class="form-section form-actions">
-            <div class="action-buttons">
-              <button type="button" @click="closeCreateModal" class="btn-secondary">
-                <XMarkIcon class="btn-icon" />
-                Cancel
-              </button>
-              <button type="submit" class="btn-primary">
-                <PlusIcon class="btn-icon" />
-                Create Request
-              </button>
-            </div>
+          <div class="inline-actions">
+            <button type="button" @click="closeCreateModal" class="btn-secondary">
+              <XMarkIcon class="btn-icon" />
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">
+              <PlusIcon class="btn-icon" />
+              Create Request
+            </button>
           </div>
         </form>
       </div>
@@ -632,11 +715,19 @@ const showCreateModal = ref(false)
 const requestForm = ref({
   providerName: '',
   category: '',
-  location: '',
-  contactEmail: '',
-  phone: '',
-  licenseNumber: '',
-  licenseExpiry: ''
+  locationAddress: '',
+  country: '',
+  region: '',
+  emailAddress: '',
+  contacts: '',
+  requestedBy: '',
+  scheme: '',
+  dateRequested: new Date().toISOString().split('T')[0],
+  query: '',
+  meetingDate: '',
+  comments: '',
+  visitReport: '',
+  providerImage: ''
 })
 
 // Pagination
@@ -648,6 +739,7 @@ const totalElements = ref(0)
 // Requests data
 const requests = ref([])
 const loading = ref(false)
+const categories = ref([])
 
 // Fetch provider requests from API
 const fetchProviderRequests = async () => {
@@ -710,9 +802,21 @@ const fetchProviderRequests = async () => {
   }
 }
 
+// Fetch categories from API
+const fetchCategories = async () => {
+  try {
+    const categoriesData = await ProviderAPIService.getCategoriesFromRequests()
+    categories.value = categoriesData
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    showToastMessage('Failed to load categories. Please try again.')
+  }
+}
+
 // Load data when component mounts
 onMounted(() => {
   fetchProviderRequests()
+  fetchCategories()
 })
 
 // Pagination methods
@@ -895,11 +999,19 @@ const closeCreateModal = () => {
   requestForm.value = {
     providerName: '',
     category: '',
-    location: '',
-    contactEmail: '',
-    phone: '',
-    licenseNumber: '',
-    licenseExpiry: ''
+    locationAddress: '',
+    country: '',
+    region: '',
+    emailAddress: '',
+    contacts: '',
+    requestedBy: '',
+    scheme: '',
+    dateRequested: new Date().toISOString().split('T')[0],
+    query: '',
+    meetingDate: '',
+    comments: '',
+    visitReport: '',
+    providerImage: ''
   }
 }
 
@@ -945,25 +1057,24 @@ const updateRequest = async (request) => {
 // Create new request
 const createRequest = async () => {
   try {
-    // Extract location parts (assuming format: "City, Country")
-    const locationParts = requestForm.value.location.split(',').map(part => part.trim())
-    const region = locationParts[0] || ''
-    const country = locationParts[1] || ''
-
-    // Create request payload
+    // Create request payload directly from form fields
     const requestPayload = {
       providerName: requestForm.value.providerName,
+      locationAddress: requestForm.value.locationAddress,
+      contacts: requestForm.value.contacts,
+      scheme: requestForm.value.scheme,
+      dateRequested: requestForm.value.dateRequested,
+      query: requestForm.value.query,
+      requestedBy: requestForm.value.requestedBy,
+      emailAddress: requestForm.value.emailAddress,
       category: requestForm.value.category,
-      locationAddress: requestForm.value.location,
-      region: region,
-      country: country,
-      emailAddress: requestForm.value.contactEmail,
-      contacts: requestForm.value.phone,
-      scheme: requestForm.value.licenseNumber,
-      dateRequested: new Date().toISOString().split('T')[0],
-      query: 'New provider request',
-      requestedBy: 'Portal User',
-      status: 'PENDING'
+      country: requestForm.value.country,
+      region: requestForm.value.region,
+      meetingDate: requestForm.value.meetingDate,
+      comments: requestForm.value.comments,
+      visitReport: requestForm.value.visitReport,
+      providerImage: requestForm.value.providerImage,
+      status: 'IN_PROGRESS'
     }
 
     // Call API to create request
@@ -973,7 +1084,7 @@ const createRequest = async () => {
     await fetchProviderRequests()
 
     // Show success message
-    showToastMessage(`Request has been created successfully`)
+    showToastMessage(`Request for ${requestForm.value.providerName} has been created successfully`)
 
     // Close modal
     closeCreateModal()
