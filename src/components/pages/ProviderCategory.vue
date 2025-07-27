@@ -27,76 +27,72 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="content-section">
-      <div class="content-header">
-        <div class="search-section">
-          <div class="search-wrapper">
-            <MagnifyingGlassIcon class="search-icon" />
-            <input 
-              type="text" 
-              v-model="searchTerm" 
-              placeholder="Search categories..." 
-              class="search-input"
-            >
+    <!-- Countries Section -->
+    <div class="countries-container">
+      <div class="countries-wrapper">
+        <div class="countries-header">
+          <div class="action-section">
+            <button class="filter-btn" @click="toggleFilter">
+              <FunnelIcon class="btn-icon" />
+              Filter
+            </button>
           </div>
         </div>
-        <div class="action-section">
-          <button class="filter-btn" @click="toggleFilter">
-            <FunnelIcon class="btn-icon" />
-            Filter
-          </button>
-          <button class="add-btn thin-btn" @click="showAddModal = true">
-            <PlusIcon class="btn-icon" />
-            Add Category
-          </button>
-        </div>
-      </div>
-
-      <!-- Countries Section -->
-      <div class="table-container countries-section">
-        <div class="table-header">
-          <h2 class="table-title">
-            <FlagIcon class="table-icon" />
-            Provider Countries
-          </h2>
-          <span class="country-count">{{ countries.length }} countries</span>
-        </div>
-
-        <div class="table-wrapper">
-          <!-- Loading State -->
-          <div v-if="loading && countries.length === 0" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading countries...</p>
+        <div class="table-container countries-section">
+          <div class="table-header">
+            <h2 class="table-title">
+              <FlagIcon class="table-icon" />
+              Provider Countries
+            </h2>
+            <span class="country-count">{{ countries.length }} countries</span>
           </div>
 
-          <!-- Error State -->
-          <div v-else-if="error && countries.length === 0" class="error-state">
-            <ExclamationTriangleIcon class="error-icon" />
-            <h3>Error Loading Countries</h3>
-            <p>{{ error }}</p>
-            <button @click="loadCountries" class="retry-btn">Retry</button>
-          </div>
+          <div class="table-wrapper">
+            <!-- Loading State -->
+            <div v-if="loading && countries.length === 0" class="loading-state">
+              <div class="loading-spinner"></div>
+              <p>Loading countries...</p>
+            </div>
 
-          <!-- Countries Grid -->
-          <div v-else class="countries-grid">
-            <div v-for="country in countries" :key="country.id" class="country-card">
-              <div class="country-flag"><FlagIcon class="country-flag-icon" /></div>
-              <div class="country-name">{{ country.country }}</div>
-              <div class="country-meta">
-                <span class="country-id">ID: {{ country.id }}</span>
-                <span class="country-date">Added: {{ formatDate(country.creationDate) }}</span>
+            <!-- Error State -->
+            <div v-else-if="error && countries.length === 0" class="error-state">
+              <ExclamationTriangleIcon class="error-icon" />
+              <h3>Error Loading Countries</h3>
+              <p>{{ error }}</p>
+              <button @click="loadCountries" class="retry-btn">Retry</button>
+            </div>
+
+            <!-- Countries Grid -->
+            <div v-else class="countries-grid">
+              <div v-for="country in countries" :key="country.id" class="country-card">
+                <div class="country-flag"><FlagIcon class="country-flag-icon" /></div>
+                <div class="country-name">{{ country.country }}</div>
+                <div class="country-meta">
+                  <span class="country-id">ID: {{ country.id }}</span>
+                  <span class="country-date">Added: {{ formatDate(country.creationDate) }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Empty State -->
-          <div v-if="!loading && !error && countries.length === 0" class="empty-state">
-            <FlagIcon class="empty-icon" />
-            <h3>No Countries Found</h3>
-            <p>No countries have been added to the system yet.</p>
+            <!-- Empty State -->
+            <div v-if="!loading && !error && countries.length === 0" class="empty-state">
+              <FlagIcon class="empty-icon" />
+              <h3>No Countries Found</h3>
+              <p>No countries have been added to the system yet.</p>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-section">
+      <!-- Add Category Button -->
+      <div class="add-category-section">
+        <button class="add-btn thin-btn" @click="showAddModal = true">
+          <PlusIcon class="btn-icon" />
+          Add Category
+        </button>
       </div>
 
       <!-- Categories Table -->
@@ -867,6 +863,24 @@ const showToastMessage = (message) => {
   margin-top: 0.25rem;
 }
 
+/* Countries Container */
+.countries-container {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.countries-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.countries-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0;
+}
+
 /* Content Section */
 .content-section {
   max-width: 1400px;
@@ -968,6 +982,13 @@ const showToastMessage = (message) => {
 }
 
 /* Table Container */
+.add-category-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
 .table-container {
   background: white;
   border-radius: 1rem;
