@@ -548,32 +548,28 @@
 
               <!-- Comments Section - Collapsible -->
               <div class="form-section">
-                <div class="section-header" @click="showComments = !showComments" style="cursor: pointer;">
-                  <span class="section-title">Additional Details</span>
-                  <svg class="collapse-icon" :class="{ 'rotated': showComments }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="comments-toggle" @click="showComments = !showComments">
+                  <span class="toggle-label">Additional Details</span>
+                  <svg class="toggle-icon" :class="{ 'rotated': showComments }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-                <div v-show="showComments" class="collapsible-content">
-                  <div class="form-row compact-textarea-grid">
-                    <div class="input-group">
-                      <label class="input-label">Visit Comments</label>
-                      <textarea v-model="visitForm.visitComments" class="modern-textarea compact-textarea" placeholder="Enter visit comments..." rows="3"></textarea>
-                    </div>
-                    <div class="input-group">
-                      <label class="input-label">Meeting Comments</label>
-                      <textarea v-model="visitForm.meetingComments" class="modern-textarea compact-textarea" placeholder="Enter meeting comments..." rows="3"></textarea>
-                    </div>
+                <div v-show="showComments" class="comments-grid">
+                  <div class="compact-field">
+                    <label class="compact-label">Visit Comments</label>
+                    <textarea v-model="visitForm.visitComments" class="compact-textarea" placeholder="Visit comments..." rows="2"></textarea>
                   </div>
-                  <div class="form-row compact-textarea-grid">
-                    <div class="input-group">
-                      <label class="input-label">Visit Report</label>
-                      <textarea v-model="visitForm.visitReport" class="modern-textarea compact-textarea" placeholder="Enter detailed visit report..." rows="3"></textarea>
-                    </div>
-                    <div class="input-group">
-                      <label class="input-label">Meeting Minutes</label>
-                      <textarea v-model="visitForm.meetingMinutes" class="modern-textarea compact-textarea" placeholder="Enter meeting minutes..." rows="3"></textarea>
-                    </div>
+                  <div class="compact-field">
+                    <label class="compact-label">Meeting Comments</label>
+                    <textarea v-model="visitForm.meetingComments" class="compact-textarea" placeholder="Meeting comments..." rows="2"></textarea>
+                  </div>
+                  <div class="compact-field">
+                    <label class="compact-label">Visit Report</label>
+                    <textarea v-model="visitForm.visitReport" class="compact-textarea" placeholder="Visit report..." rows="2"></textarea>
+                  </div>
+                  <div class="compact-field">
+                    <label class="compact-label">Meeting Minutes</label>
+                    <textarea v-model="visitForm.meetingMinutes" class="compact-textarea" placeholder="Meeting minutes..." rows="2"></textarea>
                   </div>
                 </div>
               </div>
@@ -2323,8 +2319,7 @@ onMounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8, #6366f1);
+  height: 0; /* Removed the blue stripe by setting height to 0 */
   border-radius: 12px 12px 0 0;
 }
 
@@ -3145,7 +3140,7 @@ onMounted(() => {
 
 .comments-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   padding: 0.75rem;
   background: #ffffff;
@@ -3519,7 +3514,7 @@ onMounted(() => {
 
 .compact-textarea-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
