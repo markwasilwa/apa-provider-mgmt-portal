@@ -162,14 +162,8 @@
                       <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="request.status === 'Review' || request.status === 'Draft'">
                         <PencilIcon class="action-icon" />
                       </button>
-                      <button class="action-btn approve" @click="approveRequest(request.id)" title="Approve Request" v-if="request.status === 'Review'">
-                        <CheckIcon class="action-icon" />
-                      </button>
                       <button class="action-btn review" @click="setUnderReview(request.id)" title="Move to Review" v-if="request.status === 'Draft'">
                         <ArrowRightIcon class="action-icon" />
-                      </button>
-                      <button class="action-btn reject" @click="rejectRequest(request.id)" title="Reject Request" v-if="request.status === 'Draft' || request.status === 'Review'">
-                        <XMarkIcon class="action-icon" />
                       </button>
                     </div>
                   </td>
@@ -2202,6 +2196,7 @@ const createRequest = async () => {
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 0.01em;
+  opacity: 0.85;
 }
 
 .btn-success {
@@ -2214,6 +2209,7 @@ const createRequest = async () => {
   background: #059669;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 1;
 }
 
 .btn-info {
@@ -2226,6 +2222,7 @@ const createRequest = async () => {
   background: #2563eb;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 1;
 }
 
 .btn-danger {
@@ -2238,6 +2235,7 @@ const createRequest = async () => {
   background: #dc2626;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 1;
 }
 
 .btn-icon {
