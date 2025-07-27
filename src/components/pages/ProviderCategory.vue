@@ -183,61 +183,61 @@
                 </tr>
                 <!-- Inline Details Row -->
                 <tr v-if="selectedCategory && selectedCategory.id === category.id" class="details-row">
-                <td colspan="7" class="details-cell">
-                  <div class="inline-details">
-                    <div class="inline-details-header">
-                      <h4 class="inline-details-title">
-                        <span class="panel-icon">{{ selectedCategory.icon }}</span>
-                        {{ selectedCategory.name }} Details
-                      </h4>
-                      <button class="close-details" @click="selectedCategory = null">×</button>
-                    </div>
-                    <div class="inline-details-content">
-                      <!-- View Mode -->
-                      <div v-if="!isInlineEditing" class="detail-grid">
-                        <div class="detail-section">
-                          <h4 class="section-title">Basic Information</h4>
-                          <div class="detail-item">
-                            <label class="detail-label">Category Code</label>
-                            <span class="detail-value">{{ selectedCategory.code }}</span>
+                  <td colspan="7" class="details-cell">
+                    <div class="inline-details">
+                      <div class="inline-details-header">
+                        <h4 class="inline-details-title">
+                          <span class="panel-icon">{{ selectedCategory.icon }}</span>
+                          {{ selectedCategory.name }} Details
+                        </h4>
+                        <button class="close-details" @click="selectedCategory = null">×</button>
+                      </div>
+                      <div class="inline-details-content">
+                        <!-- View Mode -->
+                        <div v-if="!isInlineEditing" class="detail-grid">
+                          <div class="detail-section">
+                            <h4 class="section-title">Basic Information</h4>
+                            <div class="detail-item">
+                              <label class="detail-label">Category Code</label>
+                              <span class="detail-value">{{ selectedCategory.code }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <label class="detail-label">Status</label>
+                              <span class="status-badge modern" :class="getStatusClass(selectedCategory.status)">
+                                {{ selectedCategory.status }}
+                              </span>
+                            </div>
                           </div>
-                          <div class="detail-item">
-                            <label class="detail-label">Status</label>
-                            <span class="status-badge modern" :class="getStatusClass(selectedCategory.status)">
-                              {{ selectedCategory.status }}
-                            </span>
+                          <div class="detail-section">
+                            <h4 class="section-title">Statistics</h4>
+                            <div class="detail-item">
+                              <label class="detail-label">Active Providers</label>
+                              <span class="detail-value highlight">{{ selectedCategory.activeProviders }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <label class="detail-label">Total Registered</label>
+                              <span class="detail-value highlight">{{ selectedCategory.totalRegistered }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <label class="detail-label">Registration Rate</label>
+                              <span class="detail-value">{{ Math.round((selectedCategory.activeProviders / selectedCategory.totalRegistered) * 100) }}%</span>
+                            </div>
                           </div>
-                        </div>
-                        <div class="detail-section">
-                          <h4 class="section-title">Statistics</h4>
-                          <div class="detail-item">
-                            <label class="detail-label">Active Providers</label>
-                            <span class="detail-value highlight">{{ selectedCategory.activeProviders }}</span>
-                          </div>
-                          <div class="detail-item">
-                            <label class="detail-label">Total Registered</label>
-                            <span class="detail-value highlight">{{ selectedCategory.totalRegistered }}</span>
-                          </div>
-                          <div class="detail-item">
-                            <label class="detail-label">Registration Rate</label>
-                            <span class="detail-value">{{ Math.round((selectedCategory.activeProviders / selectedCategory.totalRegistered) * 100) }}%</span>
-                          </div>
-                        </div>
-                        <div class="detail-section">
-                          <h4 class="section-title">Description</h4>
-                          <div class="detail-item">
-                            <span class="detail-description">{{ selectedCategory.description }}</span>
-                          </div>
-                          <div class="inline-actions">
-                            <button @click="editCategory(selectedCategory)" class="btn-compact btn-edit">
-                              <PencilIcon class="btn-icon-sm" />
-                              Edit
-                            </button>
-                            <button @click="confirmDelete(selectedCategory)" class="btn-compact btn-delete">
-                              <TrashIcon class="btn-icon-sm" />
-                              Delete
-                            </button>
-                          </div>
+                          <div class="detail-section">
+                            <h4 class="section-title">Description</h4>
+                            <div class="detail-item">
+                              <span class="detail-description">{{ selectedCategory.description }}</span>
+                            </div>
+                            <div class="inline-actions">
+                              <button @click="editCategory(selectedCategory)" class="btn-compact btn-edit">
+                                <PencilIcon class="btn-icon-sm" />
+                                Edit
+                              </button>
+                              <button @click="confirmDelete(selectedCategory)" class="btn-compact btn-delete">
+                                <TrashIcon class="btn-icon-sm" />
+                                Delete
+                              </button>
+                            </div>
                         </div>
                       </div>
 
