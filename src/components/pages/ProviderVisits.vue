@@ -14,44 +14,61 @@
         </div>
         <div class="header-stats">
           <div class="stat-item">
-            <div class="stat-number">{{ visitMeetings.filter(v => !v.visitReport).length }}</div>
-            <div class="stat-label">Pending</div>
+            <div class="stat-number">{{ scheduledVisits.filter(v => v.status === 'Scheduled').length }}</div>
+            <div class="stat-label">Scheduled</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ visitMeetings.filter(v => v.visitReport).length }}</div>
+            <div class="stat-number">{{ allVisits.filter(v => v.status === 'Completed').length }}</div>
             <div class="stat-label">Completed</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ visitMeetings.length }}</div>
-            <div class="stat-label">Total</div>
+            <div class="stat-number">{{ allVisits.filter(v => v.status === 'In Progress').length }}</div>
+            <div class="stat-label">In Progress</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Visits View -->
+    <!-- Visits View (Combined Scheduled Visits and Schedule New Visit) -->
     <div class="visits-view">
       <div class="visits-container">
-        <div class="two-column-layout">
-          <!-- Simple Visits List (Left Column) -->
-          <div class="visits-list-container">
-            <h2 class="section-title">Scheduled Visits</h2>
-            <div class="visits-list">
-              <div v-for="visit in visitMeetings" :key="visit.id" class="visit-item" @click="editVisit(visit)">
-                <div class="visit-content">
-                  <div class="visit-main-info">
-                    <div class="visit-provider">Provider ID: {{ visit.providerId }}</div>
-                    <div class="visit-date-compact">{{ formatDate(visit.visitDate) }}</div>
-                  </div>
-                  <div class="visit-meta">
-                    <span class="visit-created-compact">Created: {{ formatDateTime(visit.createdAt) }}</span>
-                    <span class="status-badge" :class="visit.visitReport ? 'completed' : 'pending'">
-                      {{ visit.visitReport ? 'Completed' : 'Pending' }}
-                    </span>
+        <div class="visits-layout">
+          <!-- Left side: Scheduled Visits -->
+          <div class="scheduled-container">
+            <div class="section-header">
+              <h2 class="section-title">Scheduled Visits</h2>
+              <div class="section-actions">
+                <button class="action-btn" @click="refreshScheduled">
+                  <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <div class="scheduled-list">
+              <div class="list-header">
+                <div class="header-col provider-col">Provider</div>
+                <div class="header-col date-col">Scheduled Date</div>
+                <div class="header-col status-col">Status</div>
+                <div class="header-col actions-col">Actions</div>
+              </div>
+              <div v-for="visit in scheduledVisits" :key="visit.id" class="list-item" @click="editVisit(visit)">
+                <div class="item-col provider-col">
+                  <h4 class="provider-name">{{ visit.providerName }}</h4>
+                </div>
+                <div class="item-col date-col">
+                  <span class="visit-date">{{ formatDate(visit.meetingDate) || 'Date not set' }}</span>
+                </div>
+                <div class="item-col status-col">
+                  <div class="status-badge">
+                    <span class="status-dot" :class="getStatusClass(visit.status)"></span>
+                    <span class="status-text">{{ visit.status }}</span>
                   </div>
                 </div>
-                <div class="visit-actions">
-                  <button class="icon-btn edit-btn" @click.stop="editVisit(visit)" title="Edit Visit">
+                <div class="item-col actions-col">
+                  <button class="edit-btn" @click.stop="editVisit(visit)" title="Edit Visit">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
@@ -59,26 +76,21 @@
                 </div>
               </div>
             </div>
-            <div v-if="visitMeetings.length === 0" class="empty-state">
+
+            <div v-if="scheduledVisits.length === 0" class="empty-state">
               <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <h3>No Visits Scheduled</h3>
+              <h3>No Scheduled Visits</h3>
               <p>Get started by scheduling your first provider visit.</p>
-              <p>Click the button on the right to create a new visit.</p>
+              <p>Use the form on the right to create new visits.</p>
             </div>
           </div>
 
-          <!-- Create Visit Form (Right Column) -->
-          <div class="form-container">
-            <button v-if="!showForm" @click="toggleForm" class="create-visit-btn">
-              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Create New Visit
-            </button>
-
-            <div v-if="showForm" class="form-card form-slide-in">
+          <!-- Right side: Schedule New Visit -->
+          <div class="schedule-container">
+            <!-- Schedule Visit Card -->
+            <div class="form-card">
               <div class="card-header">
                 <h2 class="card-title">
                   <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,60 +98,64 @@
                   </svg>
                   Schedule New Visit
                 </h2>
-                <button class="close-form-btn" @click="toggleForm">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
-              <form @submit.prevent="scheduleVisit" class="modern-form compact-form">
-                <div class="form-row">
-                  <div class="input-group">
-                    <label class="input-label">Provider</label>
-                    <div class="select-wrapper">
-                      <select v-model="scheduleForm.providerId" required class="modern-select">
-                        <option value="">Choose a provider...</option>
-                        <option v-for="provider in providers" :key="provider.id" :value="provider.id">
-                          {{ provider.name }}
-                        </option>
-                      </select>
-                      <span class="select-icon">⌄</span>
-                    </div>
-                  </div>
-
-                  <div class="input-group">
-                    <label class="input-label">Visit Date</label>
-                    <input type="date" v-model="scheduleForm.meetingDate" required class="modern-input date-input">
+              <form @submit.prevent="scheduleVisit" class="modern-form">
+                <div class="input-group">
+                  <label class="input-label">Provider</label>
+                  <div class="select-wrapper">
+                    <select v-model="scheduleForm.providerId" required class="modern-select">
+                      <option value="">Choose a provider...</option>
+                      <option v-for="provider in providers" :key="provider.id" :value="provider.id">
+                        {{ provider.name }}
+                      </option>
+                    </select>
+                    <span class="select-icon">⌄</span>
                   </div>
                 </div>
 
                 <!-- Conflict of Interest Agreement -->
-                <div class="agreement-card">
+                <div class="agreement-section">
                   <div class="agreement-header">
                     <svg class="agreement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m-3 1l-3-1" />
                     </svg>
-                    <div class="agreement-title">Conflict of Interest</div>
+                    <h4>Conflict of Interest Agreement</h4>
                   </div>
                   <div class="agreement-content">
-                    <p>By proceeding, you acknowledge no conflicts with the selected provider.</p>
+                    <p>By proceeding, you acknowledge that you have read and understood the conflict of interest policy and have no existing conflicts with the selected provider.</p>
                   </div>
 
                   <div class="consent-options">
-                    <label class="consent-radio" :class="{ active: scheduleForm.consent === 'agree' }">
+                    <label class="consent-option" :class="{ active: scheduleForm.consent === 'agree' }">
                       <input type="radio" v-model="scheduleForm.consent" value="agree" required>
-                      <span class="radio-checkmark"></span>
-                      <span class="consent-text">I agree</span>
+                      <span class="consent-check">
+                        <svg v-if="scheduleForm.consent === 'agree'" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                      </span>
+                      <span class="consent-text">I agree to the terms</span>
                     </label>
-                    <label class="consent-radio" :class="{ active: scheduleForm.consent === 'disagree' }">
+                    <label class="consent-option" :class="{ active: scheduleForm.consent === 'disagree' }">
                       <input type="radio" v-model="scheduleForm.consent" value="disagree" required>
-                      <span class="radio-checkmark"></span>
+                      <span class="consent-check">
+                        <svg v-if="scheduleForm.consent === 'disagree'" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </span>
                       <span class="consent-text">I disagree</span>
                     </label>
                   </div>
                 </div>
 
+                <div class="input-group">
+                  <label class="input-label">Visit Date</label>
+                  <input type="date" v-model="scheduleForm.meetingDate" required class="modern-input date-input">
+                </div>
+
                 <button type="submit" class="primary-btn" :disabled="scheduleForm.consent !== 'agree'">
+                  <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                   Schedule Visit
                 </button>
               </form>
@@ -200,19 +216,17 @@
               </div>
             </div>
 
-            <div class="form-section">
-              <h4 class="section-subtitle">Visit Details</h4>
+            <div class="input-group">
+              <label class="input-label">Visit Date</label>
+              <input type="date" v-model="updateForm.meetingDate" required class="modern-input date-input">
+            </div>
 
-              <div class="input-group">
-                <label class="input-label">Visit Date</label>
-                <input type="date" v-model="updateForm.visitDate" required class="modern-input date-input">
-              </div>
+            <div class="input-group">
+              <label class="input-label">Comments</label>
+              <textarea v-model="updateForm.comments" class="modern-textarea" placeholder="Enter visit notes or comments..."></textarea>
+            </div>
 
-              <div class="input-group">
-                <label class="input-label">Visit Comments</label>
-                <textarea v-model="updateForm.visitComments" class="modern-textarea" placeholder="Enter visit notes or comments..."></textarea>
-              </div>
-
+            <div class="file-upload-group">
               <div class="file-upload-item">
                 <label class="file-upload-label">
                   <svg class="file-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,34 +237,14 @@
                   <input type="file" class="file-input" @change="e => handleFileUpload(e, 'visitReport')" accept=".pdf,.doc,.docx">
                 </label>
               </div>
-            </div>
-
-            <div class="form-section">
-              <h4 class="section-subtitle">Meeting Details</h4>
-
-              <div class="input-group">
-                <label class="input-label">Meeting Title</label>
-                <input type="text" v-model="updateForm.meetingTitle" class="modern-input" placeholder="Enter meeting title...">
-              </div>
-
-              <div class="input-group">
-                <label class="input-label">Meeting Date</label>
-                <input type="date" v-model="updateForm.meetingDate" class="modern-input date-input">
-              </div>
-
-              <div class="input-group">
-                <label class="input-label">Meeting Comments</label>
-                <textarea v-model="updateForm.meetingComments" class="modern-textarea" placeholder="Enter meeting notes or comments..."></textarea>
-              </div>
-
               <div class="file-upload-item">
                 <label class="file-upload-label">
                   <svg class="file-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span class="file-text">Upload Meeting Minutes</span>
-                  <span class="file-hint">PDF, DOC, DOCX (Max 5MB)</span>
-                  <input type="file" class="file-input" @change="e => handleFileUpload(e, 'meetingMinutes')" accept=".pdf,.doc,.docx">
+                  <span class="file-text">Upload Provider Image</span>
+                  <span class="file-hint">JPG, PNG, GIF (Max 2MB)</span>
+                  <input type="file" class="file-input" @change="e => handleFileUpload(e, 'providerImage')" accept="image/*">
                 </label>
               </div>
             </div>
@@ -267,40 +261,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ProviderAPIService } from '@/services/api'
-
-// Visit meetings data from API
-const visitMeetings = ref([])
-const isLoading = ref(false)
-const error = ref(null)
-const showForm = ref(false)
-
-// Toggle form visibility
-const toggleForm = () => {
-  showForm.value = !showForm.value
-}
+import { ref, computed } from 'vue'
 
 // Form states
 const scheduleForm = ref({
   providerId: '',
-  visitDate: '',
-  visitComments: '',
-  meetingTitle: '',
   meetingDate: '',
-  meetingComments: ''
+  consent: ''
 })
 
 const updateForm = ref({
-  id: null,
   providerId: '',
-  visitDate: '',
-  visitComments: '',
-  visitReport: null,
-  meetingTitle: '',
   meetingDate: '',
-  meetingComments: '',
-  meetingMinutes: null
+  comments: '',
+  visitReport: null,
+  providerImage: null
 })
 
 const updateSuccess = ref(false)
@@ -308,88 +283,120 @@ const updateSuccess = ref(false)
 // Providers data (equivalent to PHP $providers)
 const providers = ref([
   {
-    id: 154,
-    name: 'Nairobi General Hospital'
+    id: 1,
+    name: 'Nairobi General Hospital',
+    meetingDate: '2024-02-15'
   },
   {
-    id: 155,
-    name: 'Mombasa Medical Clinic'
+    id: 2,
+    name: 'Mombasa Medical Clinic',
+    meetingDate: '2024-02-18'
   },
   {
-    id: 156,
-    name: 'Kisumu Pharmacy Plus'
+    id: 3,
+    name: 'Kisumu Pharmacy Plus',
+    meetingDate: '2024-02-12'
   },
   {
-    id: 157,
-    name: 'Eldoret Diagnostic Center'
+    id: 4,
+    name: 'Eldoret Diagnostic Center',
+    meetingDate: '2024-02-20'
   },
   {
-    id: 158,
-    name: 'Nakuru Dental Care'
+    id: 5,
+    name: 'Nakuru Dental Care',
+    meetingDate: '2024-02-10'
   },
   {
-    id: 159,
-    name: 'Thika Mental Health Center'
+    id: 6,
+    name: 'Thika Mental Health Center',
+    meetingDate: '2024-02-22'
   }
 ])
 
-// Fetch visit meetings from API
-const fetchVisitMeetings = async () => {
-  isLoading.value = true
-  error.value = null
+// All visits data (equivalent to PHP $updated_visits)
+const allVisits = ref([
+  {
+    id: 1,
+    providerName: 'Nairobi General Hospital',
+    meetingDate: '2024-02-15',
+    comments: 'Facility inspection completed successfully. All compliance requirements met.',
+    visitReport: '#',
+    providerImage: '/api/placeholder/100/100',
+    status: 'Completed'
+  },
+  {
+    id: 2,
+    providerName: 'Mombasa Medical Clinic',
+    meetingDate: '2024-02-18',
+    comments: 'Initial assessment completed. Follow-up required for equipment upgrades.',
+    visitReport: null,
+    providerImage: '/api/placeholder/100/100',
+    status: 'Scheduled'
+  },
+  {
+    id: 3,
+    providerName: 'Kisumu Pharmacy Plus',
+    meetingDate: '2024-02-12',
+    comments: 'License renewal inspection completed. Minor documentation updates needed.',
+    visitReport: '#',
+    providerImage: null,
+    status: 'Completed'
+  },
+  {
+    id: 4,
+    providerName: 'Eldoret Diagnostic Center',
+    meetingDate: '2024-02-20',
+    comments: 'Equipment audit in progress. New imaging equipment validated.',
+    visitReport: null,
+    providerImage: '/api/placeholder/100/100',
+    status: 'In Progress'
+  }
+])
 
-  try {
-    const params = {
-      page: 0,
-      size: 20,
-      sortBy: 'visitDate',
-      sortDir: 'desc'
+// Computed property for scheduled visits (shows provider meeting dates)
+const scheduledVisits = computed(() => {
+  return providers.value.map(provider => ({
+    id: provider.id,
+    providerName: provider.name,
+    meetingDate: provider.meetingDate,
+    status: provider.meetingDate ? 'Scheduled' : 'Not Scheduled'
+  }))
+})
+
+// Handle scheduling a visit (equivalent to PHP schedule_visit)
+const scheduleVisit = () => {
+  if (scheduleForm.value.consent === 'agree') {
+    // Find and update the provider's meeting date
+    const provider = providers.value.find(p => p.id == scheduleForm.value.providerId)
+    if (provider) {
+      provider.meetingDate = scheduleForm.value.meetingDate
+
+      // Reset form
+      scheduleForm.value = {
+        providerId: '',
+        meetingDate: '',
+        consent: ''
+      }
+
+      alert('Visit scheduled successfully!')
     }
-
-    const response = await ProviderAPIService.getVisitMeetings(params)
-    visitMeetings.value = response.content
-
-  } catch (err) {
-    console.error('Error fetching visit meetings:', err)
-    error.value = 'Failed to load visit meetings. Please try again.'
-  } finally {
-    isLoading.value = false
+  } else {
+    alert('You must agree to the Conflict of Interest terms to schedule a visit.')
   }
 }
 
-// Handle scheduling a new visit
-const scheduleVisit = async () => {
-  try {
-    const visitData = {
-      providerId: parseInt(scheduleForm.value.providerId),
-      visitDate: scheduleForm.value.visitDate,
-      visitComments: scheduleForm.value.visitComments || null,
-      meetingTitle: scheduleForm.value.meetingTitle || null,
-      meetingDate: scheduleForm.value.meetingDate || null,
-      meetingComments: scheduleForm.value.meetingComments || null
+// Load provider meeting date when provider is selected for update
+const loadProviderMeetingDate = () => {
+  if (updateForm.value.providerId) {
+    const provider = providers.value.find(p => p.id == updateForm.value.providerId)
+    if (provider && provider.meetingDate) {
+      updateForm.value.meetingDate = provider.meetingDate
+    } else {
+      updateForm.value.meetingDate = ''
     }
-
-    await ProviderAPIService.createVisitMeeting(visitData)
-
-    // Reset form and refresh data
-    scheduleForm.value = {
-      providerId: '',
-      visitDate: '',
-      visitComments: '',
-      meetingTitle: '',
-      meetingDate: '',
-      meetingComments: ''
-    }
-
-    // Hide form after successful submission
-    showForm.value = false
-
-    fetchVisitMeetings()
-
-    alert('Visit scheduled successfully!')
-  } catch (err) {
-    console.error('Error scheduling visit:', err)
-    alert('Failed to schedule visit. Please try again.')
+  } else {
+    updateForm.value.meetingDate = ''
   }
 }
 
@@ -404,84 +411,54 @@ const handleFileUpload = (event, fieldName) => {
   }
 }
 
-// Format date for display
-const formatDate = (dateString) => {
-  if (!dateString) return 'Not set'
+// Handle updating visit details (equivalent to PHP update_visit)
+const updateVisit = () => {
+  const provider = providers.value.find(p => p.id == updateForm.value.providerId)
+  if (provider) {
+    // Update provider meeting date
+    provider.meetingDate = updateForm.value.meetingDate
 
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-// Format date and time for display
-const formatDateTime = (dateTimeString) => {
-  if (!dateTimeString) return 'Not set'
-
-  const date = new Date(dateTimeString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-// Edit visit function
-const editVisit = (visit) => {
-  updateForm.value = {
-    id: visit.id,
-    providerId: visit.providerId.toString(),
-    visitDate: visit.visitDate || '',
-    visitComments: visit.visitComments || '',
-    visitReport: visit.visitReport,
-    meetingTitle: visit.meetingTitle || '',
-    meetingDate: visit.meetingDate || '',
-    meetingComments: visit.meetingComments || '',
-    meetingMinutes: visit.meetingMinutes
-  }
-
-  editModal.value.show = true
-  editModal.value.visit = visit
-}
-
-// Update visit function
-const updateVisit = async () => {
-  try {
-    const visitData = {
-      providerId: parseInt(updateForm.value.providerId),
-      visitDate: updateForm.value.visitDate,
-      visitComments: updateForm.value.visitComments || null,
-      visitReport: updateForm.value.visitReport,
-      meetingTitle: updateForm.value.meetingTitle || null,
-      meetingDate: updateForm.value.meetingDate || null,
-      meetingComments: updateForm.value.meetingComments || null,
-      meetingMinutes: updateForm.value.meetingMinutes
+    // Find existing visit or create new one
+    let visit = allVisits.value.find(v => v.providerName === provider.name)
+    if (!visit) {
+      visit = {
+        id: allVisits.value.length + 1,
+        providerName: provider.name,
+        meetingDate: updateForm.value.meetingDate,
+        comments: updateForm.value.comments,
+        visitReport: updateForm.value.visitReport,
+        providerImage: updateForm.value.providerImage,
+        status: 'Updated'
+      }
+      allVisits.value.push(visit)
+    } else {
+      // Update existing visit
+      visit.meetingDate = updateForm.value.meetingDate
+      visit.comments = updateForm.value.comments
+      if (updateForm.value.visitReport) visit.visitReport = updateForm.value.visitReport
+      if (updateForm.value.providerImage) visit.providerImage = updateForm.value.providerImage
+      visit.status = 'Updated'
     }
 
-    await ProviderAPIService.updateVisitMeeting(updateForm.value.id, visitData)
-
+    // Close the edit modal
     closeEditModal()
-    fetchVisitMeetings()
 
+    // Show success message
     updateSuccess.value = true
     setTimeout(() => {
       updateSuccess.value = false
     }, 3000)
 
-  } catch (err) {
-    console.error('Error updating visit:', err)
-    alert('Failed to update visit. Please try again.')
+    // Reset form
+    updateForm.value = {
+      providerId: '',
+      meetingDate: '',
+      comments: '',
+      visitReport: null,
+      providerImage: null
+    }
   }
 }
-
-// Fetch data when component is mounted
-onMounted(() => {
-  fetchVisitMeetings()
-})
 
 // Modal states
 const imageModal = ref({
@@ -494,12 +471,45 @@ const editModal = ref({
   visit: null
 })
 
+// Edit visit (populate update form and show modal)
+const editVisit = (visit) => {
+  const provider = providers.value.find(p => p.name === visit.providerName)
+  if (provider) {
+    updateForm.value.providerId = provider.id
+    updateForm.value.meetingDate = visit.meetingDate
+
+    const fullVisit = allVisits.value.find(v => v.providerName === visit.providerName)
+    if (fullVisit) {
+      updateForm.value.comments = fullVisit.comments || ''
+      updateForm.value.visitReport = fullVisit.visitReport || null
+      updateForm.value.providerImage = fullVisit.providerImage || null
+    }
+
+    // Show edit modal
+    editModal.value = {
+      show: true,
+      visit: visit
+    }
+  }
+}
+
 // Close edit modal
 const closeEditModal = () => {
   editModal.value = {
     show: false,
     visit: null
   }
+}
+
+// Format date for display
+const formatDate = (dateString) => {
+  if (!dateString) return null
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  })
 }
 
 // Get status class for styling
@@ -564,9 +574,9 @@ const getProgressText = (status) => {
 }
 
 .header-content {
-  max-width: 1800px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -646,17 +656,15 @@ const getProgressText = (status) => {
 .form-card,
 .data-card {
   background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
-  width: 100%;
-  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .card-header {
-  background: #f8fafc;
-  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -664,7 +672,7 @@ const getProgressText = (status) => {
 }
 
 .card-title {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
@@ -690,100 +698,10 @@ const getProgressText = (status) => {
 /* Modern Forms */
 .modern-form {
   padding: 1.5rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Compact Form Styles */
-.compact-form {
-  padding: 1rem;
-}
-
-.form-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.form-row .input-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.agreement-card {
-  background: linear-gradient(to right, #f8fafc, #f1f5f9);
-  border: 1px solid #e2e8f0;
-  border-left: 3px solid #3b82f6;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1.25rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
-}
-
-.agreement-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  border-left-color: #2563eb;
-}
-
-.agreement-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.agreement-title {
-  font-weight: 600;
-  color: #1e40af;
-  font-size: 0.9rem;
-}
-
-.agreement-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #3b82f6;
-}
-
-.agreement-content {
-  margin-bottom: 0.75rem;
-  padding-left: 0.25rem;
-}
-
-.agreement-content p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #4b5563;
-  line-height: 1.4;
-}
-
-.consent-options {
-  display: flex;
-  gap: 1.25rem;
-  padding-top: 0.5rem;
-  border-top: 1px dashed #e2e8f0;
 }
 
 .input-group {
   margin-bottom: 1.25rem;
-}
-
-.form-section {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
-}
-
-.section-subtitle {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #1e293b;
-  font-size: 1rem;
-  font-weight: 600;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 0.5rem;
 }
 
 .input-label {
@@ -872,79 +790,67 @@ const getProgressText = (status) => {
   margin: 0;
 }
 
-/* This rule is now defined earlier in the file */
+.consent-options {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
 
-.consent-radio {
+.consent-option {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  user-select: none;
+  flex: 1;
 }
 
-.consent-radio:hover {
-  background-color: rgba(59, 130, 246, 0.05);
+.consent-option:hover {
+  border-color: #d1d5db;
+  background: rgba(59, 130, 246, 0.05);
 }
 
-.consent-radio.active {
-  background-color: rgba(59, 130, 246, 0.1);
+.consent-option.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
 }
 
-.consent-radio input[type="radio"] {
+.consent-option input[type="radio"] {
   position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.radio-checkmark {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #cbd5e1;
+.consent-check {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
   border-radius: 50%;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
-.radio-checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.consent-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+.consent-option.active .consent-check {
   background: #3b82f6;
-}
-
-.consent-radio:hover .radio-checkmark {
-  border-color: #93c5fd;
-}
-
-.consent-radio.active .radio-checkmark {
   border-color: #3b82f6;
-}
-
-.consent-radio.active .radio-checkmark:after {
-  display: block;
+  color: white;
 }
 
 .consent-text {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: #374151;
   font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.consent-radio.active .consent-text {
-  color: #1e40af;
 }
 
 /* File Upload */
@@ -1021,17 +927,14 @@ const getProgressText = (status) => {
 }
 
 .primary-btn {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .primary-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
 .primary-btn:disabled {
@@ -1724,17 +1627,15 @@ const getProgressText = (status) => {
   width: 100%;
 }
 
-/* Visits View */
+/* Visits View (Combined) */
 .visits-view {
-  max-width: 1800px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 2rem;
+  padding: 2rem 1.5rem;
 }
 
 .visits-container {
   width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
 }
 
 .visits-layout {
@@ -1768,229 +1669,4 @@ const getProgressText = (status) => {
     width: 100%;
   }
 }
-
-
-/* Visits List Styles */
-.visits-list-container {
-  flex: 1;
-  width: 100%;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 0.75rem;
-  padding-left: 0.25rem;
-}
-
-.visits-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.visit-item {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.visit-item:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  background-color: #f8fafc;
-}
-
-.visit-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.visit-main-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.visit-provider {
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 0.95rem;
-}
-
-.visit-date-compact {
-  color: #4b5563;
-  font-size: 0.9rem;
-}
-
-.visit-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.visit-created-compact {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.visit-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Two Column Layout */
-.two-column-layout {
-  width: 100%;
-  display: flex;
-  gap: 3rem;
-  align-items: flex-start;
-}
-
-@media (max-width: 1024px) {
-  .two-column-layout {
-    flex-direction: column-reverse;
-  }
-}
-
-/* Form Container */
-.form-container {
-  flex: 0 0 450px;
-  position: relative;
-}
-
-/* Create Visit Button */
-.create-visit-btn {
-  width: 100%;
-  padding: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.create-visit-btn:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-}
-
-.create-visit-btn .btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-/* Close Form Button */
-.close-form-btn {
-  background: transparent;
-  border: none;
-  color: #64748b;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.close-form-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-
-.close-form-btn svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Form Animation */
-.form-slide-in {
-  animation: slideIn 0.3s ease forwards;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.75rem;
-  font-size: 0.7rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-badge.completed {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #6b7280;
-}
-
-.icon-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-
-.icon-btn svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-
 </style>
