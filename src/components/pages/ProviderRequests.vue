@@ -17,7 +17,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ pendingRequests }}</div>
-            <div class="stat-label">Pending</div>
+            <div class="stat-label">Review</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ approvedRequests }}</div>
@@ -150,7 +150,7 @@
                   </td>
                   <td class="td-status">
                     <span class="status-badge modern" :class="getStatusClass(request.status)">
-                      {{ request.status }}
+                      {{ getDisplayStatus(request.status) }}
                     </span>
                   </td>
                   <td class="td-actions">
@@ -235,7 +235,7 @@
                               <div class="detail-item">
                                 <label class="detail-label">Request Status</label>
                                 <span class="status-badge modern" :class="getStatusClass(request.status)">
-                                  {{ request.status }}
+                                  {{ getDisplayStatus(request.status) }}
                                 </span>
                               </div>
                               <div class="detail-item">
@@ -847,7 +847,7 @@ const changePage = (page) => {
 const totalRequests = computed(() => totalElements.value)
 
 const pendingRequests = computed(() => {
-  return requests.value.filter(r => r.status === 'Pending').length
+  return requests.value.filter(r => r.status === 'Under Review').length
 })
 
 const approvedRequests = computed(() => {
@@ -968,6 +968,13 @@ const getStatusClass = (status) => {
     'Rejected': 'rejected'
   }
   return statusMap[status] || 'default'
+}
+
+const getDisplayStatus = (status) => {
+  if (status === 'Under Review') {
+    return 'Review'
+  }
+  return status
 }
 
 const formatDate = (dateString) => {
