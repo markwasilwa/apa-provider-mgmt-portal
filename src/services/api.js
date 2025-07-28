@@ -467,10 +467,14 @@ export class ProviderAPIService {
     }
   }
 
-  static async deleteVisitMeeting(id) {
+  static async deleteVisitMeeting(id, comment) {
     try {
       const response = await fetch(`${API_BASE_URL}/visit-meetings/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ deletionComment: comment })
       })
 
       if (!response.ok) {
@@ -709,166 +713,6 @@ export class ProviderAPIService {
     }
   }
 
-  // Provider Reports API methods
-  static async getDashboardStatistics() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/dashboard`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch dashboard statistics:', error)
-      throw error
-    }
-  }
-
-  static async getRequestStatusSummary() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/requests/status-summary`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch request status summary:', error)
-      throw error
-    }
-  }
-
-  static async getRequestCountrySummary() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/requests/country-summary`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch request country summary:', error)
-      throw error
-    }
-  }
-
-  static async getRequestCategorySummary() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/requests/category-summary`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch request category summary:', error)
-      throw error
-    }
-  }
-
-  static async getRequestTrends(startDate, endDate) {
-    const queryParams = new URLSearchParams({
-      startDate,
-      endDate
-    })
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/requests/trends?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch request trends:', error)
-      throw error
-    }
-  }
-
-  static async getVisitSummaryByProvider(providerId) {
-    const queryParams = new URLSearchParams({
-      providerId
-    })
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/visits/provider-summary?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(`Failed to fetch visit summary for provider ID ${providerId}:`, error)
-      throw error
-    }
-  }
-
-  static async getVisitsByDateRange(startDate, endDate) {
-    const queryParams = new URLSearchParams({
-      startDate,
-      endDate
-    })
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/visits/date-range?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch visits by date range:', error)
-      throw error
-    }
-  }
-
-  static async getPerformanceMetrics(startDate = null, endDate = null) {
-    const queryParams = new URLSearchParams()
-    if (startDate) queryParams.append('startDate', startDate)
-    if (endDate) queryParams.append('endDate', endDate)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/performance?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch performance metrics:', error)
-      throw error
-    }
-  }
-
-  static async exportRequestsData(params = {}) {
-    const queryParams = new URLSearchParams()
-    if (params.startDate) queryParams.append('startDate', params.startDate)
-    if (params.endDate) queryParams.append('endDate', params.endDate)
-    if (params.status) queryParams.append('status', params.status)
-    if (params.category) queryParams.append('category', params.category)
-    if (params.country) queryParams.append('country', params.country)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/reports/export/requests?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to export requests data:', error)
-      throw error
-    }
-  }
 }
 
 // Transform API data to component-friendly format

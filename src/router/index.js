@@ -4,7 +4,6 @@ import ProviderCategory from '@/components/pages/ProviderCategory.vue'
 import ProviderVisits from '@/components/pages/ProviderVisits.vue'
 import ProviderListings from '@/components/pages/ProviderListings.vue'
 import ProviderRequests from '@/components/pages/ProviderRequests.vue'
-import Reports from '@/components/pages/Reports.vue'
 import ChangePassword from '@/components/pages/ChangePassword.vue'
 
 const router = createRouter({
@@ -38,11 +37,6 @@ const router = createRouter({
       path: '/provider-requests',
       name: 'provider-requests',
       component: ProviderRequests
-    },
-    {
-      path: '/reports',
-      name: 'reports',
-      component: Reports
     },
     {
       path: '/change-password',

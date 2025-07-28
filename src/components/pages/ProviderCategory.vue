@@ -6,7 +6,7 @@
         <div class="title-group">
           <h1 class="main-title">
             <ClipboardDocumentListIcon class="icon" />
-            Provider Categories Management
+            Master: Category & Country
           </h1>
           <p class="subtitle">Manage and organize different healthcare provider types and their associated facilities</p>
         </div>
@@ -27,34 +27,76 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="content-section">
-      <div class="content-header">
-        <div class="search-section">
-          <div class="search-wrapper">
-            <MagnifyingGlassIcon class="search-icon" />
-            <input 
-              type="text" 
-              v-model="searchTerm" 
-              placeholder="Search categories..." 
-              class="search-input"
-            >
+    <!-- Countries Section -->
+    <div class="countries-container">
+      <div class="countries-wrapper">
+        <div class="countries-header">
+          <div class="action-section">
+            <button class="filter-btn" @click="toggleFilter">
+              <FunnelIcon class="btn-icon" />
+              Filter
+            </button>
           </div>
         </div>
-        <div class="action-section">
-          <button class="filter-btn" @click="toggleFilter">
-            <FunnelIcon class="btn-icon" />
-            Filter
-          </button>
-          <button class="add-btn" @click="showAddModal = true">
-            <PlusIcon class="btn-icon" />
-            Add Category
-          </button>
+        <div class="table-container countries-section">
+          <div class="table-header">
+            <h2 class="table-title">
+              <FlagIcon class="table-icon" />
+              Provider Countries
+            </h2>
+            <span class="country-count">{{ countries.length }} countries</span>
+          </div>
+
+          <div class="table-wrapper">
+            <!-- Loading State -->
+            <div v-if="loading && countries.length === 0" class="loading-state">
+              <div class="loading-spinner"></div>
+              <p>Loading countries...</p>
+            </div>
+
+            <!-- Error State -->
+            <div v-else-if="error && countries.length === 0" class="error-state">
+              <ExclamationTriangleIcon class="error-icon" />
+              <h3>Error Loading Countries</h3>
+              <p>{{ error }}</p>
+              <button @click="loadCountries" class="retry-btn">Retry</button>
+            </div>
+
+            <!-- Countries Grid -->
+            <div v-else class="countries-grid">
+              <div v-for="country in countries" :key="country.id" class="country-card">
+                <div class="country-flag"><FlagIcon class="country-flag-icon" /></div>
+                <div class="country-name">{{ country.country }}</div>
+                <div class="country-meta">
+                  <span class="country-id">ID: {{ country.id }}</span>
+                  <span class="country-date">Added: {{ formatDate(country.creationDate) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="!loading && !error && countries.length === 0" class="empty-state">
+              <FlagIcon class="empty-icon" />
+              <h3>No Countries Found</h3>
+              <p>No countries have been added to the system yet.</p>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-section">
+      <!-- Add Category Button -->
+      <div class="add-category-section">
+        <button class="add-btn thin-btn" @click="showAddModal = true">
+          <PlusIcon class="btn-icon" />
+          Add Category
+        </button>
       </div>
 
       <!-- Categories Table -->
-      <div class="table-container">
+      <div class="table-container categories-section">
         <div class="table-header">
           <h2 class="table-title">
             <ChartBarIcon class="table-icon" />
@@ -64,7 +106,22 @@
         </div>
 
         <div class="table-wrapper">
-          <table class="categories-table">
+          <!-- Loading State -->
+          <div v-if="loading" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading categories...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="error" class="error-state">
+            <ExclamationTriangleIcon class="error-icon" />
+            <h3>Error Loading Categories</h3>
+            <p>{{ error }}</p>
+            <button @click="loadCategories" class="retry-btn">Retry</button>
+          </div>
+
+          <!-- Table View -->
+          <table v-else class="categories-table">
             <thead>
               <tr>
                 <th class="th-icon"></th>
@@ -77,97 +134,231 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="category in filteredCategories" :key="category.id" class="category-row">
-                <td class="td-icon">
-                  <div class="category-icon-wrapper">
-                    <span class="category-icon">{{ category.icon }}</span>
-                  </div>
-                </td>
-                <td class="td-name">
-                  <div class="name-cell">
-                    <h4 class="category-name">{{ category.name }}</h4>
-                    <p class="category-code">{{ category.code }}</p>
-                  </div>
-                </td>
-                <td class="td-description">
-                  <p class="description-text">{{ category.description }}</p>
-                </td>
-                <td class="td-active">
-                  <div class="stat-display">
-                    <span class="stat-number">{{ category.activeProviders }}</span>
-                    <span class="stat-label">providers</span>
-                  </div>
-                </td>
-                <td class="td-total">
-                  <div class="stat-display">
-                    <span class="stat-number">{{ category.totalRegistered }}</span>
-                    <span class="stat-label">registered</span>
-                  </div>
-                </td>
-                <td class="td-status">
-                  <span class="status-badge modern" :class="getStatusClass(category.status)">
-                    {{ category.status }}
-                  </span>
-                </td>
-                <td class="td-actions">
-                  <div class="action-buttons">
-                    <button class="action-btn view" @click="viewCategory(category)" title="View Details">
-                      <EyeIcon class="action-icon" />
-                    </button>
-                    <button class="action-btn edit" @click="editCategory(category)" title="Edit Category">
-                      <PencilIcon class="action-icon" />
-                    </button>
-                    <button class="action-btn delete" @click="deleteCategory(category.id)" title="Delete Category">
-                      <TrashIcon class="action-icon" />
-                    </button>
+              <template v-for="category in filteredCategories" :key="category.id">
+                <tr class="category-row">
+                  <td class="td-icon">
+                    <div class="category-icon-wrapper">
+                      <span class="category-icon">{{ category.icon }}</span>
+                    </div>
+                  </td>
+                  <td class="td-name">
+                    <div class="name-cell">
+                      <h4 class="category-name">{{ category.name }}</h4>
+                      <p class="category-code">{{ category.code }}</p>
+                    </div>
+                  </td>
+                  <td class="td-description">
+                    <p class="description-text">{{ category.description }}</p>
+                  </td>
+                  <td class="td-active">
+                    <div class="stat-display">
+                      <span class="stat-number">{{ category.activeProviders }}</span>
+                      <span class="stat-label">providers</span>
+                    </div>
+                  </td>
+                  <td class="td-total">
+                    <div class="stat-display">
+                      <span class="stat-number">{{ category.totalRegistered }}</span>
+                      <span class="stat-label">registered</span>
+                    </div>
+                  </td>
+                  <td class="td-status">
+                    <span class="status-badge modern" :class="getStatusClass(category.status)">
+                      {{ category.status }}
+                    </span>
+                  </td>
+                  <td class="td-actions">
+                    <div class="action-buttons">
+                      <button class="action-btn view" @click="viewCategory(category)" title="View Details">
+                        <EyeIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn edit" @click="editCategory(category)" title="Edit Category">
+                        <PencilIcon class="action-icon" />
+                      </button>
+                      <button class="action-btn delete" @click="confirmDelete(category)" title="Delete Category">
+                        <TrashIcon class="action-icon" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Inline Details Row -->
+                <tr v-if="selectedCategory && selectedCategory.id === category.id" class="details-row">
+                  <td colspan="7" class="details-cell">
+                    <div class="inline-details">
+                      <div class="inline-details-header">
+                        <h4 class="inline-details-title">
+                          <span class="panel-icon">{{ selectedCategory.icon }}</span>
+                          {{ selectedCategory.name }} Details
+                        </h4>
+                        <button class="close-details" @click="selectedCategory = null">×</button>
+                      </div>
+                      <div class="inline-details-content">
+                        <!-- View Mode -->
+                        <div v-if="!isInlineEditing" class="detail-grid">
+                          <div class="detail-section">
+                            <h4 class="section-title">Basic Information</h4>
+                            <div class="detail-item">
+                              <label class="detail-label">Category Code</label>
+                              <span class="detail-value">{{ selectedCategory.code }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <label class="detail-label">Status</label>
+                              <span class="status-badge modern" :class="getStatusClass(selectedCategory.status)">
+                                {{ selectedCategory.status }}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="detail-section">
+                            <h4 class="section-title">Statistics</h4>
+                            <div class="detail-item">
+                              <label class="detail-label">Active Providers</label>
+                              <span class="detail-value highlight">{{ selectedCategory.activeProviders }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <label class="detail-label">Total Registered</label>
+                              <span class="detail-value highlight">{{ selectedCategory.totalRegistered }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <label class="detail-label">Registration Rate</label>
+                              <span class="detail-value">{{ Math.round((selectedCategory.activeProviders / selectedCategory.totalRegistered) * 100) }}%</span>
+                            </div>
+                          </div>
+                          <div class="detail-section">
+                            <h4 class="section-title">Description</h4>
+                            <div class="detail-item">
+                              <span class="detail-description">{{ selectedCategory.description }}</span>
+                            </div>
+                            <div class="inline-actions">
+                              <button @click="editCategory(selectedCategory)" class="btn-compact btn-edit">
+                                <PencilIcon class="btn-icon-sm" />
+                                Edit
+                              </button>
+                              <button @click="confirmDelete(selectedCategory)" class="btn-compact btn-delete">
+                                <TrashIcon class="btn-icon-sm" />
+                                Delete
+                              </button>
+                            </div>
+                        </div>
+                      </div>
+
+                      <!-- Edit Mode -->
+                      <div v-else class="inline-edit-form">
+                        <form @submit.prevent="saveCategory" class="compact-form">
+                          <div class="form-grid compact">
+                            <div class="input-group">
+                              <label class="input-label">Category Name</label>
+                              <input 
+                                type="text" 
+                                v-model="categoryForm.name" 
+                                required 
+                                class="modern-input"
+                                placeholder="Enter category name"
+                              >
+                            </div>
+                            <div class="input-group">
+                              <label class="input-label">Category Code</label>
+                              <input 
+                                type="text" 
+                                v-model="categoryForm.code" 
+                                required 
+                                class="modern-input"
+                                placeholder="e.g., HOSP, INDV"
+                              >
+                            </div>
+                            <div class="input-group">
+                              <label class="input-label">Icon (Emoji)</label>
+                              <input 
+                                type="text" 
+                                v-model="categoryForm.icon" 
+                                class="modern-input"
+                                placeholder="Icon emoji"
+                                maxlength="2"
+                              >
+                            </div>
+                            <div class="input-group">
+                              <label class="input-label">Status</label>
+                              <div class="select-wrapper">
+                                <select v-model="categoryForm.status" class="modern-select">
+                                  <option value="Active">Active</option>
+                                  <option value="Under Review">Under Review</option>
+                                  <option value="Inactive">Inactive</option>
+                                </select>
+                                <span class="select-icon">⌄</span>
+                              </div>
+                            </div>
+                            <div class="input-group full-width">
+                              <label class="input-label">Description</label>
+                              <textarea 
+                                v-model="categoryForm.description" 
+                                rows="2" 
+                                class="modern-textarea"
+                                placeholder="Enter category description"
+                              ></textarea>
+                            </div>
+                          </div>
+                          <div class="form-actions">
+                            <button type="button" @click="closeModal" class="btn-compact btn-secondary">
+                              Cancel
+                            </button>
+                            <button type="submit" class="btn-compact btn-primary">
+                              <span class="btn-icon-sm">💾</span>
+                              Update
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
+              </template>
             </tbody>
           </table>
-        </div>
-      </div>
 
-      <!-- Category Details Panel -->
-      <div class="details-panel" v-if="selectedCategory">
-        <div class="panel-header">
-          <h3 class="panel-title">
-            <span class="panel-icon">{{ selectedCategory.icon }}</span>
-            {{ selectedCategory.name }} Details
-          </h3>
-          <button class="close-panel" @click="selectedCategory = null">×</button>
+          <!-- Empty State -->
+          <div v-if="!loading && !error && categories.length === 0" class="empty-state">
+            <DocumentIcon class="empty-icon" />
+            <h3>No Categories Found</h3>
+            <p>No categories match your current search criteria.</p>
+            <button @click="resetSearch" class="primary-btn">Reset Search</button>
+          </div>
         </div>
-        <div class="panel-content">
-          <div class="detail-grid">
-            <div class="detail-item">
-              <label class="detail-label">Category Code</label>
-              <span class="detail-value">{{ selectedCategory.code }}</span>
+
+        <!-- Pagination -->
+        <div v-if="!loading && !error && totalPages > 1" class="pagination-section">
+          <div class="pagination-info">
+            <span>Page {{ currentPage + 1 }} of {{ totalPages }} ({{ totalElements }} total categories)</span>
+          </div>
+          <div class="pagination-controls">
+            <button @click="prevPage" :disabled="currentPage === 0" class="pagination-btn">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Previous
+            </button>
+
+            <div class="page-numbers">
+              <button 
+                v-for="page in Math.min(5, totalPages)" 
+                :key="page - 1"
+                @click="goToPage(page - 1)"
+                :class="{ active: currentPage === page - 1 }"
+                class="page-number"
+              >
+                {{ page }}
+              </button>
             </div>
-            <div class="detail-item">
-              <label class="detail-label">Status</label>
-              <span class="status-badge modern" :class="getStatusClass(selectedCategory.status)">
-                {{ selectedCategory.status }}
-              </span>
-            </div>
-            <div class="detail-item full-width">
-              <label class="detail-label">Description</label>
-              <p class="detail-description">{{ selectedCategory.description }}</p>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Active Providers</label>
-              <span class="detail-value highlight">{{ selectedCategory.activeProviders }}</span>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Total Registered</label>
-              <span class="detail-value highlight">{{ selectedCategory.totalRegistered }}</span>
-            </div>
-            <div class="detail-item">
-              <label class="detail-label">Registration Rate</label>
-              <span class="detail-value">{{ Math.round((selectedCategory.activeProviders / selectedCategory.totalRegistered) * 100) }}%</span>
-            </div>
+
+            <button @click="nextPage" :disabled="currentPage >= totalPages - 1" class="pagination-btn">
+              Next
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
+
     </div>
 
     <!-- Add/Edit Modal -->
@@ -175,8 +366,8 @@
       <div class="modal modern" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">
-            <component :is="editingCategory ? PencilIcon : PlusIcon" class="modal-icon" />
-            {{ editingCategory ? 'Edit Category' : 'Add New Category' }}
+            <PlusIcon class="modal-icon" />
+            Add New Category
           </h3>
           <button class="modal-close" @click="closeModal">×</button>
         </div>
@@ -234,12 +425,12 @@
             </div>
           </div>
           <div class="modal-actions">
-            <button type="button" @click="closeModal" class="btn-secondary">
+            <button type="button" @click="closeModal" class="btn-compact btn-secondary">
               Cancel
             </button>
-            <button type="submit" class="btn-primary">
-              <span class="btn-icon">💾</span>
-              {{ editingCategory ? 'Update' : 'Create' }} Category
+            <button type="submit" class="btn-compact btn-primary">
+              <span class="btn-icon-sm">💾</span>
+              Create Category
             </button>
           </div>
         </form>
@@ -256,11 +447,57 @@
         <p>{{ toastMessage }}</p>
       </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="deleteModal.show" class="modal-overlay" @click="closeDeleteModal">
+      <div class="delete-modal" @click.stop>
+        <div class="modal-header delete-header">
+          <div class="modal-title-wrapper">
+            <TrashIcon class="delete-icon" />
+            <h3 class="modal-title">Confirm Delete</h3>
+          </div>
+          <button class="modal-close" @click="closeDeleteModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="delete-warning">
+            <p>Are you sure you want to delete this category?</p>
+          </div>
+
+          <div class="delete-details">
+            <div class="detail-item">
+              <span class="detail-label">Category Name:</span>
+              <span class="detail-value">{{ deleteModal.categoryName || 'Unknown Category' }}</span>
+            </div>
+          </div>
+
+          <div class="delete-comment-section">
+            <label class="input-label">Deletion Comment <span class="required">*</span></label>
+            <textarea 
+              v-model="deleteModal.comment" 
+              class="modern-input delete-comment-input" 
+              placeholder="Please provide a reason for deletion"
+              required
+            ></textarea>
+            <p class="comment-hint">This comment will be recorded with the deletion action.</p>
+          </div>
+
+          <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" @click="closeDeleteModal">
+            Cancel
+          </button>
+          <button class="danger-btn" @click="deleteCategory" :disabled="!deleteModal.comment">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { 
   ClipboardDocumentListIcon,
   MagnifyingGlassIcon,
@@ -272,41 +509,105 @@ import {
   TrashIcon,
   CheckCircleIcon,
   FunnelIcon,
-  EyeIcon
+  EyeIcon,
+  ExclamationTriangleIcon,
+  FlagIcon,
+  DocumentIcon
 } from '@heroicons/vue/24/outline'
+import { ProviderAPIService } from '@/services/api'
 
 // Form states
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editingCategory = ref(null)
 const selectedCategory = ref(null)
+const isInlineEditing = ref(false)
 const searchTerm = ref('')
 const showToast = ref(false)
 const toastMessage = ref('')
+const loading = ref(false)
+const error = ref(null)
 
-// Categories data (only Hospital and Individual as requested)
-const categories = ref([
-  {
-    id: 1,
-    name: 'Hospital',
-    code: 'HOSP',
-    description: 'Major medical facilities providing comprehensive healthcare services including emergency care, surgical procedures, and specialized treatments',
-    icon: '🏥',
-    activeProviders: 245,
-    totalRegistered: 278,
-    status: 'Active'
-  },
-  {
-    id: 2,
-    name: 'Individual',
-    code: 'INDV',
-    description: 'Individual healthcare practitioners including doctors, specialists, nurses, and other licensed medical professionals',
-    icon: '👨‍⚕️',
-    activeProviders: 1834,
-    totalRegistered: 2156,
-    status: 'Active'
+// Pagination
+const currentPage = ref(0)
+const pageSize = ref(20)
+const totalPages = ref(0)
+const totalElements = ref(0)
+
+// Categories data
+const categories = ref([])
+const countries = ref([])
+
+// Load categories from API
+const loadCategories = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await ProviderAPIService.getProviderCategories({
+      page: currentPage.value,
+      size: pageSize.value,
+      search: searchTerm.value
+    })
+
+    categories.value = response.content.map(category => ({
+      id: category.id,
+      name: category.categoryName,
+      code: `CAT-${category.id}`,
+      description: category.categoryName,
+      icon: getCategoryIcon(category.categoryName),
+      activeProviders: category.status === 1 ? 100 : 0, // Fixed value for active providers
+      totalRegistered: 200, // Fixed value for total registered
+      status: category.status === 1 ? 'Active' : 'Inactive'
+    }))
+
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
+  } catch (err) {
+    console.error('Failed to load categories:', err)
+    error.value = 'Failed to load categories. Please try again.'
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Load countries from API
+const loadCountries = async () => {
+  try {
+    const response = await ProviderAPIService.getProviderCountries()
+    countries.value = response
+  } catch (err) {
+    console.error('Failed to load countries:', err)
+  }
+}
+
+// Helper function to get icon based on category name
+const getCategoryIcon = (categoryName) => {
+  const name = categoryName.toLowerCase()
+
+  if (name.includes('hospital')) return '🏥'
+  if (name.includes('clinic')) return '🏪'
+  if (name.includes('pharmacy')) return '💊'
+  if (name.includes('dental')) return '🦷'
+  if (name.includes('lab')) return '🔬'
+  if (name.includes('mental')) return '🧠'
+  if (name.includes('eye')) return '👁️'
+  if (name.includes('individual')) return '👨‍⚕️'
+
+  return '🏢' // Default icon
+}
+
+// Load data on component mount
+onMounted(() => {
+  loadCategories()
+  loadCountries()
+})
+
+// Watch for search term changes
+watch(searchTerm, () => {
+  currentPage.value = 0 // Reset to first page when search changes
+  loadCategories()
+})
 
 // Category form for add/edit
 const categoryForm = ref({
@@ -328,16 +629,48 @@ const totalRegistered = computed(() => {
   return categories.value.reduce((sum, cat) => sum + cat.totalRegistered, 0)
 })
 
+// Since we're using the API for filtering, this just returns the categories
 const filteredCategories = computed(() => {
-  if (!searchTerm.value) {
-    return categories.value
-  }
-  return categories.value.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    category.code.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.value.toLowerCase())
-  )
+  return categories.value
 })
+
+// Pagination methods
+const prevPage = () => {
+  if (currentPage.value > 0) {
+    currentPage.value--
+    loadCategories()
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value - 1) {
+    currentPage.value++
+    loadCategories()
+  }
+}
+
+const goToPage = (page) => {
+  currentPage.value = page
+  loadCategories()
+}
+
+const resetSearch = () => {
+  searchTerm.value = ''
+  currentPage.value = 0
+  loadCategories()
+}
+
+// Format date for display
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
 
 // Methods
 const viewCategory = (category) => {
@@ -347,16 +680,50 @@ const viewCategory = (category) => {
 const editCategory = (category) => {
   editingCategory.value = category
   categoryForm.value = { ...category }
-  showEditModal.value = true
+
+  // Always use inline editing
+  selectedCategory.value = category
+  isInlineEditing.value = true
 }
 
-const deleteCategory = (categoryId) => {
-  if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
-    const index = categories.value.findIndex(cat => cat.id === categoryId)
+// Confirm delete
+const deleteModal = ref({
+  show: false,
+  categoryId: null,
+  categoryName: '',
+  comment: ''
+})
+
+const confirmDelete = (category) => {
+  deleteModal.value = {
+    show: true,
+    categoryId: category.id,
+    categoryName: category.name,
+    comment: ''
+  }
+}
+
+const closeDeleteModal = () => {
+  deleteModal.value.show = false
+  deleteModal.value.comment = '' // Reset comment when closing
+}
+
+const deleteCategory = async () => {
+  try {
+    if (!deleteModal.value.comment.trim()) {
+      showToastMessage('Please provide a reason for deletion', 'error')
+      return
+    }
+
+    const index = categories.value.findIndex(cat => cat.id === deleteModal.value.categoryId)
     if (index !== -1) {
       categories.value.splice(index, 1)
       showToastMessage('Category deleted successfully')
     }
+    closeDeleteModal()
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    showToastMessage('Failed to delete category', 'error')
   }
 }
 
@@ -383,6 +750,7 @@ const saveCategory = () => {
 const closeModal = () => {
   showAddModal.value = false
   showEditModal.value = false
+  isInlineEditing.value = false
   editingCategory.value = null
   categoryForm.value = {
     name: '',
@@ -495,6 +863,24 @@ const showToastMessage = (message) => {
   margin-top: 0.25rem;
 }
 
+/* Countries Container */
+.countries-container {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.countries-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.countries-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0;
+}
+
 /* Content Section */
 .content-section {
   max-width: 1400px;
@@ -596,6 +982,13 @@ const showToastMessage = (message) => {
 }
 
 /* Table Container */
+.add-category-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
 .table-container {
   background: white;
   border-radius: 1rem;
@@ -614,6 +1007,13 @@ const showToastMessage = (message) => {
   align-items: center;
 }
 
+/* Special thin header for countries and categories sections */
+.countries-section .table-header,
+.categories-section .table-header {
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+}
+
 .table-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -624,11 +1024,23 @@ const showToastMessage = (message) => {
   gap: 0.5rem;
 }
 
+.countries-section .table-title,
+.categories-section .table-title {
+  font-size: 0.95rem;
+}
+
 .table-icon {
   width: 1.125rem;
   height: 1.125rem;
   margin-right: 0.5rem;
   color: #3b82f6;
+}
+
+.countries-section .table-icon,
+.categories-section .table-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 0.25rem;
 }
 
 .category-count {
@@ -645,6 +1057,11 @@ const showToastMessage = (message) => {
   overflow-x: auto;
 }
 
+.countries-section .table-wrapper {
+  max-height: 100px; /* Allow scrolling if many countries */
+  overflow-y: auto;
+}
+
 .categories-table {
   width: 100%;
   border-collapse: collapse;
@@ -652,9 +1069,10 @@ const showToastMessage = (message) => {
 
 .categories-table th,
 .categories-table td {
-  padding: 1rem;
+  padding: 0.5rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
 }
 
 .categories-table th {
@@ -675,11 +1093,11 @@ const showToastMessage = (message) => {
 }
 
 .th-icon {
-  width: 60px;
+  width: 40px;
 }
 
 .th-name {
-  width: 200px;
+  width: 150px;
 }
 
 .th-description {
@@ -688,16 +1106,16 @@ const showToastMessage = (message) => {
 
 .th-active,
 .th-total {
-  width: 100px;
+  width: 80px;
   text-align: center;
 }
 
 .th-status {
-  width: 120px;
+  width: 100px;
 }
 
 .th-actions {
-  width: 120px;
+  width: 100px;
   text-align: center;
 }
 
@@ -706,14 +1124,14 @@ const showToastMessage = (message) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   background: #f1f5f9;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
 }
 
 .category-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .name-cell {
@@ -722,29 +1140,32 @@ const showToastMessage = (message) => {
 }
 
 .category-name {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.15rem 0;
 }
 
 .category-code {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #6b7280;
   margin: 0;
   font-family: monospace;
   background: #f3f4f6;
-  padding: 0.125rem 0.375rem;
+  padding: 0.1rem 0.25rem;
   border-radius: 0.25rem;
   display: inline-block;
 }
 
 .description-text {
   color: #4b5563;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.4;
   margin: 0;
-  max-width: 300px;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat-display {
@@ -755,23 +1176,23 @@ const showToastMessage = (message) => {
 }
 
 .stat-number {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #6b7280;
-  margin-top: 0.125rem;
+  margin-top: 0.1rem;
 }
 
 /* Status Badges */
 .status-badge.modern {
-  padding: 0.375rem 0.875rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -803,10 +1224,10 @@ const showToastMessage = (message) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
   background: transparent;
@@ -830,104 +1251,265 @@ const showToastMessage = (message) => {
 }
 
 .action-icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
-/* Details Panel */
-.details-panel {
+/* Inline Details Styles */
+.details-row {
+  background-color: #f8fafc;
+}
+
+.details-row td {
+  padding: 0;
+}
+
+.details-cell {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.inline-details {
+  padding: 0;
+  margin: 0.25rem;
   background: white;
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  width: calc(100% - 0.5rem);
 }
 
-.panel-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
+.inline-details-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-.panel-title {
-  font-size: 1.25rem;
+.inline-details-title {
+  font-size: 0.75rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .panel-icon {
-  font-size: 1.5rem;
+  font-size: 0.875rem;
 }
 
-.close-panel {
-  width: 32px;
-  height: 32px;
+.close-details {
+  width: 16px;
+  height: 16px;
   border: none;
   background: transparent;
-  color: #6b7280;
-  font-size: 1.5rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
   cursor: pointer;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
+  border-radius: 0.2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.close-panel:hover {
-  background: #f3f4f6;
-  color: #374151;
+.close-details:hover {
+  color: #6b7280;
+  background-color: #f3f4f6;
 }
 
-.panel-content {
-  padding: 2rem;
+.inline-details-content {
+  padding: 0.5rem;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.125rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-}
-
-.detail-item.full-width {
-  grid-column: span 2;
+  gap: 0.125rem;
+  margin-bottom: 0.25rem;
 }
 
 .detail-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 500;
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
 }
 
 .detail-value {
-  font-size: 1rem;
+  font-size: 0.7rem;
   color: #1e293b;
   font-weight: 500;
+  line-height: 1.3;
 }
 
 .detail-value.highlight {
-  font-size: 1.5rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #3b82f6;
 }
 
+/* Inline Edit Form Styles */
+.inline-edit-form {
+  width: 100%;
+}
+
+.compact-form {
+  padding: 0.5rem;
+}
+
+.form-grid.compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-grid.compact .input-group {
+  margin-bottom: 0;
+}
+
+.form-grid.compact .input-group.full-width {
+  grid-column: span 4;
+}
+
+.form-grid.compact .input-label {
+  font-size: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-grid.compact .modern-input,
+.form-grid.compact .modern-select,
+.form-grid.compact .modern-textarea {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  border-width: 1px;
+}
+
+.form-grid.compact .select-icon {
+  right: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-compact.btn-secondary {
+  background: #f1f5f9;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-compact.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-compact.btn-primary {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.btn-compact.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
 .detail-description {
   color: #4b5563;
-  line-height: 1.6;
+  font-size: 0.7rem;
+  line-height: 1.4;
   margin: 0;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
+
+.btn-edit:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-icon-sm {
+  width: 0.65rem;
+  height: 0.65rem;
 }
 
 /* Modal Styles */
@@ -1159,6 +1741,312 @@ const showToastMessage = (message) => {
   font-size: 0.75rem;
 }
 
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: #ef4444;
+  text-align: center;
+}
+
+.error-icon {
+  width: 48px;
+  height: 48px;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #dc2626;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: #6b7280;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.primary-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #2563eb;
+}
+
+/* Pagination */
+.pagination-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+
+.pagination-info {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-number {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-number:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.page-number.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Thin Button */
+.thin-btn {
+  padding: 0.5rem 1rem;
+  height: 36px;
+  font-size: 0.8rem;
+}
+
+/* Disabled Add Button */
+.add-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.add-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Countries and Categories Sections */
+.countries-section, .categories-section {
+  margin-bottom: 1rem;
+}
+
+.table-container.countries-section {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  max-height: 140px; /* Constrain height to make it very thin */
+  overflow: hidden;
+}
+
+.table-container.categories-section {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.country-count {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.countries-section .country-count,
+.categories-section .category-count {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.65rem;
+  border-radius: 0.75rem;
+}
+
+.countries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.country-card {
+  background: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+  height: 60px;
+}
+
+.country-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+.country-flag {
+  margin-bottom: 0.2rem;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.country-flag-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #3b82f6;
+}
+
+.country-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.1;
+}
+
+.country-meta {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  font-size: 0.6rem;
+  color: #6b7280;
+  line-height: 1;
+}
+
+.country-id {
+  background: #f1f5f9;
+  padding: 0.05rem 0.15rem;
+  border-radius: 0.2rem;
+  font-size: 0.55rem;
+  display: none; /* Hide to save space */
+}
+
+.country-date {
+  font-style: italic;
+  font-size: 0.55rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .header-content {
@@ -1250,5 +2138,192 @@ const showToastMessage = (message) => {
   .modal-actions {
     flex-direction: column;
   }
+}
+
+/* Delete Modal Styles */
+.delete-modal {
+  width: 100%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  max-height: 90vh;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem; /* More compact padding */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.modal-body {
+  padding: 0.75rem 1rem; /* Added proper padding */
+  overflow-y: auto;
+  max-height: calc(90vh - 80px); /* Adjusted for smaller header and footer */
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.delete-header {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.375rem 0.75rem; /* More compact header */
+}
+
+.modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.delete-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+}
+
+.delete-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border-left: 4px solid #e5e7eb;
+}
+
+.delete-details {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-item {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #4b5563;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: #111827;
+  font-weight: 500;
+}
+
+.delete-comment-section {
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem; /* Added padding */
+}
+
+.delete-comment-input {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.comment-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.warning-text {
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.required {
+  color: #dc2626;
+}
+
+/* Button Styles */
+.secondary-btn {
+  padding: 0.625rem 1.25rem;
+  background-color: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondary-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.danger-btn {
+  padding: 0.625rem 1.25rem;
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.danger-btn:hover {
+  background-color: #dc2626;
+}
+
+.danger-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

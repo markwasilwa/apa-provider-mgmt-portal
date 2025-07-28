@@ -6,22 +6,22 @@
         <div class="title-group">
           <h1 class="main-title">
             <DocumentChartBarIcon class="icon" />
-            Reports & Analytics
+            Provider Reports
           </h1>
-          <p class="subtitle">Generate comprehensive reports and analytics for healthcare providers</p>
+          <p class="subtitle">Access key provider information and management tools</p>
         </div>
         <div class="header-stats">
           <div class="stat-item">
             <div class="stat-number">{{ totalReports }}</div>
-            <div class="stat-label">Total Reports</div>
+            <div class="stat-label">Total Tools</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ completedReports }}</div>
-            <div class="stat-label">Completed</div>
+            <div class="stat-label">Available</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ processingReports }}</div>
-            <div class="stat-label">Processing</div>
+            <div class="stat-label">In Progress</div>
           </div>
         </div>
       </div>
@@ -36,7 +36,7 @@
             <input 
               type="text" 
               v-model="searchTerm" 
-              placeholder="Search reports by title, type, description..." 
+              placeholder="Search tools by title, type, description..." 
               class="search-input"
             >
           </div>
@@ -45,10 +45,10 @@
           <div class="select-wrapper">
             <select v-model="selectedReportType" class="modern-select">
               <option value="all">All Report Types</option>
-              <option value="provider-summary">Provider Summary</option>
-              <option value="compliance">Compliance Report</option>
-              <option value="financial">Financial Report</option>
-              <option value="performance">Performance Report</option>
+              <option value="documents">Supporting Documents</option>
+              <option value="requests">Provider Requests</option>
+              <option value="visits">Provider Visits</option>
+              <option value="actisure">Actisure Providers</option>
             </select>
             <ChevronDownIcon class="select-icon" />
           </div>
@@ -64,7 +64,7 @@
           </div>
           <button class="generate-btn" @click="generateReport">
             <PlusIcon class="btn-icon" />
-            Generate New Report
+            Access Tools
           </button>
         </div>
       </div>
@@ -73,31 +73,31 @@
         <div class="section-header">
           <h2 class="section-title">
             <DocumentTextIcon class="table-icon" />
-            Available Reports
+            Provider Management Tools
           </h2>
-          <span class="report-count">{{ filteredReports.length }} reports</span>
+          <span class="report-count">{{ filteredReports.length }} tools</span>
         </div>
 
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading reports...</p>
+          <p>Loading tools...</p>
         </div>
 
         <!-- Error State -->
         <div v-else-if="error" class="error-state">
           <ExclamationTriangleIcon class="error-icon" />
-          <h3>Error Loading Reports</h3>
+          <h3>Error Loading Tools</h3>
           <p>{{ error }}</p>
           <button @click="loadReports" class="retry-btn">Retry</button>
         </div>
 
-        <!-- Reports Grid -->
+        <!-- Tools Grid -->
         <div v-else class="reports-grid">
           <div class="report-card" v-for="report in filteredReports" :key="report.id">
             <div class="report-header">
               <div class="report-icon-wrapper">
-                <DocumentChartBarIcon class="report-icon" />
+                <component :is="getReportIcon(report.dataType)" class="report-icon" />
               </div>
               <span class="status-badge modern" :class="getStatusClass(report.status)">
                 {{ report.status }}
@@ -107,30 +107,120 @@
               <h3 class="report-title">{{ report.title }}</h3>
               <div class="report-type-badge">{{ report.type }}</div>
               <p class="report-description">{{ report.description }}</p>
-              <div class="report-meta">
+
+              <!-- Dashboard Stats -->
+              <div v-if="report.dataType === 'dashboard' && report.apiData" class="report-data-summary">
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.totalProviders || 0 }}</span>
+                  <span class="data-label">Total Providers</span>
+                </div>
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.totalRequests || 0 }}</span>
+                  <span class="data-label">Total Requests</span>
+                </div>
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.pendingRequests || 0 }}</span>
+                  <span class="data-label">Pending</span>
+                </div>
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.activeCategories || 0 }}</span>
+                  <span class="data-label">Categories</span>
+                </div>
+              </div>
+
+              <!-- Status Summary -->
+              <div v-else-if="report.dataType === 'status' && report.apiData" class="report-data-summary">
+                <div v-for="(count, status) in report.apiData" :key="status" class="data-stat">
+                  <span class="data-value">{{ count }}</span>
+                  <span class="data-label">{{ status }}</span>
+                </div>
+              </div>
+
+              <!-- Country Summary -->
+              <div v-else-if="report.dataType === 'country' && report.apiData" class="report-data-summary">
+                <div v-for="(count, country) in report.apiData" :key="country" class="data-stat">
+                  <span class="data-value">{{ count }}</span>
+                  <span class="data-label">{{ country }}</span>
+                </div>
+              </div>
+
+              <!-- Category Summary -->
+              <div v-else-if="report.dataType === 'category' && report.apiData" class="report-data-summary">
+                <div v-for="(count, category) in report.apiData" :key="category" class="data-stat">
+                  <span class="data-value">{{ count }}</span>
+                  <span class="data-label">{{ category }}</span>
+                </div>
+              </div>
+
+              <!-- Provider Statistics -->
+              <div v-else-if="report.dataType === 'providers' && report.apiData" class="report-data-summary">
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.totalProviders || 0 }}</span>
+                  <span class="data-label">Total</span>
+                </div>
+                <div v-for="(count, category) in report.apiData.byCategory || {}" :key="category" class="data-stat">
+                  <span class="data-value">{{ count }}</span>
+                  <span class="data-label">{{ category }}</span>
+                </div>
+                <div v-if="Object.keys(report.apiData.byCountry || {}).length > 0" class="data-stat">
+                  <span class="data-value">{{ Object.values(report.apiData.byCountry)[0] }}</span>
+                  <span class="data-label">{{ Object.keys(report.apiData.byCountry)[0] }}</span>
+                </div>
+              </div>
+
+              <!-- Trends -->
+              <div v-else-if="report.dataType === 'trends' && report.apiData" class="report-data-summary">
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.totalRequests || 0 }}</span>
+                  <span class="data-label">Total</span>
+                </div>
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.period || 'month' }}</span>
+                  <span class="data-label">Period</span>
+                </div>
+                <div v-for="(item, index) in (report.apiData.categoryTrends || []).slice(0, 2)" :key="index" class="data-stat">
+                  <span class="data-value">{{ item.count || 0 }} <small>({{ item.trend || '0%' }})</small></span>
+                  <span class="data-label">{{ item.category || 'Category' }}</span>
+                </div>
+              </div>
+
+              <!-- Performance -->
+              <div v-else-if="report.dataType === 'performance' && report.apiData" class="report-data-summary">
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.approvalRate || 0 }}%</span>
+                  <span class="data-label">Approval Rate</span>
+                </div>
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.averageProcessingDays || 0 }}</span>
+                  <span class="data-label">Avg Days</span>
+                </div>
+                <div class="data-stat">
+                  <span class="data-value">{{ report.apiData.requestVolume?.change || '0%' }}</span>
+                  <span class="data-label">Change</span>
+                </div>
+              </div>
+
+              <!-- Fallback for other data types -->
+              <div v-else class="report-meta">
                 <div class="meta-item">
                   <CalendarIcon class="meta-icon" />
-                  <span>{{ report.generatedDate }}</span>
+                  <span>{{ new Date().toISOString().split('T')[0] }}</span>
                 </div>
                 <div class="meta-item">
                   <DocumentIcon class="meta-icon" />
-                  <span>{{ report.pageCount }} pages</span>
-                </div>
-                <div class="meta-item">
-                  <DocumentDuplicateIcon class="meta-icon" />
-                  <span>{{ report.recordCount }} records</span>
+                  <span>Data available</span>
                 </div>
               </div>
             </div>
             <div class="report-footer">
               <div class="action-buttons">
-                <button class="action-btn download" @click="downloadReport(report)" title="Download Report">
+                <button class="action-btn download" @click="downloadReport(report)" title="Download Tool">
                   <ArrowDownTrayIcon class="action-icon" />
                 </button>
-                <button class="action-btn view" @click="viewReport(report)" title="Preview Report">
+                <button class="action-btn view" @click="viewReport(report)" title="Access Tool">
                   <EyeIcon class="action-icon" />
                 </button>
-                <button class="action-btn share" @click="shareReport(report)" title="Share Report">
+                <button class="action-btn share" @click="shareReport(report)" title="Share Tool">
                   <ShareIcon class="action-icon" />
                 </button>
               </div>
@@ -155,6 +245,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ProviderAPIService } from '@/services/api'
 import { 
   DocumentChartBarIcon, 
   DocumentTextIcon,
@@ -168,7 +259,11 @@ import {
   ShareIcon,
   CalendarIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  GlobeAltIcon,
+  TagIcon,
+  ChartBarIcon,
+  ChartPieIcon
 } from '@heroicons/vue/24/outline'
 
 // Form states
@@ -179,74 +274,14 @@ const showToast = ref(false)
 const toastMessage = ref('')
 
 // API states
-const reports = ref([
-  {
-    id: 1,
-    title: 'Monthly Provider Summary',
-    type: 'Provider Summary',
-    description: 'Comprehensive overview of all registered providers and their activities',
-    generatedDate: '2024-02-01',
-    recordCount: 1245,
-    pageCount: 45,
-    fileSize: '12.3 MB',
-    status: 'Completed'
-  },
-  {
-    id: 2,
-    title: 'Q1 Compliance Report',
-    type: 'Compliance',
-    description: 'Quarterly compliance assessment for all healthcare providers',
-    generatedDate: '2024-01-31',
-    recordCount: 567,
-    pageCount: 23,
-    fileSize: '8.7 MB',
-    status: 'Completed'
-  },
-  {
-    id: 3,
-    title: 'Financial Analysis Report',
-    type: 'Financial',
-    description: 'Revenue and cost analysis for insurance claims processing',
-    generatedDate: '2024-01-30',
-    recordCount: 2340,
-    pageCount: 67,
-    fileSize: '18.9 MB',
-    status: 'Completed'
-  },
-  {
-    id: 4,
-    title: 'Provider Performance Metrics',
-    type: 'Performance',
-    description: 'Key performance indicators and benchmarks for all providers',
-    generatedDate: '2024-01-29',
-    recordCount: 890,
-    pageCount: 34,
-    fileSize: '15.2 MB',
-    status: 'Processing'
-  },
-  {
-    id: 5,
-    title: 'Weekly Visit Summary',
-    type: 'Provider Summary',
-    description: 'Summary of all provider visits and inspections for the week',
-    generatedDate: '2024-01-28',
-    recordCount: 156,
-    pageCount: 12,
-    fileSize: '4.5 MB',
-    status: 'Completed'
-  },
-  {
-    id: 6,
-    title: 'Regulatory Compliance Audit',
-    type: 'Compliance',
-    description: 'Detailed audit report for regulatory compliance requirements',
-    generatedDate: '2024-01-27',
-    recordCount: 423,
-    pageCount: 28,
-    fileSize: '9.8 MB',
-    status: 'Failed'
-  }
-])
+const reports = ref([])
+const dashboardStats = ref(null)
+const providerStats = ref(null)
+const requestStatusSummary = ref(null)
+const requestCountrySummary = ref(null)
+const requestCategorySummary = ref(null)
+const requestTrends = ref(null)
+const performanceMetrics = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
@@ -283,32 +318,172 @@ const processingReports = computed(() =>
 )
 
 // Methods
-const loadReports = () => {
+const loadReports = async () => {
   loading.value = true
   error.value = null
 
-  // Simulate API call
-  setTimeout(() => {
+  try {
+    // Get dates for trends based on selected date range
+    const today = new Date()
+    let startDate, endDate
+
+    switch (selectedDateRange.value) {
+      case 'today':
+        startDate = today.toISOString().split('T')[0]
+        endDate = startDate
+        break
+      case 'week':
+        const lastWeek = new Date(today)
+        lastWeek.setDate(today.getDate() - 7)
+        startDate = lastWeek.toISOString().split('T')[0]
+        endDate = today.toISOString().split('T')[0]
+        break
+      case 'month':
+        const lastMonth = new Date(today)
+        lastMonth.setMonth(today.getMonth() - 1)
+        startDate = lastMonth.toISOString().split('T')[0]
+        endDate = today.toISOString().split('T')[0]
+        break
+      case 'quarter':
+        const lastQuarter = new Date(today)
+        lastQuarter.setMonth(today.getMonth() - 3)
+        startDate = lastQuarter.toISOString().split('T')[0]
+        endDate = today.toISOString().split('T')[0]
+        break
+      case 'year':
+        const lastYear = new Date(today)
+        lastYear.setFullYear(today.getFullYear() - 1)
+        startDate = lastYear.toISOString().split('T')[0]
+        endDate = today.toISOString().split('T')[0]
+        break
+      default:
+        const defaultMonth = new Date(today)
+        defaultMonth.setMonth(today.getMonth() - 1)
+        startDate = defaultMonth.toISOString().split('T')[0]
+        endDate = today.toISOString().split('T')[0]
+    }
+
+    // Fetch all report data in parallel
+    const [
+      dashboardData,
+      providerData,
+      trendsData,
+      performanceData
+    ] = await Promise.all([
+      ProviderAPIService.getDashboardStatistics(),
+      ProviderAPIService.getProviderStatistics(),
+      ProviderAPIService.getRequestTrends(startDate, endDate),
+      ProviderAPIService.getPerformanceMetrics(startDate, endDate)
+    ])
+
+    // Update reactive refs with fetched data
+    dashboardStats.value = dashboardData
+    providerStats.value = providerData
+    requestStatusSummary.value = providerData.byStatus || {}
+    requestCountrySummary.value = providerData.byCountry || {}
+    requestCategorySummary.value = providerData.byCategory || {}
+    requestTrends.value = trendsData
+    performanceMetrics.value = performanceData
+
+    // Create report cards based on the API data
+    reports.value = [
+      {
+        id: 1,
+        title: 'Supporting Documents',
+        type: 'Documents',
+        description: 'Access and manage all supporting documents for healthcare providers',
+        apiData: dashboardStats.value,
+        dataType: 'dashboard',
+        status: 'Completed'
+      },
+      {
+        id: 2,
+        title: 'Provider Requests',
+        type: 'Requests',
+        description: 'View and manage all provider requests and applications',
+        apiData: requestStatusSummary.value,
+        dataType: 'status',
+        status: 'Completed'
+      },
+      {
+        id: 3,
+        title: 'Provider Visits',
+        type: 'Visits',
+        description: 'Track and manage all provider visits and inspections',
+        apiData: requestTrends.value,
+        dataType: 'trends',
+        status: 'Completed'
+      },
+      {
+        id: 4,
+        title: 'Actisure Providers',
+        type: 'Actisure',
+        description: 'Access and manage core provider information from Actisure',
+        apiData: providerStats.value,
+        dataType: 'providers',
+        status: 'Completed'
+      }
+    ]
+
     loading.value = false
-    // If you want to simulate an error, uncomment the line below
-    // error.value = 'Failed to load reports. Server error.'
-  }, 1000)
+  } catch (err) {
+    console.error('Error loading reports:', err)
+    loading.value = false
+    error.value = 'Failed to load provider tools. ' + err.message
+  }
 }
 
 const generateReport = () => {
-  console.log('Generating new report...')
+  console.log('Accessing provider tools...')
   showToast.value = true
-  toastMessage.value = 'Report generation started. You will be notified when it completes.'
+  toastMessage.value = 'Accessing provider management tools. Please wait...'
 
   setTimeout(() => {
     showToast.value = false
   }, 3000)
 }
 
-const downloadReport = (report) => {
-  console.log('Downloading report:', report.title)
+const downloadReport = async (report) => {
+  console.log('Downloading tool:', report.title)
   showToast.value = true
-  toastMessage.value = `Report "${report.title}" is being downloaded.`
+  toastMessage.value = `Tool "${report.title}" is being prepared for download...`
+
+  try {
+    let exportType = 'requests'
+    let format = 'json'
+
+    // Determine export type based on report data type
+    switch (report.dataType) {
+      case 'dashboard':
+        exportType = 'requests'
+        break
+      case 'providers':
+        exportType = 'providers'
+        break
+      case 'status':
+      case 'country':
+      case 'category':
+      case 'trends':
+        exportType = 'requests'
+        break
+      case 'performance':
+        exportType = 'performance'
+        break
+      default:
+        exportType = 'requests'
+    }
+
+    // Call the export API
+    const exportData = await ProviderAPIService.exportData(exportType, format)
+    console.log('Export data:', exportData)
+
+    // In a real application, we would handle the download here
+    // For now, we'll just show a success message
+    toastMessage.value = `Tool "${report.title}" has been downloaded.`
+  } catch (error) {
+    console.error('Error downloading report:', error)
+    toastMessage.value = `Error downloading "${report.title}". Please try again.`
+  }
 
   setTimeout(() => {
     showToast.value = false
@@ -316,13 +491,13 @@ const downloadReport = (report) => {
 }
 
 const viewReport = (report) => {
-  console.log('Viewing report:', report.title)
+  console.log('Accessing tool:', report.title)
 }
 
 const shareReport = (report) => {
-  console.log('Sharing report:', report.title)
+  console.log('Sharing tool:', report.title)
   showToast.value = true
-  toastMessage.value = `Report "${report.title}" has been shared.`
+  toastMessage.value = `Tool "${report.title}" has been shared.`
 
   setTimeout(() => {
     showToast.value = false
@@ -339,6 +514,27 @@ const getStatusClass = (status) => {
       return 'danger'
     default:
       return 'default'
+  }
+}
+
+const getReportIcon = (dataType) => {
+  switch (dataType) {
+    case 'dashboard':
+      return DocumentChartBarIcon
+    case 'providers':
+      return DocumentTextIcon
+    case 'status':
+      return DocumentTextIcon
+    case 'country':
+      return GlobeAltIcon
+    case 'category':
+      return TagIcon
+    case 'trends':
+      return ChartBarIcon
+    case 'performance':
+      return ChartPieIcon
+    default:
+      return DocumentChartBarIcon
   }
 }
 
@@ -734,6 +930,35 @@ onMounted(() => {
   color: #6b7280;
 }
 
+.report-data-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.data-stat {
+  display: flex;
+  flex-direction: column;
+  background: #f1f5f9;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 80px;
+  flex: 1;
+}
+
+.data-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.data-label {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.125rem;
+}
+
 .report-footer {
   padding: 0.5rem 0.75rem;
   border-top: 1px solid #e2e8f0;
@@ -875,3 +1100,4 @@ onMounted(() => {
   }
 }
 </style>
+

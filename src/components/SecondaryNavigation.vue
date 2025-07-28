@@ -28,11 +28,6 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/reports" class="nav-link" active-class="active">
-            Reports
-          </router-link>
-        </li>
-        <li class="nav-item">
           <router-link to="/change-password" class="nav-link" active-class="active">
             Settings
           </router-link>
@@ -96,7 +91,7 @@
   .nav-menu {
     flex-direction: column;
   }
-  
+
   .nav-link {
     padding: 0.75rem 1rem;
   }
