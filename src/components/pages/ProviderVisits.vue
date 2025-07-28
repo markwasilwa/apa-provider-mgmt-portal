@@ -145,7 +145,7 @@
                     <span class="venue-name">{{ visit.venue || 'Not Specified' }}</span>
                   </td>
                   <td class="td-status">
-                    <span class="status-badge" :class="getStatusClass(visit.status)">{{ visit.status || 'Scheduled' }}</span>
+                    <span class="status-badge" :class="getStatusClass(visit.status)">{{ formatStatusText(visit.status) || 'Scheduled' }}</span>
                   </td>
                   <td class="td-actions">
                     <div class="action-buttons">
@@ -188,7 +188,7 @@
                             <div class="detail-item">
                               <label class="detail-label">Status</label>
                               <span class="status-badge modern" :class="getStatusClass(visit.status)">
-                                {{ visit.status || 'Pending' }}
+                                {{ formatStatusText(visit.status) || 'Pending' }}
                               </span>
                             </div>
                             <div class="detail-item">
@@ -287,7 +287,7 @@
                               <label class="compact-label">Status</label>
                               <select v-model="visitForm.status" class="compact-input compact-select">
                                 <option value="Scheduled">Scheduled</option>
-                                <option value="In Progress">In Progress</option>
+                                <option value="PROGRESS">Progress</option>
                                 <option value="Completed">Completed</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="Postponed">Postponed</option>
@@ -532,7 +532,7 @@
                     <label class="input-label">Status</label>
                     <select v-model="visitForm.status" class="modern-input compact-input modern-select">
                       <option value="Scheduled">Scheduled</option>
-                      <option value="In Progress">In Progress</option>
+                      <option value="PROGRESS">Progress</option>
                       <option value="Completed">Completed</option>
                       <option value="Cancelled">Cancelled</option>
                       <option value="Postponed">Postponed</option>
@@ -1001,7 +1001,7 @@ const getStatusClass = (status) => {
   switch (status) {
     case 'Scheduled':
       return 'status-scheduled'
-    case 'In Progress':
+    case 'PROGRESS':
       return 'status-in-progress'
     case 'Completed':
       return 'status-completed'
@@ -1011,6 +1011,16 @@ const getStatusClass = (status) => {
       return 'status-postponed'
     default:
       return 'status-scheduled'
+  }
+}
+
+// Format status text for display
+const formatStatusText = (status) => {
+  switch (status) {
+    case 'PROGRESS':
+      return 'Progress'
+    default:
+      return status
   }
 }
 
