@@ -1,5 +1,46 @@
-// API service for provider management
-const API_BASE_URL = 'http://localhost:8080/api'
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// Request interceptor to add authentication
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('jwt_token')
+  const apiKey = localStorage.getItem('api_key')
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  } else if (apiKey) {
+    config.headers['X-API-Key'] = apiKey
+  }
+  return config
+})
+
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized - redirect to login
+      localStorage.removeItem('jwt_token')
+      localStorage.removeItem('api_key')
+      localStorage.removeItem('user')
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+export default api
+
+// Legacy API service for provider management (keeping existing functionality)
+const API_BASE_URL = '/api'
 
 export class ProviderAPIService {
   static async getProviderEntities(params = {}) {
@@ -11,20 +52,14 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/actisure/providers?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      const response = await api.get(`${API_BASE_URL}/actisure/providers?${queryParams}`)
       return {
         status: 0,
         content: {
-          content: data.content,
+          content: response.data.content,
           page: {
-            totalPages: data.totalPages,
-            totalElements: data.totalElements
+            totalPages: response.data.totalPages,
+            totalElements: response.data.totalElements
           }
         }
       }
@@ -44,20 +79,14 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/actisure/providers/search?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      const response = await api.get(`${API_BASE_URL}/actisure/providers/search?${queryParams}`)
       return {
         status: 0,
         content: {
-          content: data.content,
+          content: response.data.content,
           page: {
-            totalPages: data.totalPages,
-            totalElements: data.totalElements
+            totalPages: response.data.totalPages,
+            totalElements: response.data.totalElements
           }
         }
       }
@@ -67,7 +96,6 @@ export class ProviderAPIService {
     }
   }
 
-  // Search venues (providers as venues) by company name
   static async searchVenues(companyName, params = {}) {
     const queryParams = new URLSearchParams({
       companyName: companyName,
@@ -78,20 +106,14 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/actisure/providers?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      const response = await api.get(`${API_BASE_URL}/actisure/providers?${queryParams}`)
       return {
         status: 0,
         content: {
-          content: data.content,
+          content: response.data.content,
           page: {
-            totalPages: data.totalPages,
-            totalElements: data.totalElements
+            totalPages: response.data.totalPages,
+            totalElements: response.data.totalElements
           }
         }
       }
@@ -101,7 +123,6 @@ export class ProviderAPIService {
     }
   }
 
-  // Provider Requests API methods
   static async getProviderRequests(params = {}) {
     const queryParams = new URLSearchParams({
       page: params.page || 0,
@@ -118,13 +139,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/provider-requests?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error('Failed to fetch provider requests:', error)
       throw error
@@ -133,14 +149,8 @@ export class ProviderAPIService {
 
   static async getCategoriesFromRequests() {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories?page=0&size=1000`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      return data.content
+      const response = await api.get(`${API_BASE_URL}/provider-categories?page=0&size=1000`)
+      return response.data.content
     } catch (error) {
       console.error('Failed to fetch categories from requests:', error)
       throw error
@@ -149,13 +159,8 @@ export class ProviderAPIService {
 
   static async getProviderRequestById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests/${id}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/provider-requests/${id}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to fetch provider request with ID ${id}:`, error)
       throw error
@@ -164,19 +169,8 @@ export class ProviderAPIService {
 
   static async createProviderRequest(requestData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.post(`${API_BASE_URL}/provider-requests`, requestData)
+      return response.data
     } catch (error) {
       console.error('Failed to create provider request:', error)
       throw error
@@ -185,19 +179,8 @@ export class ProviderAPIService {
 
   static async updateProviderRequest(id, requestData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.put(`${API_BASE_URL}/provider-requests/${id}`, requestData)
+      return response.data
     } catch (error) {
       console.error(`Failed to update provider request with ID ${id}:`, error)
       throw error
@@ -206,14 +189,7 @@ export class ProviderAPIService {
 
   static async deleteProviderRequest(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests/${id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      await api.delete(`${API_BASE_URL}/provider-requests/${id}`)
       return true
     } catch (error) {
       console.error(`Failed to delete provider request with ID ${id}:`, error)
@@ -228,15 +204,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests/${id}/approve?${queryParams}`, {
-        method: 'PUT'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.put(`${API_BASE_URL}/provider-requests/${id}/approve?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to approve provider request with ID ${id}:`, error)
       throw error
@@ -250,15 +219,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-requests/${id}/decline?${queryParams}`, {
-        method: 'PUT'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.put(`${API_BASE_URL}/provider-requests/${id}/decline?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to decline provider request with ID ${id}:`, error)
       throw error
@@ -279,13 +241,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/visit-meetings?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error('Failed to fetch visit meetings:', error)
       throw error
@@ -294,13 +251,8 @@ export class ProviderAPIService {
 
   static async getVisitMeetingById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/${id}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/visit-meetings/${id}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to fetch visit meeting with ID ${id}:`, error)
       throw error
@@ -314,13 +266,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/provider/${providerId}?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/visit-meetings/provider/${providerId}?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to fetch visit meetings for provider ID ${providerId}:`, error)
       throw error
@@ -334,112 +281,18 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/recent?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/visit-meetings/recent?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error('Failed to fetch recent visit meetings:', error)
       throw error
     }
   }
 
-  static async getVisitMeetingsByDateRange(startDate, endDate, params = {}) {
-    const queryParams = new URLSearchParams({
-      startDate,
-      endDate,
-      page: params.page || 0,
-      size: params.size || 20,
-      filterType: params.filterType || 'visit'
-    })
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/date-range?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to fetch visit meetings by date range:', error)
-      throw error
-    }
-  }
-
-  static async getVisitMeetingsByDate(date, filterType = 'visit') {
-    const queryParams = new URLSearchParams({
-      filterType
-    })
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/date/${date}?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(`Failed to fetch visit meetings for date ${date}:`, error)
-      throw error
-    }
-  }
-
-  static async searchVisitMeetingsByTitle(title, params = {}) {
-    const queryParams = new URLSearchParams({
-      title,
-      page: params.page || 0,
-      size: params.size || 20
-    })
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/search?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(`Failed to search visit meetings with title "${title}":`, error)
-      throw error
-    }
-  }
-
-  static async getVisitCountByProvider(providerId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/statistics/provider/${providerId}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(`Failed to get visit count for provider ID ${providerId}:`, error)
-      throw error
-    }
-  }
-
   static async createVisitMeeting(meetingData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(meetingData)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.post(`${API_BASE_URL}/visit-meetings`, meetingData)
+      return response.data
     } catch (error) {
       console.error('Failed to create visit meeting:', error)
       throw error
@@ -448,19 +301,8 @@ export class ProviderAPIService {
 
   static async updateVisitMeeting(id, meetingData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(meetingData)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.put(`${API_BASE_URL}/visit-meetings/${id}`, meetingData)
+      return response.data
     } catch (error) {
       console.error(`Failed to update visit meeting with ID ${id}:`, error)
       throw error
@@ -469,18 +311,9 @@ export class ProviderAPIService {
 
   static async deleteVisitMeeting(id, comment) {
     try {
-      const response = await fetch(`${API_BASE_URL}/visit-meetings/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ deletionComment: comment })
+      await api.delete(`${API_BASE_URL}/visit-meetings/${id}`, {
+        data: { deletionComment: comment }
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
       return true
     } catch (error) {
       console.error(`Failed to delete visit meeting with ID ${id}:`, error)
@@ -500,13 +333,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/provider-categories?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error('Failed to fetch provider categories:', error)
       throw error
@@ -515,13 +343,8 @@ export class ProviderAPIService {
 
   static async getActiveProviderCategories() {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories/active`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/provider-categories/active`)
+      return response.data
     } catch (error) {
       console.error('Failed to fetch active provider categories:', error)
       throw error
@@ -530,13 +353,8 @@ export class ProviderAPIService {
 
   static async getProviderCategoryById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories/${id}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/provider-categories/${id}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to fetch provider category with ID ${id}:`, error)
       throw error
@@ -545,19 +363,8 @@ export class ProviderAPIService {
 
   static async createProviderCategory(categoryData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(categoryData)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.post(`${API_BASE_URL}/provider-categories`, categoryData)
+      return response.data
     } catch (error) {
       console.error('Failed to create provider category:', error)
       throw error
@@ -566,19 +373,8 @@ export class ProviderAPIService {
 
   static async updateProviderCategory(id, categoryData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(categoryData)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.put(`${API_BASE_URL}/provider-categories/${id}`, categoryData)
+      return response.data
     } catch (error) {
       console.error(`Failed to update provider category with ID ${id}:`, error)
       throw error
@@ -587,14 +383,7 @@ export class ProviderAPIService {
 
   static async deleteProviderCategory(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories/${id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      await api.delete(`${API_BASE_URL}/provider-categories/${id}`)
       return true
     } catch (error) {
       console.error(`Failed to delete provider category with ID ${id}:`, error)
@@ -604,14 +393,7 @@ export class ProviderAPIService {
 
   static async activateProviderCategory(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-categories/${id}/activate`, {
-        method: 'PUT'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      await api.put(`${API_BASE_URL}/provider-categories/${id}/activate`)
       return true
     } catch (error) {
       console.error(`Failed to activate provider category with ID ${id}:`, error)
@@ -626,30 +408,10 @@ export class ProviderAPIService {
     )
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-countries?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.get(`${API_BASE_URL}/provider-countries?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error('Failed to fetch provider countries:', error)
-      throw error
-    }
-  }
-
-  static async getProviderCountryById(id) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/provider-countries/${id}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(`Failed to fetch provider country with ID ${id}:`, error)
       throw error
     }
   }
@@ -660,15 +422,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-countries?${queryParams}`, {
-        method: 'POST'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.post(`${API_BASE_URL}/provider-countries?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error('Failed to create provider country:', error)
       throw error
@@ -681,15 +436,8 @@ export class ProviderAPIService {
     })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-countries/${id}?${queryParams}`, {
-        method: 'PUT'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      return await response.json()
+      const response = await api.put(`${API_BASE_URL}/provider-countries/${id}?${queryParams}`)
+      return response.data
     } catch (error) {
       console.error(`Failed to update provider country with ID ${id}:`, error)
       throw error
@@ -698,21 +446,13 @@ export class ProviderAPIService {
 
   static async deleteProviderCountry(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/provider-countries/${id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      await api.delete(`${API_BASE_URL}/provider-countries/${id}`)
       return true
     } catch (error) {
       console.error(`Failed to delete provider country with ID ${id}:`, error)
       throw error
     }
   }
-
 }
 
 // Transform API data to component-friendly format
@@ -721,15 +461,15 @@ export const transformProviderData = (entity) => {
     id: entity.entityId,
     name: entity.companyName || `${entity.firstName} ${entity.surname}`.trim() || 'Unknown Provider',
     category: getProviderCategory(entity),
-    location: 'Kenya', // Default location since not provided by API
-    phone: '+254-700-000000', // Default phone since not provided by API
-    email: `contact@provider${entity.entityId}.co.ke`, // Generated email
+    location: 'Kenya',
+    phone: '+254-700-000000',
+    email: `contact@provider${entity.entityId}.co.ke`,
     licenseNumber: `LIC-${entity.entityId}`,
     status: entity.isActiveEntity ? 'Active' : 'Inactive',
-    rating: (4.0 + Math.random()).toFixed(1), // Generated rating
+    rating: (4.0 + Math.random()).toFixed(1),
     icon: getProviderIcon(entity),
-    patientsServed: `${Math.floor(Math.random() * 50)}K+`, // Generated stat
-    yearsActive: Math.floor(Math.random() * 20) + 1, // Generated stat
+    patientsServed: `${Math.floor(Math.random() * 50)}K+`,
+    yearsActive: Math.floor(Math.random() * 20) + 1,
     roles: entity.roles,
     entityType: entity.entityType
   }
@@ -743,7 +483,6 @@ const getProviderCategory = (entity) => {
   )
 
   if (hasHealthcareRole) {
-    // Determine category based on company name or other criteria
     const name = entity.companyName?.toLowerCase() || ''
 
     if (name.includes('hospital')) return 'Hospital'
@@ -754,7 +493,7 @@ const getProviderCategory = (entity) => {
     if (name.includes('mental') || name.includes('psychology')) return 'Mental Health'
     if (name.includes('eye') || name.includes('optic')) return 'Eye Care'
 
-    return 'Hospital' // Default
+    return 'Hospital'
   }
 
   return 'Other'
