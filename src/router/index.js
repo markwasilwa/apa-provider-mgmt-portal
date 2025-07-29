@@ -6,8 +6,7 @@ import ProviderVisits from '@/components/pages/ProviderVisits.vue'
 import ProviderListings from '@/components/pages/ProviderListings.vue'
 import ProviderRequests from '@/components/pages/ProviderRequests.vue'
 import ChangePassword from '@/components/pages/ChangePassword.vue'
-import Profile from '@/components/pages/Profile.vue'
-import ProfileManagement from '@/components/pages/ProfileManagement.vue'
+import UserProfile from '@/components/pages/UserProfile.vue'
 import Settings from '@/components/pages/Settings.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import RegisterForm from '@/components/auth/RegisterForm.vue'
@@ -78,14 +77,8 @@ const router = createRouter({
     {
       path: '/profile',
       name: 'profile',
-      component: Profile,
+      component: UserProfile,
       meta: { requiresAuth: true }
-    },
-    {
-      path: '/profile-management',
-      name: 'profile-management',
-      component: ProfileManagement,
-      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/settings',

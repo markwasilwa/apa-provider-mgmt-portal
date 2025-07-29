@@ -13,6 +13,8 @@ export const useAuthStore = defineStore('auth', {
     isAdmin: (state) => state.user?.role === 'ROLE_ADMIN',
     isProvider: (state) => state.user?.role === 'ROLE_PROVIDER',
     isBackOffice: (state) => state.user?.role === 'ROLE_BACK_OFFICE',
+    isEmailVerified: (state) => state.user?.emailVerified === true,
+    isActive: (state) => state.user?.isActive === true,
     userInitials: (state) => {
       if (!state.user) return ''
       const first = state.user.firstName?.charAt(0) || ''
@@ -22,7 +24,8 @@ export const useAuthStore = defineStore('auth', {
     userDisplayName: (state) => {
       if (!state.user) return ''
       return `${state.user.firstName} ${state.user.lastName}`.trim()
-    }
+    },
+    userApiKey: (state) => state.user?.apiKey
   },
 
   actions: {
@@ -124,6 +127,55 @@ export const useAuthStore = defineStore('auth', {
         throw error
       } finally {
         this.loading = false
+      }
+    },
+
+    async verifyEmail(token) {
+      try {
+        const result = await AuthService.verifyEmail(token)
+        // Refresh user data to get updated emailVerified status
+        await this.getProfile()
+        return result
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async regenerateApiKey() {
+      this.loading = true
+      try {
+        const user = await AuthService.regenerateApiKey()
+        this.user = user
+        return user
+      } catch (error) {
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Admin-only actions
+    async getAllUsers() {
+      try {
+        return await AuthService.getAllUsers()
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async getUserById(id) {
+      try {
+        return await AuthService.getUserById(id)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteUser(id) {
+      try {
+        return await AuthService.deleteUser(id)
+      } catch (error) {
+        throw error
       }
     },
 

@@ -143,6 +143,68 @@ class AuthService {
   isBackOffice() {
     return this.hasRole('ROLE_BACK_OFFICE')
   }
+
+  async verifyEmail(token) {
+    try {
+      const response = await api.post(`/api/auth/verify-email/${token}`)
+      if (response.data.status === 0) {
+        return response.data.content
+      }
+      throw new Error(response.data.message)
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message)
+    }
+  }
+
+  async regenerateApiKey() {
+    try {
+      const response = await api.post('/api/users/regenerate-api-key')
+      if (response.data.status === 0) {
+        localStorage.setItem('user', JSON.stringify(response.data.content))
+        return response.data.content
+      }
+      throw new Error(response.data.message)
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message)
+    }
+  }
+
+  // Admin-only methods
+  async getAllUsers() {
+    try {
+      const response = await api.get('/api/users')
+      if (response.data.status === 0) {
+        return response.data.content
+      }
+      throw new Error(response.data.message)
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message)
+    }
+  }
+
+  async getUserById(id) {
+    try {
+      const response = await api.get(`/api/users/${id}`)
+      if (response.data.status === 0) {
+        return response.data.content
+      }
+      throw new Error(response.data.message)
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message)
+    }
+  }
+
+  async deleteUser(id) {
+    try {
+      const response = await api.delete(`/api/users/${id}`)
+      if (response.data.status === 0) {
+        return response.data.content
+      }
+      throw new Error(response.data.message)
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message)
+    }
+  }
 }
 
 export default new AuthService()
