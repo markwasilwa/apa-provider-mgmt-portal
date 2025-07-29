@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Auth Persistence</title>
+</head>
+<body>
+    <h1>Test Authentication Persistence</h1>
+    
+    <div id="auth-status">
+        <h2>Current Auth Status:</h2>
+        <p>JWT Token: <span id="jwt-token"></span></p>
+        <p>API Key: <span id="api-key"></span></p>
+        <p>User Data: <span id="user-data"></span></p>
+    </div>
+    
+    <div>
+        <h2>Test Login:</h2>
+        <button onclick="testLogin()">Login with admin2@actisure.co.ke</button>
+        <button onclick="testApiKeyLogin()">Login with API Key</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+    </div>
+    
+    <script>
+        function updateStatus() {
+            document.getElementById('jwt-token').textContent = 
+                localStorage.getItem('jwt_token') ? 'Present' : 'None';
+            document.getElementById('api-key').textContent = 
+                localStorage.getItem('api_key') ? 'Present' : 'None';
+            document.getElementById('user-data').textContent = 
+                localStorage.getItem('user') || 'None';
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin2@actisure.co.ke',
+                        password: 'password'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (data.status === 0) {
+                    localStorage.setItem('jwt_token', data.content.token);
+                    localStorage.setItem('user', JSON.stringify(data.content.user));
+                    alert('Login successful!');
+                } else {
+                    alert('Login failed: ' + data.message);
+                }
+                updateStatus();
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login error: ' + error.message);
+            }
+        }
+        
+        async function testApiKeyLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/users/profile', {
+                    headers: { 'X-API-Key': 'ak_e02d30964db34d698a251848b925868c' }
+                });
+                
+                const data = await response.json();
+                console.log('API Key response:', data);
+                
+                if (data.status === 0) {
+                    localStorage.setItem('api_key', 'ak_e02d30964db34d698a251848b925868c');
+                    localStorage.setItem('user', JSON.stringify(data.content));
+                    alert('API Key login successful!');
+                } else {
+                    alert('API Key login failed: ' + data.message);
+                }
+                updateStatus();
+            } catch (error) {
+                console.error('API Key error:', error);
+                alert('API Key error: ' + error.message);
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('api_key');
+            localStorage.removeItem('user');
+            updateStatus();
+            alert('Storage cleared!');
+        }
+        
+        // Update status on page load
+        updateStatus();
+    </script>
+</body>
+</html>

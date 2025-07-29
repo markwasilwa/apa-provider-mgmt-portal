@@ -5,7 +5,8 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     isAuthenticated: false,
-    loading: false
+    loading: false,
+    initializing: true
   }),
 
   getters: {
@@ -133,18 +134,44 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async initialize() {
-      this.user = AuthService.getCurrentUser()
-      this.isAuthenticated = AuthService.isAuthenticated()
+      this.initializing = true
       
-      // If authenticated, try to refresh user data
-      if (this.isAuthenticated && this.user) {
-        try {
-          await this.getProfile()
-        } catch (error) {
-          // If profile fetch fails, user might be using invalid token
-          console.warn('Failed to refresh user profile:', error)
-          this.logout()
+      try {
+        // Get stored user and auth state
+        const storedUser = AuthService.getCurrentUser()
+        const hasAuthToken = AuthService.isAuthenticated()
+        
+        if (hasAuthToken && storedUser) {
+          // Set initial state from localStorage
+          this.user = storedUser
+          this.isAuthenticated = true
+          
+          try {
+            // Try to refresh user data to ensure it's current
+            const refreshedUser = await AuthService.getProfile()
+            this.user = refreshedUser
+          } catch (error) {
+            // If profile fetch fails, token might be invalid/expired
+            console.warn('Failed to refresh user profile, logging out:', error)
+            this.logout()
+          }
+        } else if (hasAuthToken && !storedUser) {
+          // We have a token but no user data, try to fetch it
+          try {
+            const user = await AuthService.getProfile()
+            this.user = user
+            this.isAuthenticated = true
+          } catch (error) {
+            console.warn('Failed to fetch user profile, logging out:', error)
+            this.logout()
+          }
+        } else {
+          // No authentication data
+          this.user = null
+          this.isAuthenticated = false
         }
+      } finally {
+        this.initializing = false
       }
     },
 
