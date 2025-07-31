@@ -3,26 +3,21 @@
     <div class="nav-container">
       <ul class="nav-menu">
         <li class="nav-item">
-          <router-link to="/dashboard" class="nav-link" active-class="active">
-            Dashboard
-          </router-link>
-        </li>
-        <li class="nav-item">
           <router-link to="/provider-requests" class="nav-link" active-class="active">
-            Requests
+            {{ authStore.isProvider ? 'My Requests' : 'Requests' }}
           </router-link>
         </li>
         <li class="nav-item">
           <router-link to="/provider-visits" class="nav-link" active-class="active">
-            Visits
+            {{ authStore.isProvider ? 'My Visits' : 'Visits' }}
           </router-link>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" v-if="!authStore.isProvider">
           <router-link to="/provider-listings" class="nav-link" active-class="active">
             Actisure Listing
           </router-link>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" v-if="!authStore.isProvider">
           <router-link to="/provider-category" class="nav-link" active-class="active">
             Category & Country
           </router-link>
@@ -38,7 +33,9 @@
 </template>
 
 <script setup>
-// Router navigation is handled automatically by router-link components
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 </script>
 
 <style scoped>

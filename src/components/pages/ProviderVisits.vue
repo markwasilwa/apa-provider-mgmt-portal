@@ -8,11 +8,15 @@
             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            Provider Visits Management
+            {{ authStore.isProvider ? 'My Visit Details' : 'Provider Visits Management' }}
           </h1>
-          <p class="subtitle">Schedule, track, and manage healthcare provider facility visits and inspections</p>
+          <p class="subtitle">
+            {{ authStore.isProvider 
+              ? 'View details of scheduled and completed facility visits' 
+              : 'Schedule, track, and manage healthcare provider facility visits and inspections' }}
+          </p>
         </div>
-        <div class="header-stats">
+        <div class="header-stats" v-if="!authStore.isProvider">
           <div class="stat-item">
             <div class="stat-number">{{ totalVisits }}</div>
             <div class="stat-label">Total Visits</div>
@@ -79,7 +83,7 @@
             </svg>
             Visit Meetings
           </h2>
-          <div class="action-buttons">
+          <div class="action-buttons" v-if="!authStore.isProvider">
             <button class="primary-btn" @click="openCreateModal">
               <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -155,7 +159,7 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </button>
-                      <button class="action-btn edit" @click="editVisit(visit)" title="Edit Visit">
+                      <button class="action-btn edit" @click="editVisit(visit)" title="Edit Visit" v-if="!authStore.isProvider">
                         <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -230,7 +234,7 @@
                           </div>
                         </div>
 
-                        <div class="inline-actions">
+                        <div class="inline-actions" v-if="!authStore.isProvider">
                           <button @click="editVisit(visit)" class="btn-compact btn-edit">
                             <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -246,8 +250,8 @@
                         </div>
                       </div>
 
-                      <!-- Edit Mode - Beautiful Design -->
-                      <div v-else class="inline-edit-beautiful">
+                      <!-- Edit Mode - Beautiful Design (Admin/Back Office only) -->
+                      <div v-else-if="!authStore.isProvider" class="inline-edit-beautiful">
                         <form @submit.prevent="saveInlineEdit" class="compact-edit-form">
                           <!-- Primary Fields Row -->
                           <div class="compact-row primary-fields">
@@ -696,6 +700,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { ProviderAPIService, transformProviderData } from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
+
+// Auth store
+const authStore = useAuthStore()
 
 // State variables
 const visitMeetings = ref([])

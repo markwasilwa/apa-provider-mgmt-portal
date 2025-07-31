@@ -6,11 +6,15 @@
         <div class="title-group">
           <h1 class="main-title">
             <ClipboardDocumentListIcon class="icon" />
-            Provider Registration Requests
+            {{ authStore.isProvider ? 'My Registration Requests' : 'Provider Registration Requests' }}
           </h1>
-          <p class="subtitle">Review and process new healthcare provider registration applications and licensing requests</p>
+          <p class="subtitle">
+            {{ authStore.isProvider 
+              ? 'Submit and track your healthcare provider registration applications' 
+              : 'Review and process new healthcare provider registration applications and licensing requests' }}
+          </p>
         </div>
-        <div class="header-stats">
+        <div class="header-stats" v-if="!authStore.isProvider">
           <div class="stat-item">
             <div class="stat-number">{{ totalRequests }}</div>
             <div class="stat-label">Total Requests</div>
@@ -159,10 +163,10 @@
                       <button class="action-btn view" @click="viewRequest(request)" title="View Details">
                         <EyeIcon class="action-icon" />
                       </button>
-                      <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="request.status === 'Review' || request.status === 'Draft'">
+                      <button class="action-btn edit" @click="editRequest(request)" title="Edit Request" v-if="!authStore.isProvider && (request.status === 'Review' || request.status === 'Draft')">
                         <PencilIcon class="action-icon" />
                       </button>
-                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Move to Review" v-if="request.status === 'Draft'">
+                      <button class="action-btn review" @click="setUnderReview(request.id)" title="Move to Review" v-if="!authStore.isProvider && request.status === 'Draft'">
                         <ArrowRightIcon class="action-icon" />
                       </button>
                     </div>
@@ -259,7 +263,7 @@
                             </div>
                           </div>
 
-                          <div class="inline-actions" v-if="request.status === 'Draft' || request.status === 'Review'">
+                          <div class="inline-actions" v-if="!authStore.isProvider && (request.status === 'Draft' || request.status === 'Review')">
                             <button @click="approveRequest(request.id)" class="btn-success" v-if="request.status === 'Review'">
                               <CheckIcon class="btn-icon" />
                               Approve Request
@@ -884,6 +888,10 @@ import {
 } from '@heroicons/vue/24/outline'
 import { ProviderAPIService } from '@/services/api'
 import { SettingsService } from '@/services/settings'
+import { useAuthStore } from '@/stores/auth'
+
+// Auth store
+const authStore = useAuthStore()
 
 // Form states
 const searchTerm = ref('')

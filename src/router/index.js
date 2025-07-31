@@ -18,7 +18,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/dashboard'
+      redirect: '/dashboard' // Will be handled by navigation guard
     },
     {
       path: '/login',
@@ -48,7 +48,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresNonProvider: true }
     },
     {
       path: '/provider-visits',
@@ -60,7 +60,13 @@ const router = createRouter({
       path: '/provider-listings',
       name: 'provider-listings',
       component: ProviderListings,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresNonProvider: true }
+    },
+    {
+      path: '/provider-category',
+      name: 'provider-category',
+      component: ProviderCategory,
+      meta: { requiresAuth: true, requiresNonProvider: true }
     },
     {
       path: '/provider-requests',
@@ -112,9 +118,14 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/dashboard')
+    // Redirect authenticated users based on role
+    next(authStore.isProvider ? '/provider-requests' : '/dashboard')
   } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    next('/dashboard') // Redirect non-admins to dashboard
+    next(authStore.isProvider ? '/provider-requests' : '/dashboard')
+  } else if (to.meta.requiresNonProvider && authStore.isProvider) {
+    next('/provider-requests') // Redirect providers to their requests page
+  } else if (to.path === '/dashboard' && authStore.isProvider) {
+    next('/provider-requests') // Redirect providers away from dashboard
   } else {
     next()
   }
