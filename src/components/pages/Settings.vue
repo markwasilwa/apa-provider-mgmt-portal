@@ -1,28 +1,26 @@
 <template>
   <div class="settings-page">
-    <div class="page-header">
-      <h1 class="page-title">Settings</h1>
-      <p class="page-description">Manage system settings and configurations</p>
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-content">
+        <div class="title-group">
+          <h1 class="main-title">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Settings
+          </h1>
+          <p class="subtitle">Manage system settings and configurations</p>
+        </div>
+      </div>
     </div>
 
-    <div class="settings-layout">
+    <div class="content-section">
       <!-- Settings Navigation -->
       <div class="settings-nav">
         <nav class="settings-menu">
-          <h3 class="menu-title">Settings Menu</h3>
           <ul class="menu-list">
-            <li class="menu-item">
-              <button 
-                @click="activeTab = 'categories'"
-                class="menu-button"
-                :class="{ 'active': activeTab === 'categories' }"
-              >
-                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 017-4z"></path>
-                </svg>
-                Categories & Countries
-              </button>
-            </li>
             <li v-if="authStore.isAdmin" class="menu-item">
               <button 
                 @click="activeTab = 'profiles'"
@@ -33,6 +31,18 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
                 User Management
+              </button>
+            </li>
+            <li class="menu-item">
+              <button 
+                @click="activeTab = 'categories'"
+                class="menu-button"
+                :class="{ 'active': activeTab === 'categories' }"
+              >
+                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 017-4z"></path>
+                </svg>
+                Categories & Countries
               </button>
             </li>
             <li v-if="authStore.isAdmin" class="menu-item">
@@ -71,8 +81,8 @@
             <h2 class="section-title">Categories & Countries</h2>
             <p class="section-description">Manage provider categories and supported countries</p>
           </div>
-          
-          <div class="content-card">
+
+          <div class="content-card responsive-content">
             <ProviderCategory />
           </div>
         </div>
@@ -80,12 +90,29 @@
         <!-- User Management Tab -->
         <div v-if="activeTab === 'profiles' && authStore.isAdmin" class="settings-section">
           <div class="section-header">
-            <h2 class="section-title">User Management</h2>
-            <p class="section-description">Manage user accounts across the system</p>
+            <div class="header-content">
+              <div class="title-group">
+                <h2 class="section-title">
+                  <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  User Management
+                </h2>
+                <p class="section-description">Manage user accounts across the system</p>
+              </div>
+              <div class="header-actions">
+                <button class="action-button">
+                  <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Add User
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <div class="content-card">
-            <UserManagement />
+
+          <div class="content-card responsive-content">
+            <UserManagement :showHeader="false" />
           </div>
         </div>
 
@@ -95,7 +122,7 @@
             <h2 class="section-title">System Configuration</h2>
             <p class="section-description">Configure system-wide settings and parameters</p>
           </div>
-          
+
           <div class="content-grid">
             <!-- API Settings -->
             <div class="config-card">
@@ -266,7 +293,7 @@
             <h2 class="section-title">User Preferences</h2>
             <p class="section-description">Customize your personal settings and preferences</p>
           </div>
-          
+
           <div class="content-grid">
             <!-- Display Preferences -->
             <div class="config-card">
@@ -362,35 +389,58 @@ import ProviderCategory from '@/components/pages/ProviderCategory.vue'
 import UserManagement from '@/components/pages/UserManagement.vue'
 
 const authStore = useAuthStore()
-const activeTab = ref('categories')
+const activeTab = ref('profiles')
 </script>
 
 <style scoped>
 .settings-page {
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
-.page-header {
-  margin-bottom: 2rem;
+/* Header Section */
+.header-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
 }
 
-.page-title {
-  font-size: 1.875rem;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.title-group {
+  max-width: 800px;
+}
+
+.main-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.75rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0 0 0.5rem 0;
 }
 
-.page-description {
-  color: #64748b;
-  margin: 0;
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.75rem;
+  color: #1e40af;
 }
 
-.settings-layout {
+.subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.content-section {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 2rem;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
   align-items: start;
 }
 
@@ -406,15 +456,7 @@ const activeTab = ref('categories')
 }
 
 .settings-menu {
-  padding: 1.5rem 0;
-}
-
-.menu-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 1rem 0;
-  padding: 0 1.5rem;
+  padding: 0.75rem 0;
 }
 
 .menu-list {
@@ -430,9 +472,9 @@ const activeTab = ref('categories')
 .menu-button {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   width: 100%;
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1rem;
   background: none;
   border: none;
   text-align: left;
@@ -441,7 +483,7 @@ const activeTab = ref('categories')
   color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
-  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
 }
 
 .menu-button:hover {
@@ -452,7 +494,7 @@ const activeTab = ref('categories')
 .menu-button.active {
   color: #1e40af;
   background-color: #f1f5f9;
-  border-right-color: #1e40af;
+  border-left-color: #1e40af;
 }
 
 .menu-icon {
@@ -475,70 +517,123 @@ const activeTab = ref('categories')
 }
 
 .section-header {
-  padding: 2rem 2rem 1rem 2rem;
+  padding: 1.25rem 1.5rem 0.75rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   background-color: #f8fafc;
 }
 
 .section-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
 }
 
 .section-description {
   color: #64748b;
   margin: 0;
+  font-size: 0.875rem;
+}
+
+.title-group .section-description {
+  padding: 0.5rem 0;
+}
+
+.section-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  color: #1e40af;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background-color: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-button:hover {
+  background-color: #1d4ed8;
+}
+
+.action-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .content-card {
   padding: 0;
 }
 
+.responsive-content {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1.5rem;
-  padding: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
 }
 
 /* Configuration Cards */
 .config-card {
   border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  background-color: #f9fafb;
+  border-radius: 0.375rem;
+  background-color: white;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  background-color: white;
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .card-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
 }
 
 .card-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1rem;
+  height: 1rem;
   color: #64748b;
 }
 
 .card-content {
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .setting-item {
-  margin-bottom: 1rem;
+  margin-bottom: 0.875rem;
 }
 
 .setting-item:last-child {
@@ -547,18 +642,18 @@ const activeTab = ref('categories')
 
 .setting-label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #374151;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .setting-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.625rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
   background-color: white;
   transition: all 0.2s;
 }
@@ -566,7 +661,7 @@ const activeTab = ref('categories')
 .setting-input:focus {
   outline: none;
   border-color: #1e40af;
-  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
 }
 
 /* Toggle Switch */
@@ -582,10 +677,10 @@ const activeTab = ref('categories')
 .toggle-label {
   position: relative;
   display: inline-block;
-  width: 3rem;
-  height: 1.5rem;
+  width: 2.5rem;
+  height: 1.25rem;
   background-color: #d1d5db;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -594,12 +689,12 @@ const activeTab = ref('categories')
   position: absolute;
   top: 0.125rem;
   left: 0.125rem;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1rem;
+  height: 1rem;
   background-color: white;
   border-radius: 50%;
   transition: transform 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-input:checked + .toggle-label {
@@ -607,15 +702,15 @@ const activeTab = ref('categories')
 }
 
 .toggle-input:checked + .toggle-label .toggle-slider {
-  transform: translateX(1.5rem);
+  transform: translateX(1.25rem);
 }
 
 /* Settings Actions */
 .settings-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding: 2rem;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
   border-top: 1px solid #e2e8f0;
   background-color: #f8fafc;
 }
@@ -624,15 +719,15 @@ const activeTab = ref('categories')
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  padding: 0.375rem 1rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
   border: 1px solid transparent;
-  min-width: 120px;
+  min-width: 100px;
 }
 
 .btn-primary {
@@ -660,49 +755,62 @@ const activeTab = ref('categories')
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .settings-layout {
+  .content-section {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
-  
+
   .settings-nav {
     position: static;
   }
-  
+
   .settings-menu {
-    padding: 1rem 0;
+    padding: 0.5rem;
   }
-  
+
   .menu-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
-  
+
+  .menu-item {
+    flex: 1 1 auto;
+    min-width: 150px;
+  }
+
   .menu-button {
-    border-right: none;
-    border-bottom: 3px solid transparent;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    justify-content: center;
+    padding: 0.5rem;
   }
-  
+
   .menu-button.active {
-    border-right: none;
+    border-left: none;
     border-bottom-color: #1e40af;
   }
 }
 
 @media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+  }
+
   .content-grid {
     grid-template-columns: 1fr;
-    padding: 1rem;
+    padding: 0.75rem;
   }
-  
+
   .section-header {
-    padding: 1.5rem 1rem 1rem 1rem;
+    padding: 1rem 0.75rem 0.75rem 0.75rem;
   }
-  
+
   .settings-actions {
     flex-direction: column;
-    padding: 1rem;
+    padding: 0.75rem;
   }
-  
+
   .btn {
     width: 100%;
   }
@@ -710,11 +818,15 @@ const activeTab = ref('categories')
 
 @media (max-width: 640px) {
   .menu-list {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
-  
-  .page-title {
+
+  .main-title {
     font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
   }
 }
 </style>

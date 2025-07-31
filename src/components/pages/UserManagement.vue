@@ -1,88 +1,124 @@
 <template>
   <div class="user-management">
-    <div class="page-header">
+    <div v-if="showHeader" class="page-header">
       <h1 class="page-title">User Management</h1>
       <p class="page-description">Manage user accounts across the system</p>
     </div>
 
     <!-- Search and Filters -->
     <div class="search-section">
-      <div class="search-controls">
-        <div class="search-group">
-          <input
-            v-model="searchTerm"
-            type="text"
-            placeholder="Search users by name or email..."
-            class="search-input"
-            @input="handleSearch"
-          >
-          <button @click="loadUsers" class="btn btn-primary" :disabled="loading">
-            <span v-if="loading" class="loading-spinner"></span>
-            {{ loading ? 'Loading...' : 'Refresh' }}
+      <div class="search-header">
+        <div class="search-title-group">
+          <h3 class="search-title">Search & Filter Users</h3>
+          <p class="search-description">Find and manage user accounts efficiently</p>
+        </div>
+        <div class="search-actions">
+          <button @click="showRegisterModal = true" class="btn btn-primary">
+            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+            </svg>
+            Register User
           </button>
         </div>
-        
-        <div class="filter-group">
-          <select v-model="selectedRole" @change="filterUsers" class="filter-select">
-            <option value="">All Roles</option>
-            <option value="ROLE_PROVIDER">Providers</option>
-            <option value="ROLE_BACK_OFFICE">Back Office</option>
-            <option value="ROLE_ADMIN">Administrators</option>
-          </select>
-          
-          <select v-model="selectedStatus" @change="filterUsers" class="filter-select">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="verified">Email Verified</option>
-            <option value="unverified">Email Unverified</option>
-          </select>
+      </div>
+      
+      <div class="search-controls">
+        <div class="search-input-group">
+          <div class="search-field">
+            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input
+              v-model="searchTerm"
+              type="text"
+              placeholder="Search by name, email, or ID..."
+              class="search-input"
+              @input="handleSearch"
+            >
+            <button v-if="searchTerm" @click="clearSearch" class="clear-search">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label class="filter-label">Role</label>
+            <select v-model="selectedRole" @change="filterUsers" class="filter-select">
+              <option value="">All Roles</option>
+              <option value="ROLE_PROVIDER">Providers</option>
+              <option value="ROLE_BACK_OFFICE">Back Office</option>
+              <option value="ROLE_ADMIN">Administrators</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select v-model="selectedStatus" @change="filterUsers" class="filter-select">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="verified">Email Verified</option>
+              <option value="unverified">Email Unverified</option>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button @click="resetFilters" class="btn btn-outline btn-sm">
+              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Reset
+            </button>
+            <button @click="loadUsers" class="btn btn-primary btn-sm" :disabled="loading">
+              <span v-if="loading" class="loading-spinner"></span>
+              <svg v-else class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              {{ loading ? 'Loading...' : 'Refresh' }}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="search-results-summary" v-if="searchTerm || selectedRole || selectedStatus">
+        <span class="results-count">{{ filteredUsers.length }} users found</span>
+        <div class="active-filters">
+          <span v-if="searchTerm" class="filter-tag">
+            Search: "{{ searchTerm }}"
+            <button @click="searchTerm = ''" class="remove-filter">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </span>
+          <span v-if="selectedRole" class="filter-tag">
+            Role: {{ formatRole(selectedRole) }}
+            <button @click="selectedRole = ''" class="remove-filter">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </span>
+          <span v-if="selectedStatus" class="filter-tag">
+            Status: {{ selectedStatus }}
+            <button @click="selectedStatus = ''" class="remove-filter">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="stats-section">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value">{{ stats.total }}</div>
-          <div class="stat-label">Total Users</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ stats.providers }}</div>
-          <div class="stat-label">Providers</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ stats.backOffice }}</div>
-          <div class="stat-label">Back Office</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ stats.admins }}</div>
-          <div class="stat-label">Administrators</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ stats.verified }}</div>
-          <div class="stat-label">Email Verified</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ stats.active }}</div>
-          <div class="stat-label">Active Users</div>
-        </div>
-      </div>
-    </div>
 
     <!-- User List -->
     <div class="users-section">
       <div class="section-header">
         <h3>Users ({{ filteredUsers.length }})</h3>
-        <div class="header-actions">
-          <button @click="showInviteModal = true" class="btn btn-primary">
-            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            Invite User
-          </button>
-        </div>
       </div>
 
       <!-- Loading State -->
@@ -130,33 +166,33 @@
                   <div class="user-id">ID: {{ user.id }}</div>
                 </div>
               </td>
-              
+
               <td class="user-email">
                 <a :href="`mailto:${user.email}`" class="email-link">{{ user.email }}</a>
               </td>
-              
+
               <td class="user-phone">
                 {{ user.phone || 'Not provided' }}
               </td>
-              
+
               <td class="user-role">
                 <span class="role-badge" :class="getRoleClass(user.role)">
                   {{ formatRole(user.role) }}
                 </span>
               </td>
-              
+
               <td class="user-status">
                 <span class="status-badge" :class="user.isActive ? 'status-active' : 'status-inactive'">
                   {{ user.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              
+
               <td class="user-verification">
                 <span class="verification-badge" :class="user.emailVerified ? 'verified' : 'unverified'">
                   {{ user.emailVerified ? 'Verified' : 'Unverified' }}
                 </span>
               </td>
-              
+
               <td class="user-api-key">
                 <button 
                   @click="showApiKey(user)"
@@ -168,7 +204,7 @@
                   </svg>
                 </button>
               </td>
-              
+
               <td class="user-actions">
                 <div class="action-buttons">
                   <button 
@@ -181,7 +217,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                   </button>
-                  
+
                   <button 
                     v-if="user.id !== authStore.user?.id"
                     @click="confirmDeleteUser(user)"
@@ -254,13 +290,36 @@
         </div>
       </div>
     </div>
+
+    <!-- User Registration Modal -->
+    <div v-if="showRegisterModal" class="modal-overlay" @click="closeRegisterModal">
+      <div class="modal-content register-modal" @click.stop>
+        <div class="modal-header">
+          <h3>Register New User</h3>
+          <button @click="closeRegisterModal" class="modal-close">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <UserRegistrationForm @close="closeRegisterModal" @success="onRegistrationSuccess" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineProps } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import AuthService from '@/services/auth'
+import UserRegistrationForm from '@/components/forms/UserRegistrationForm.vue'
+
+const props = defineProps({
+  showHeader: {
+    type: Boolean,
+    default: true
+  }
+})
 
 const authStore = useAuthStore()
 
@@ -273,20 +332,10 @@ const selectedStatus = ref('')
 // Modal state
 const showApiKeyModal = ref(false)
 const showDeleteModal = ref(false)
-const showInviteModal = ref(false)
+const showRegisterModal = ref(false)
 const selectedUser = ref(null)
 const userToDelete = ref(null)
 
-const stats = computed(() => {
-  const total = users.value.length
-  const providers = users.value.filter(u => u.role === 'ROLE_PROVIDER').length
-  const backOffice = users.value.filter(u => u.role === 'ROLE_BACK_OFFICE').length
-  const admins = users.value.filter(u => u.role === 'ROLE_ADMIN').length
-  const verified = users.value.filter(u => u.emailVerified).length
-  const active = users.value.filter(u => u.isActive).length
-  
-  return { total, providers, backOffice, admins, verified, active }
-})
 
 const filteredUsers = computed(() => {
   let filtered = users.value
@@ -347,6 +396,16 @@ const filterUsers = () => {
   // Filters are reactive through computed property
 }
 
+const clearSearch = () => {
+  searchTerm.value = ''
+}
+
+const resetFilters = () => {
+  searchTerm.value = ''
+  selectedRole.value = ''
+  selectedStatus.value = ''
+}
+
 const getInitials = (firstName, lastName) => {
   const first = firstName?.charAt(0) || ''
   const last = lastName?.charAt(0) || ''
@@ -359,7 +418,7 @@ const formatRole = (role) => {
     'ROLE_PROVIDER': 'Provider',
     'ROLE_BACK_OFFICE': 'Back Office'
   }
-  
+
   return roleMap[role] || role.replace('ROLE_', '').replace('_', ' ')
 }
 
@@ -369,7 +428,7 @@ const getRoleClass = (role) => {
     'ROLE_PROVIDER': 'role-provider',
     'ROLE_BACK_OFFICE': 'role-back-office'
   }
-  
+
   return classMap[role] || 'role-default'
 }
 
@@ -410,7 +469,7 @@ const closeDeleteModal = () => {
 
 const deleteUser = async () => {
   if (!userToDelete.value) return
-  
+
   loading.value = true
   try {
     await AuthService.deleteUser(userToDelete.value.id)
@@ -423,6 +482,15 @@ const deleteUser = async () => {
   }
 }
 
+const closeRegisterModal = () => {
+  showRegisterModal.value = false
+}
+
+const onRegistrationSuccess = (newUser) => {
+  users.value.unshift(newUser)
+  closeRegisterModal()
+}
+
 onMounted(() => {
   loadUsers()
 })
@@ -432,6 +500,8 @@ onMounted(() => {
 .user-management {
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .page-header {
@@ -452,44 +522,125 @@ onMounted(() => {
 
 .search-section {
   background-color: white;
-  padding: 1.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
-  margin-bottom: 2rem;
+  margin: 1rem 1rem 2rem 1rem;
+  overflow: hidden;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.search-title-group {
+  flex: 1;
+}
+
+.search-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.search-description {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.search-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .search-controls {
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+.search-input-group {
+  margin-bottom: 1.25rem;
+}
+
+.search-field {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
   align-items: center;
 }
 
-.search-group {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 300px;
-}
-
-.filter-group {
-  display: flex;
-  gap: 0.5rem;
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  color: #9ca3af;
+  z-index: 1;
 }
 
 .search-input {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
+  background-color: #f9fafb;
+  transition: all 0.2s;
 }
 
 .search-input:focus {
   outline: none;
   border-color: #1e40af;
   box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+  background-color: white;
+}
+
+.clear-search {
+  position: absolute;
+  right: 0.75rem;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.clear-search:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.clear-search svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 140px;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .filter-select {
@@ -498,41 +649,76 @@ onMounted(() => {
   border-radius: 0.375rem;
   font-size: 0.875rem;
   background-color: white;
+  transition: all 0.2s;
 }
 
-.stats-section {
-  margin-bottom: 2rem;
+.filter-select:focus {
+  outline: none;
+  border-color: #1e40af;
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.search-results-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
 }
 
-.stat-card {
-  background-color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1e40af;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: #64748b;
+.results-count {
+  font-size: 0.875rem;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: #1e293b;
 }
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #1e40af;
+  color: white;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.remove-filter {
+  background: none;
+  border: none;
+  padding: 0.125rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.remove-filter:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.remove-filter svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 
 .users-section {
   background-color: white;
@@ -948,63 +1134,79 @@ onMounted(() => {
   margin: 0.5rem 0 0 0;
 }
 
+.register-modal {
+  max-width: 600px;
+  max-height: 95vh;
+  overflow: auto;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .search-controls {
+  .search-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .filter-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  
-  .search-group {
-    min-width: auto;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
+
+  .filter-actions {
+    margin-left: 0;
+    align-self: stretch;
   }
 }
 
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
+
   .section-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .users-table th,
   .users-table td {
     padding: 0.5rem 0.75rem;
   }
-  
+
   .modal-overlay {
     padding: 0.5rem;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
 }
 
 @media (max-width: 640px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
+  .search-results-summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
   }
-  
+
+  .active-filters {
+    justify-content: center;
+  }
+
+  .filter-group {
+    min-width: auto;
+  }
+
   .users-table {
     font-size: 0.75rem;
   }
-  
+
   .user-info {
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 0.5rem;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }

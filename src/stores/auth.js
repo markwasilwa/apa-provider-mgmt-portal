@@ -179,6 +179,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async registerUser(userData) {
+      try {
+        return await AuthService.registerUser(userData)
+      } catch (error) {
+        throw error
+      }
+    },
+
     logout() {
       AuthService.logout()
       this.user = null

@@ -182,6 +182,18 @@ class AuthService {
     }
   }
 
+  async registerUser(userData) {
+    try {
+      const response = await api.post('/api/auth/register', userData)
+      if (response.data.status === 0) {
+        return response.data.content.user
+      }
+      throw new Error(response.data.message)
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message)
+    }
+  }
+
   async getUserById(id) {
     try {
       const response = await api.get(`/api/users/${id}`)
