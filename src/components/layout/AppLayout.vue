@@ -18,7 +18,7 @@
             <span class="logo-text">APA Insurance ~ Providers Portal</span>
           </div>
         </div>
-        
+
         <div class="auth-section">
           <div class="user-menu" v-if="authStore.isAuthenticated">
             <div class="user-info">
@@ -168,13 +168,13 @@ const handleLogout = () => {
 
 const formatRole = (role) => {
   if (!role) return ''
-  
+
   const roleMap = {
     'ROLE_ADMIN': 'Administrator',
     'ROLE_PROVIDER': 'Provider',
     'ROLE_BACK_OFFICE': 'Back Office'
   }
-  
+
   return roleMap[role] || role.replace('ROLE_', '').replace('_', ' ')
 }
 
@@ -204,8 +204,8 @@ onUnmounted(() => {
 
 /* Top Navigation - matching existing TopNavigation.vue */
 .top-nav {
-  background-color: #1e40af;
-  color: white;
+  background-color: white;
+  color: #1e40af;
   padding: 0.75rem 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: relative;
@@ -229,7 +229,7 @@ onUnmounted(() => {
 .sidebar-toggle {
   background: none;
   border: none;
-  color: white;
+  color: #1e40af;
   padding: 0.5rem;
   margin-right: 1rem;
   border-radius: 0.375rem;
@@ -238,7 +238,7 @@ onUnmounted(() => {
 }
 
 .sidebar-toggle:hover {
-  background-color: #2563eb;
+  background-color: #f1f5f9;
 }
 
 .toggle-icon {
@@ -283,7 +283,7 @@ onUnmounted(() => {
 .user-avatar {
   width: 40px;
   height: 40px;
-  background-color: #3b82f6;
+  background-color: #1e40af;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -305,7 +305,7 @@ onUnmounted(() => {
 
 .user-role {
   font-size: 0.75rem;
-  color: #cbd5e1;
+  color: #64748b;
 }
 
 .user-dropdown-container {
@@ -315,7 +315,7 @@ onUnmounted(() => {
 .user-menu-button {
   background: none;
   border: none;
-  color: white;
+  color: #1e40af;
   padding: 0.25rem;
   border-radius: 0.375rem;
   cursor: pointer;
@@ -323,7 +323,7 @@ onUnmounted(() => {
 }
 
 .user-menu-button:hover {
-  background-color: #2563eb;
+  background-color: #f1f5f9;
 }
 
 .dropdown-icon {
@@ -475,14 +475,14 @@ onUnmounted(() => {
   .mobile-only {
     display: none;
   }
-  
+
   .sidebar {
     position: static;
     transform: translateX(0);
     top: auto;
     bottom: auto;
   }
-  
+
   .main-content {
     margin-left: 0;
   }
@@ -493,7 +493,7 @@ onUnmounted(() => {
   .user-details {
     display: none;
   }
-  
+
   .logo-text {
     display: none;
   }

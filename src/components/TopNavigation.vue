@@ -30,7 +30,7 @@ const logout = () => {
 <style scoped>
 .top-nav {
   background-color: white;
-  color: #1e40af;
+  color: white;
   padding: 0.75rem 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
