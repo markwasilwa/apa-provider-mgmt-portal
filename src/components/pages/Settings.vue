@@ -279,35 +279,67 @@
             <p class="section-description">Customize your personal settings and preferences</p>
           </div>
 
-          <div class="content-grid">
-            <!-- Display Preferences -->
-            <div class="config-card">
-              <div class="card-header">
-                <h3 class="card-title">Display Settings</h3>
-                <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
+          <div class="preferences-container">
+            <!-- Theme Selection -->
+            <div class="preference-group">
+              <div class="preference-header">
+                <h3 class="preference-title">
+                  <svg class="preference-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                  </svg>
+                  Theme
+                </h3>
               </div>
-              <div class="card-content">
-                <div class="setting-item">
-                  <label class="setting-label">Theme</label>
-                  <select class="setting-input">
-                    <option value="light" selected>Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="system">System Default</option>
-                  </select>
-                </div>
-                <div class="setting-item">
+              <div class="theme-options">
+                <button 
+                  class="theme-option" 
+                  :class="{ active: themeStore.currentTheme === 'light' }"
+                  @click="themeStore.setTheme('light')"
+                >
+                  <div class="theme-preview light-preview"></div>
+                  <span class="theme-label">Light</span>
+                </button>
+                <button 
+                  class="theme-option" 
+                  :class="{ active: themeStore.currentTheme === 'dark' }"
+                  @click="themeStore.setTheme('dark')"
+                >
+                  <div class="theme-preview dark-preview"></div>
+                  <span class="theme-label">Dark</span>
+                </button>
+                <button 
+                  class="theme-option" 
+                  :class="{ active: themeStore.currentTheme === 'system' }"
+                  @click="themeStore.setTheme('system')"
+                >
+                  <div class="theme-preview system-preview"></div>
+                  <span class="theme-label">System</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Display Settings -->
+            <div class="preference-group">
+              <div class="preference-header">
+                <h3 class="preference-title">
+                  <svg class="preference-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  Display Settings
+                </h3>
+              </div>
+              <div class="compact-settings">
+                <div class="setting-row">
                   <label class="setting-label">Language</label>
-                  <select class="setting-input">
+                  <select class="setting-input compact-input">
                     <option value="en" selected>English</option>
                     <option value="sw">Swahili</option>
                     <option value="fr">French</option>
                   </select>
                 </div>
-                <div class="setting-item">
+                <div class="setting-row">
                   <label class="setting-label">Items per page</label>
-                  <select class="setting-input">
+                  <select class="setting-input compact-input">
                     <option value="10">10</option>
                     <option value="20" selected>20</option>
                     <option value="50">50</option>
@@ -317,16 +349,18 @@
               </div>
             </div>
 
-            <!-- Notification Preferences -->
-            <div class="config-card">
-              <div class="card-header">
-                <h3 class="card-title">Notifications</h3>
-                <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM7 7h10v10H7V7zm10-5H7a2 2 0 00-2 2v.586l.414.414L7 7h10V4a2 2 0 00-2-2z"></path>
-                </svg>
+            <!-- Notification Settings -->
+            <div class="preference-group">
+              <div class="preference-header">
+                <h3 class="preference-title">
+                  <svg class="preference-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                  </svg>
+                  Notifications
+                </h3>
               </div>
-              <div class="card-content">
-                <div class="setting-item">
+              <div class="compact-settings">
+                <div class="setting-row">
                   <label class="setting-label">Email Notifications</label>
                   <div class="toggle-switch">
                     <input type="checkbox" id="email-notif-toggle" class="toggle-input" checked>
@@ -335,7 +369,7 @@
                     </label>
                   </div>
                 </div>
-                <div class="setting-item">
+                <div class="setting-row">
                   <label class="setting-label">Browser Notifications</label>
                   <div class="toggle-switch">
                     <input type="checkbox" id="browser-notif-toggle" class="toggle-input">
@@ -344,7 +378,7 @@
                     </label>
                   </div>
                 </div>
-                <div class="setting-item">
+                <div class="setting-row">
                   <label class="setting-label">Sound Notifications</label>
                   <div class="toggle-switch">
                     <input type="checkbox" id="sound-notif-toggle" class="toggle-input" checked>
@@ -358,8 +392,8 @@
           </div>
 
           <div class="settings-actions">
-            <button class="btn btn-outline">Reset Preferences</button>
-            <button class="btn btn-primary">Save Preferences</button>
+            <button class="btn btn-outline" @click="resetPreferences">Reset Preferences</button>
+            <button class="btn btn-primary" @click="savePreferences">Save Preferences</button>
           </div>
         </div>
       </div>
@@ -370,11 +404,27 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import ProviderCategory from '@/components/pages/ProviderCategory.vue'
 import UserManagement from '@/components/pages/UserManagement.vue'
 
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 const activeTab = ref(authStore.isProvider ? 'preferences' : 'profiles')
+
+// Initialize theme when component is mounted
+themeStore.initTheme()
+
+// Methods for preference actions
+const resetPreferences = () => {
+  themeStore.setTheme('light')
+  // Reset other preferences as needed
+}
+
+const savePreferences = () => {
+  // Theme is saved automatically when changed
+  // Save other preferences as needed
+}
 </script>
 
 <style scoped>
@@ -813,5 +863,193 @@ const activeTab = ref(authStore.isProvider ? 'preferences' : 'profiles')
   .subtitle {
     font-size: 0.875rem;
   }
+}
+
+/* New styles for compact user preferences */
+.preferences-container {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.preference-group {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.preference-header {
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.preference-title {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.preference-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
+  color: #1e40af;
+}
+
+.compact-settings {
+  padding: 0.75rem 1rem;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.compact-input {
+  width: auto;
+  min-width: 120px;
+}
+
+/* Theme selection styles */
+.theme-options {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-option:hover {
+  background-color: #f8fafc;
+}
+
+.theme-option.active {
+  border-color: #1e40af;
+  background-color: #f1f5f9;
+}
+
+.theme-preview {
+  width: 80px;
+  height: 50px;
+  border-radius: 0.25rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.light-preview {
+  background-color: #ffffff;
+  position: relative;
+}
+
+.light-preview::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+}
+
+.light-preview::before {
+  content: '';
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  right: 30px;
+  height: 8px;
+  background-color: #f1f5f9;
+  border-radius: 4px;
+}
+
+.dark-preview {
+  background-color: #1e293b;
+  position: relative;
+}
+
+.dark-preview::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  background-color: #475569;
+  border-radius: 4px;
+}
+
+.dark-preview::before {
+  content: '';
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  right: 30px;
+  height: 8px;
+  background-color: #334155;
+  border-radius: 4px;
+}
+
+.system-preview {
+  background: linear-gradient(to right, #ffffff 50%, #1e293b 50%);
+  position: relative;
+}
+
+.system-preview::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  background: linear-gradient(to right, #e2e8f0 50%, #475569 50%);
+  border-radius: 4px;
+}
+
+.system-preview::before {
+  content: '';
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  right: 30px;
+  height: 8px;
+  background: linear-gradient(to right, #f1f5f9 50%, #334155 50%);
+  border-radius: 4px;
+}
+
+.theme-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.theme-option.active .theme-label {
+  color: #1e40af;
 }
 </style>
