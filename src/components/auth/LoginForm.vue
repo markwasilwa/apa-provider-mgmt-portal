@@ -8,7 +8,7 @@
         <h1 class="main-title">Sign in to your account</h1>
         <p class="subtitle">Access the Provider Management Portal</p>
       </div>
-      
+
       <form class="login-form" @submit.prevent="handleSubmit">
         <div class="form-section">
           <div class="input-group">
@@ -63,8 +63,11 @@
           </div>
         </div>
 
-        <div v-if="error" class="error-alert">
-          <h3 class="alert-text">{{ error }}</h3>
+        <div v-if="error" class="alert alert-error">
+          <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          {{ error }}
         </div>
 
         <div class="submit-section">
@@ -350,18 +353,32 @@ const handleApiKeyLogin = async () => {
 }
 
 /* Alert Section */
-.error-alert {
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   border-radius: 0.375rem;
-  background-color: #fee2e2;
-  padding: 1rem;
-  border: 1px solid #fecaca;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 }
 
-.alert-text {
-  font-size: 0.875rem;
-  font-weight: 500;
+.alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert-error {
+  background-color: #fee2e2;
   color: #dc2626;
-  margin: 0;
+  border: 1px solid #fca5a5;
+}
+
+.alert-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 /* Submit Section */
@@ -500,11 +517,11 @@ const handleApiKeyLogin = async () => {
   .login-container {
     padding: 1rem;
   }
-  
+
   .login-card {
     padding: 1.5rem;
   }
-  
+
   .options-section {
     flex-direction: column;
     align-items: flex-start;

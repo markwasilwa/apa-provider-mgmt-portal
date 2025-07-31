@@ -95,6 +95,13 @@
           <p class="loading-text">Loading provider requests...</p>
         </div>
 
+        <!-- Error Indicator -->
+        <div v-else-if="fetchError" class="error-container">
+          <div class="error-icon">❌</div>
+          <p class="error-text">Failed to load provider requests</p>
+          <button @click="fetchProviderRequests" class="retry-btn">Try Again</button>
+        </div>
+
         <div v-else class="table-wrapper">
           <table class="requests-table">
             <thead>
@@ -944,12 +951,14 @@ const totalElements = ref(0)
 // Requests data
 const requests = ref([])
 const loading = ref(false)
+const fetchError = ref(false)
 const categories = ref([])
 const countries = ref([])
 
 // Fetch provider requests from API
 const fetchProviderRequests = async () => {
   loading.value = true
+  fetchError.value = false
   try {
     const params = {
       page: currentPage.value,
@@ -1005,6 +1014,7 @@ const fetchProviderRequests = async () => {
     }))
   } catch (error) {
     console.error('Error fetching provider requests:', error)
+    fetchError.value = true
     showToastMessage('Failed to load provider requests. Please try again.')
   } finally {
     loading.value = false
@@ -2997,6 +3007,47 @@ const createRequest = async () => {
   color: #64748b;
   font-size: 0.95rem;
   font-weight: 500;
+}
+
+/* Error Indicator */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #ef4444;
+}
+
+.error-text {
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.retry-btn {
+  padding: 0.5rem 1.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retry-btn:hover {
+  background-color: #2563eb;
 }
 
 @keyframes spin {

@@ -8,7 +8,7 @@
         <h2 class="title">Create your account</h2>
         <p class="subtitle">Join the Provider Management Portal</p>
       </div>
-      
+
       <form class="register-form" @submit.prevent="handleSubmit">
         <div class="form-grid">
           <div class="form-group">
@@ -115,16 +115,18 @@
           <p v-if="errors.confirmPassword" class="error-text">{{ errors.confirmPassword }}</p>
         </div>
 
-        <div v-if="error" class="error-alert">
-          <div class="error-content">
-            <h3 class="error-title">{{ error }}</h3>
-          </div>
+        <div v-if="error" class="alert alert-error">
+          <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          {{ error }}
         </div>
 
-        <div v-if="success" class="success-alert">
-          <div class="success-content">
-            <h3 class="success-title">{{ success }}</h3>
-          </div>
+        <div v-if="success" class="alert alert-success">
+          <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          {{ success }}
         </div>
 
         <div class="form-submit">
@@ -245,12 +247,13 @@ const handleSubmit = async () => {
 
     await authStore.register(userData)
     success.value = 'Account created successfully! Please check your email for verification instructions.'
-    
+
     setTimeout(() => {
       router.push('/dashboard')
     }, 2000)
   } catch (err) {
     error.value = err.message
+    success.value = '' // Ensure success message is cleared when there's an error
   } finally {
     loading.value = false
   }
@@ -370,42 +373,32 @@ const handleSubmit = async () => {
   color: #dc2626;
 }
 
-.error-alert {
-  border-radius: 0.375rem;
-  background-color: #fef2f2;
-  padding: 1rem;
-  border: 1px solid #fecaca;
-}
-
-.error-content {
+.alert {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 }
 
-.error-title {
-  font-size: 0.875rem;
-  font-weight: 500;
+.alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert-error {
+  background-color: #fee2e2;
   color: #dc2626;
-  margin: 0;
+  border: 1px solid #fca5a5;
 }
 
-.success-alert {
-  border-radius: 0.375rem;
-  background-color: #f0fdf4;
-  padding: 1rem;
-  border: 1px solid #bbf7d0;
-}
-
-.success-content {
-  display: flex;
-  align-items: center;
-}
-
-.success-title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #166534;
-  margin: 0;
+.alert-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 .form-submit {
@@ -483,11 +476,11 @@ const handleSubmit = async () => {
   .register-container {
     padding: 1rem;
   }
-  
+
   .register-card {
     padding: 1.5rem;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
   }
