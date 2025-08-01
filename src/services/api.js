@@ -401,6 +401,84 @@ export class ProviderAPIService {
     }
   }
 
+  // Upload rate template file
+  static async uploadRateTemplate(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await api.post(`${API_BASE_URL}/rates/template`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to upload rate template:', error)
+      throw error
+    }
+  }
+
+  // Get master rates
+  static async getMasterRates(params = {}) {
+    try {
+      const response = await api.get(`${API_BASE_URL}/rates/master`)
+      
+      // Since the API returns a simple array, we'll handle pagination and filtering client-side
+      let rates = response.data || []
+      
+      // Apply search filter if provided
+      if (params.search) {
+        const searchTerm = params.search.toLowerCase()
+        rates = rates.filter(rate => 
+          rate.itemCode.toLowerCase().includes(searchTerm) ||
+          rate.description.toLowerCase().includes(searchTerm)
+        )
+      }
+      
+      // Apply sorting
+      if (params.sortBy) {
+        rates.sort((a, b) => {
+          let aVal = a[params.sortBy]
+          let bVal = b[params.sortBy]
+          
+          // Handle different data types
+          if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase()
+            bVal = bVal.toLowerCase()
+          }
+          
+          if (params.sortDir === 'desc') {
+            return aVal > bVal ? -1 : aVal < bVal ? 1 : 0
+          } else {
+            return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+          }
+        })
+      }
+      
+      // Apply pagination
+      const page = params.page || 0
+      const size = params.size || 20
+      const startIndex = page * size
+      const endIndex = startIndex + size
+      const paginatedRates = rates.slice(startIndex, endIndex)
+      
+      // Return data in expected format
+      return {
+        content: paginatedRates,
+        page: {
+          number: page,
+          size: size,
+          totalElements: rates.length,
+          totalPages: Math.ceil(rates.length / size)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch master rates:', error)
+      throw error
+    }
+  }
+
   // Actisure Core System API methods for provider creation
   static async createProviderInActisure(providerName, kraPin, licenseNo) {
     const createProviderPayload = {

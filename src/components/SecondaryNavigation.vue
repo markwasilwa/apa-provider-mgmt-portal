@@ -22,6 +22,11 @@
             Category & Country
           </router-link>
         </li>
+        <li class="nav-item" v-if="!authStore.isProvider">
+          <router-link to="/upload-rates" class="nav-link" active-class="active">
+            Upload Rates
+          </router-link>
+        </li>
         <li class="nav-item">
           <router-link to="/change-password" class="nav-link" active-class="active">
             Settings

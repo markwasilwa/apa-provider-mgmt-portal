@@ -110,6 +110,22 @@
                 Actisure Listing
               </router-link>
             </li>
+            <li class="nav-item" v-if="!authStore.isProvider">
+              <router-link to="/provider-category" class="nav-link" active-class="active">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                Category & Country
+              </router-link>
+            </li>
+            <li class="nav-item" v-if="!authStore.isProvider">
+              <router-link to="/upload-rates" class="nav-link" active-class="active">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                </svg>
+                Upload Rates
+              </router-link>
+            </li>
             <li class="nav-item">
               <router-link to="/settings" class="nav-link" active-class="active">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

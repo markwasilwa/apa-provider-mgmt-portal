@@ -5,6 +5,7 @@ import ProviderCategory from '@/components/pages/ProviderCategory.vue'
 import ProviderVisits from '@/components/pages/ProviderVisits.vue'
 import ProviderListings from '@/components/pages/ProviderListings.vue'
 import ProviderRequests from '@/components/pages/ProviderRequests.vue'
+import UploadRates from '@/components/pages/UploadRates.vue'
 import ChangePassword from '@/components/pages/ChangePassword.vue'
 import UserProfile from '@/components/pages/UserProfile.vue'
 import Settings from '@/components/pages/Settings.vue'
@@ -66,6 +67,12 @@ const router = createRouter({
       path: '/provider-category',
       name: 'provider-category',
       component: ProviderCategory,
+      meta: { requiresAuth: true, requiresNonProvider: true }
+    },
+    {
+      path: '/upload-rates',
+      name: 'upload-rates',
+      component: UploadRates,
       meta: { requiresAuth: true, requiresNonProvider: true }
     },
     {

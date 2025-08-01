@@ -8,27 +8,32 @@ const defaultDocumentTemplates = {
     { id: 1, name: 'Hospital License', required: true },
     { id: 2, name: 'Medical Practitioner License', required: true },
     { id: 3, name: 'Tax Compliance Certificate', required: true },
-    { id: 4, name: 'Insurance Certificate', required: false }
+    { id: 4, name: 'Insurance Certificate', required: false },
+    { id: 5, name: 'Provider Rates', required: true }
   ],
   'Dental': [
     { id: 1, name: 'Dental Practice License', required: true },
     { id: 2, name: 'Dentist License', required: true },
-    { id: 3, name: 'Tax Compliance Certificate', required: false }
+    { id: 3, name: 'Tax Compliance Certificate', required: false },
+    { id: 4, name: 'Provider Rates', required: true }
   ],
   'Specialist': [
     { id: 1, name: 'Specialist License', required: true },
     { id: 2, name: 'Medical Practitioner License', required: true },
-    { id: 3, name: 'Tax Compliance Certificate', required: true }
+    { id: 3, name: 'Tax Compliance Certificate', required: true },
+    { id: 4, name: 'Provider Rates', required: true }
   ],
   'Optical': [
     { id: 1, name: 'Optical License', required: true },
     { id: 2, name: 'Optometrist License', required: true },
-    { id: 3, name: 'Tax Compliance Certificate', required: false }
+    { id: 3, name: 'Tax Compliance Certificate', required: false },
+    { id: 4, name: 'Provider Rates', required: true }
   ],
   'Default': [
     { id: 1, name: 'Business License', required: true },
     { id: 2, name: 'Practitioner License', required: true },
-    { id: 3, name: 'Tax Compliance Certificate', required: true }
+    { id: 3, name: 'Tax Compliance Certificate', required: true },
+    { id: 4, name: 'Provider Rates', required: true }
   ]
 };
 
@@ -182,5 +187,23 @@ export class SettingsService {
         return false;
       }
     }
+  }
+
+  // Clear cached settings and force refresh from defaults
+  static clearCache() {
+    try {
+      localStorage.removeItem('categoryDocumentMappings');
+      return true;
+    } catch (error) {
+      console.error('Failed to clear settings cache:', error);
+      return false;
+    }
+  }
+
+  // Force refresh settings with latest defaults
+  static forceRefresh() {
+    this.clearCache();
+    this.setCategoryDocuments(defaultDocumentTemplates);
+    return defaultDocumentTemplates;
   }
 }

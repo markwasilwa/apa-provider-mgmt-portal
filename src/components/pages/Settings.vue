@@ -264,6 +264,43 @@
                 </div>
               </div>
             </div>
+
+            <!-- Document Settings -->
+            <div class="config-card">
+              <div class="card-header">
+                <h3 class="card-title">Document Settings</h3>
+                <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div class="card-content">
+                <div class="setting-item">
+                  <label class="setting-label">Document Templates</label>
+                  <p class="setting-description">Manage required documents for provider categories</p>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-actions">
+                    <button @click="refreshDocumentSettings" class="btn btn-outline btn-sm">
+                      <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                      </svg>
+                      Refresh Document Templates
+                    </button>
+                    <button @click="resetDocumentSettings" class="btn btn-outline btn-sm">
+                      <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                      </svg>
+                      Reset to Defaults
+                    </button>
+                  </div>
+                </div>
+                <div v-if="documentRefreshMessage" class="setting-item">
+                  <div class="alert" :class="documentRefreshSuccess ? 'alert-success' : 'alert-error'">
+                    {{ documentRefreshMessage }}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="settings-actions">
@@ -405,12 +442,17 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { SettingsService } from '@/services/settings'
 import ProviderCategory from '@/components/pages/ProviderCategory.vue'
 import UserManagement from '@/components/pages/UserManagement.vue'
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const activeTab = ref(authStore.isProvider ? 'preferences' : 'profiles')
+
+// Document settings state
+const documentRefreshMessage = ref('')
+const documentRefreshSuccess = ref(false)
 
 // Initialize theme when component is mounted
 themeStore.initTheme()
@@ -424,6 +466,51 @@ const resetPreferences = () => {
 const savePreferences = () => {
   // Theme is saved automatically when changed
   // Save other preferences as needed
+}
+
+// Methods for document settings
+const refreshDocumentSettings = () => {
+  try {
+    SettingsService.forceRefresh()
+    documentRefreshMessage.value = 'Document templates refreshed successfully! Provider Rates document has been added to all categories.'
+    documentRefreshSuccess.value = true
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      documentRefreshMessage.value = ''
+    }, 5000)
+  } catch (error) {
+    console.error('Failed to refresh document settings:', error)
+    documentRefreshMessage.value = 'Failed to refresh document templates. Please try again.'
+    documentRefreshSuccess.value = false
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      documentRefreshMessage.value = ''
+    }, 5000)
+  }
+}
+
+const resetDocumentSettings = async () => {
+  try {
+    await SettingsService.resetToDefaults()
+    documentRefreshMessage.value = 'Document settings reset to defaults successfully!'
+    documentRefreshSuccess.value = true
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      documentRefreshMessage.value = ''
+    }, 5000)
+  } catch (error) {
+    console.error('Failed to reset document settings:', error)
+    documentRefreshMessage.value = 'Failed to reset document settings. Please try again.'
+    documentRefreshSuccess.value = false
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      documentRefreshMessage.value = ''
+    }, 5000)
+  }
 }
 </script>
 
@@ -1051,5 +1138,59 @@ const savePreferences = () => {
 
 .theme-option.active .theme-label {
   color: #1e40af;
+}
+
+/* Document Settings */
+.setting-description {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.setting-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+.alert {
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.alert-success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+@media (max-width: 640px) {
+  .setting-actions {
+    flex-direction: column;
+  }
+  
+  .setting-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>
