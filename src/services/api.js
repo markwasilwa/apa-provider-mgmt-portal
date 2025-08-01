@@ -466,6 +466,23 @@ export class ProviderAPIService {
     }
   }
 
+  // Sync entity details from Actisure backend
+  static async syncEntityDetailsFromActisure(entityId) {
+    try {
+      const response = await api.get(`/api/actisure/providers/${entityId}`)
+      
+      return {
+        success: true,
+        entityData: response.data,
+        message: 'Entity details synced successfully'
+      }
+
+    } catch (error) {
+      console.error('Failed to sync entity details from Actisure:', error)
+      throw error
+    }
+  }
+
   // Add contact details to provider in Actisure
   static async addContactDetailsToActisure(entityId, providerData) {
     const contactDetailsPayload = {

@@ -1192,6 +1192,7 @@ const confirmApprove = async () => {
       { text: 'Creating provider in Actisure', status: 'pending' },
       { text: 'Adding healthcare provider role', status: 'pending' },
       { text: 'Setting up payee details', status: 'pending' },
+      { text: 'Syncing entity details', status: 'pending' },
       { text: 'Adding contact/address info', status: 'pending' },
       { text: 'Finalizing setup', status: 'pending' }
     ]
@@ -1224,7 +1225,16 @@ const confirmApprove = async () => {
       
       console.log('Provider created in Actisure with Entity ID:', actisureResult.entityId)
       
-      // Step 5: Add contact details
+      // Step 5: Sync entity details from backend
+      const syncResult = await ProviderAPIService.syncEntityDetailsFromActisure(actisureResult.entityId)
+      
+      // Update step 5
+      loadingSteps.value[4].status = 'completed'
+      loadingSteps.value[5].status = 'in-progress'
+      
+      console.log('Entity details synced from Actisure:', syncResult.entityData)
+      
+      // Step 6: Add contact details
       const contactResult = await ProviderAPIService.addContactDetailsToActisure(
         actisureResult.entityId,
         {
@@ -1233,14 +1243,14 @@ const confirmApprove = async () => {
         }
       )
       
-      // Update step 5
-      loadingSteps.value[4].status = 'completed'
-      loadingSteps.value[5].status = 'in-progress'
+      // Update step 6
+      loadingSteps.value[5].status = 'completed'
+      loadingSteps.value[6].status = 'in-progress'
       
       console.log('Contact details added to Actisure:', contactResult)
       
-      // Step 6: Finalize
-      loadingSteps.value[5].status = 'completed'
+      // Step 7: Finalize
+      loadingSteps.value[6].status = 'completed'
       
       // Wait a moment to show completion
       await new Promise(resolve => setTimeout(resolve, 1000))
