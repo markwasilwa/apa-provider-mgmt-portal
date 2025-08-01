@@ -11,7 +11,7 @@ const api = axios.create({
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('jwt_token')
   const apiKey = localStorage.getItem('api_key')
-  
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   } else if (apiKey) {
@@ -423,10 +423,10 @@ export class ProviderAPIService {
   static async getMasterRates(params = {}) {
     try {
       const response = await api.get(`${API_BASE_URL}/rates/master`)
-      
+
       // Since the API returns a simple array, we'll handle pagination and filtering client-side
       let rates = response.data || []
-      
+
       // Apply search filter if provided
       if (params.search) {
         const searchTerm = params.search.toLowerCase()
@@ -435,19 +435,19 @@ export class ProviderAPIService {
           rate.description.toLowerCase().includes(searchTerm)
         )
       }
-      
+
       // Apply sorting
       if (params.sortBy) {
         rates.sort((a, b) => {
           let aVal = a[params.sortBy]
           let bVal = b[params.sortBy]
-          
+
           // Handle different data types
           if (typeof aVal === 'string') {
             aVal = aVal.toLowerCase()
             bVal = bVal.toLowerCase()
           }
-          
+
           if (params.sortDir === 'desc') {
             return aVal > bVal ? -1 : aVal < bVal ? 1 : 0
           } else {
@@ -455,14 +455,14 @@ export class ProviderAPIService {
           }
         })
       }
-      
+
       // Apply pagination
       const page = params.page || 0
       const size = params.size || 20
       const startIndex = page * size
       const endIndex = startIndex + size
       const paginatedRates = rates.slice(startIndex, endIndex)
-      
+
       // Return data in expected format
       return {
         content: paginatedRates,
@@ -496,7 +496,7 @@ export class ProviderAPIService {
     try {
       // Step 1: Create Provider
       const createResponse = await api.post('/client/add', createProviderPayload)
-      
+
       if (!createResponse.data.success) {
         throw new Error(createResponse.data.errorMessage || 'Failed to create provider')
       }
@@ -514,7 +514,7 @@ export class ProviderAPIService {
       }
 
       const healthcareRoleResponse = await api.post('/api/entity/add-role-info/healthcare-provider', healthcareRolePayload)
-      
+
       if (healthcareRoleResponse.data.status !== 0) {
         throw new Error(healthcareRoleResponse.data.error || 'Failed to add healthcare provider role')
       }
@@ -527,7 +527,7 @@ export class ProviderAPIService {
       }
 
       const payeeResponse = await api.post('/api/entity/add-role-info/payee', payeePayload)
-      
+
       if (payeeResponse.data.status !== 0) {
         throw new Error(payeeResponse.data.error || 'Failed to add payee role')
       }
@@ -548,7 +548,7 @@ export class ProviderAPIService {
   static async syncEntityDetailsFromActisure(entityId) {
     try {
       const response = await api.get(`/api/actisure/providers/${entityId}`)
-      
+
       return {
         success: true,
         entityData: response.data,
@@ -593,7 +593,7 @@ export class ProviderAPIService {
 
     try {
       const response = await api.post('/api/entity/add-contact-details', contactDetailsPayload)
-      
+
       if (response.data.status !== 0) {
         throw new Error(response.data.error || 'Failed to add contact details')
       }
@@ -660,6 +660,85 @@ export class ProviderAPIService {
       return true
     } catch (error) {
       console.error(`Failed to delete provider country with ID ${id}:`, error)
+      throw error
+    }
+  }
+
+  // Dashboard Statistics API method
+  static async getDashboardStatistics() {
+    try {
+      const response = await api.get(`${API_BASE_URL}/dashboard/statistics`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch dashboard statistics:', error)
+      // Return null to indicate API is not available
+      return null
+    }
+  }
+
+  // Provider Statistics API method
+  static async getProviderStatistics() {
+    try {
+      const response = await api.get(`${API_BASE_URL}/providers/statistics`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch provider statistics:', error)
+      // Return empty object with expected structure
+      return {
+        totalProviders: 0,
+        activeProviders: 0,
+        byStatus: {},
+        byCountry: {},
+        byCategory: {}
+      }
+    }
+  }
+
+  // Request Trends API method
+  static async getRequestTrends(startDate, endDate) {
+    const queryParams = new URLSearchParams({
+      startDate,
+      endDate
+    })
+
+    try {
+      const response = await api.get(`${API_BASE_URL}/provider-requests/trends?${queryParams}`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch request trends:', error)
+      // Return empty array
+      return []
+    }
+  }
+
+  // Performance Metrics API method
+  static async getPerformanceMetrics(startDate, endDate) {
+    const queryParams = new URLSearchParams({
+      startDate,
+      endDate
+    })
+
+    try {
+      const response = await api.get(`${API_BASE_URL}/performance/metrics?${queryParams}`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch performance metrics:', error)
+      // Return empty object
+      return {}
+    }
+  }
+
+  // Export Data API method
+  static async exportData(exportType, format) {
+    const queryParams = new URLSearchParams({
+      format
+    })
+
+    try {
+      const response = await api.get(`${API_BASE_URL}/export/${exportType}?${queryParams}`)
+      return response.data
+    } catch (error) {
+      console.error(`Failed to export ${exportType} data:`, error)
       throw error
     }
   }

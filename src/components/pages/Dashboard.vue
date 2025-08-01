@@ -10,7 +10,13 @@
           <p class="subtitle">Overview of system metrics and key performance indicators</p>
         </div>
         <div class="header-stats">
-          <div class="stat-item" v-for="(stat, index) in stats" :key="index">
+          <div v-if="loading" class="header-loading">
+            Loading metrics...
+          </div>
+          <div v-else-if="stats.length === 0" class="header-no-data">
+            No metrics available
+          </div>
+          <div v-else class="stat-item" v-for="(stat, index) in stats" :key="index">
             <div class="stat-number">{{ stat.value }}</div>
             <div class="stat-label">{{ stat.title }}</div>
           </div>
@@ -21,7 +27,16 @@
     <!-- Main Content -->
     <div class="content-section">
       <!-- KPI Cards -->
-      <div class="kpi-section">
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading dashboard metrics...</p>
+      </div>
+
+      <div v-else-if="stats.length === 0" class="no-data-container">
+        <p>No metrics data available. Please check your connection or try again later.</p>
+      </div>
+
+      <div v-else class="kpi-section">
         <div class="kpi-card" v-for="stat in stats" :key="stat.title">
           <div class="kpi-header">
             <component :is="stat.icon" class="kpi-icon" />
@@ -98,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { 
   BuildingOffice2Icon, 
   ClipboardDocumentListIcon, 
@@ -110,37 +125,82 @@ import {
   ArrowUpIcon,
   ArrowDownIcon
 } from '@heroicons/vue/24/outline'
+import { ProviderAPIService } from '@/services/api'
 
-const stats = ref([
-  {
-    title: 'Total Providers',
-    value: '1,245',
-    icon: BuildingOffice2Icon,
-    change: '+12%',
-    changeType: 'positive'
-  },
-  {
-    title: 'Active Requests',
-    value: '87',
-    icon: ClipboardDocumentListIcon,
-    change: '-5%',
-    changeType: 'negative'
-  },
-  {
-    title: 'Completed Visits',
-    value: '456',
-    icon: CheckCircleIcon,
-    change: '+23%',
-    changeType: 'positive'
-  },
-  {
-    title: 'Pending Approvals',
-    value: '23',
-    icon: ClockIcon,
-    change: '+8%',
-    changeType: 'positive'
+// Initialize with empty array, will be populated from API
+const stats = ref([])
+const loading = ref(true)
+
+// Function to fetch dashboard statistics from API
+const fetchDashboardStats = async () => {
+  try {
+    // Fetch dashboard statistics from API
+    const dashboardData = await ProviderAPIService.getDashboardStatistics()
+
+    const metricsData = []
+
+    // If API is available, use the data from API
+    if (dashboardData) {
+      // Add Total Providers card if data is available
+      if (dashboardData.totalProviders !== undefined) {
+        metricsData.push({
+          title: 'Total Providers',
+          value: dashboardData.totalProviders.toLocaleString(),
+          icon: BuildingOffice2Icon,
+          change: dashboardData.providerChange || '+0%',
+          changeType: dashboardData.providerChange && dashboardData.providerChange.startsWith('+') ? 'positive' : 'negative'
+        })
+      }
+
+      // Add Active Requests card if data is available
+      if (dashboardData.activeRequests !== undefined) {
+        metricsData.push({
+          title: 'Active Requests',
+          value: dashboardData.activeRequests.toLocaleString(),
+          icon: ClipboardDocumentListIcon,
+          change: dashboardData.requestChange || '+0%',
+          changeType: dashboardData.requestChange && dashboardData.requestChange.startsWith('+') ? 'positive' : 'negative'
+        })
+      }
+
+      // Add Completed Visits card if data is available
+      if (dashboardData.completedVisits !== undefined) {
+        metricsData.push({
+          title: 'Completed Visits',
+          value: dashboardData.completedVisits.toLocaleString(),
+          icon: CheckCircleIcon,
+          change: dashboardData.visitChange || '+0%',
+          changeType: dashboardData.visitChange && dashboardData.visitChange.startsWith('+') ? 'positive' : 'negative'
+        })
+      }
+
+      // Add Pending Approvals card if data is available
+      if (dashboardData.pendingApprovals !== undefined) {
+        metricsData.push({
+          title: 'Pending Approvals',
+          value: dashboardData.pendingApprovals.toLocaleString(),
+          icon: ClockIcon,
+          change: dashboardData.approvalChange || '+0%',
+          changeType: dashboardData.approvalChange && dashboardData.approvalChange.startsWith('+') ? 'positive' : 'negative'
+        })
+      }
+    }
+
+    // Update stats with API data (will be empty if API is not available)
+    stats.value = metricsData
+  } catch (error) {
+    console.error('Error fetching dashboard statistics:', error)
+    // If there's an error, use empty array
+    stats.value = []
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Fetch dashboard statistics when component is mounted
+onMounted(() => {
+  fetchDashboardStats()
+})
 
 const recentActivities = ref([
   {
@@ -244,6 +304,15 @@ const recentActivities = ref([
   font-size: 0.875rem;
   color: #64748b;
   margin-top: 0.25rem;
+}
+
+.header-loading, .header-no-data {
+  font-size: 0.875rem;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.25rem;
+  border: 1px solid #e2e8f0;
 }
 
 /* Content Section */
@@ -456,6 +525,41 @@ const recentActivities = ref([
 .activity-time {
   font-size: 0.75rem;
   color: #64748b;
+}
+
+/* Loading and No Data Styles */
+.loading-container, .no-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-data-container p {
+  color: #64748b;
+  font-size: 1rem;
+  text-align: center;
 }
 
 /* Responsive Styles */
