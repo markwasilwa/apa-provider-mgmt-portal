@@ -4,18 +4,12 @@ import { ProviderAPIService } from '@/services/api'
 // Default document types for common categories
 // These will be used as templates for categories from the API
 const defaultDocumentTemplates = {
-  'Hospital': [
+  'Healthcare Provider': [
     { id: 1, name: 'Hospital License', required: true },
     { id: 2, name: 'Medical Practitioner License', required: true },
     { id: 3, name: 'Tax Compliance Certificate', required: true },
     { id: 4, name: 'Insurance Certificate', required: false },
     { id: 5, name: 'Provider Rates', required: true }
-  ],
-  'Dental': [
-    { id: 1, name: 'Dental Practice License', required: true },
-    { id: 2, name: 'Dentist License', required: true },
-    { id: 3, name: 'Tax Compliance Certificate', required: false },
-    { id: 4, name: 'Provider Rates', required: true }
   ],
   'Specialist': [
     { id: 1, name: 'Specialist License', required: true },
@@ -26,6 +20,37 @@ const defaultDocumentTemplates = {
   'Optical': [
     { id: 1, name: 'Optical License', required: true },
     { id: 2, name: 'Optometrist License', required: true },
+    { id: 3, name: 'Tax Compliance Certificate', required: false },
+    { id: 4, name: 'Provider Rates', required: true }
+  ],
+  'Others': [
+    { id: 1, name: 'Business License', required: true },
+    { id: 2, name: 'Practitioner License', required: true },
+    { id: 3, name: 'Tax Compliance Certificate', required: true },
+    { id: 4, name: 'Provider Rates', required: true }
+  ],
+  'Dental': [
+    { id: 1, name: 'Dental Practice License', required: true },
+    { id: 2, name: 'Dentist License', required: true },
+    { id: 3, name: 'Tax Compliance Certificate', required: false },
+    { id: 4, name: 'Provider Rates', required: true }
+  ],
+  'Radiology': [
+    { id: 1, name: 'Radiology License', required: true },
+    { id: 2, name: 'Medical Practitioner License', required: true },
+    { id: 3, name: 'Tax Compliance Certificate', required: true },
+    { id: 4, name: 'Equipment Certification', required: true },
+    { id: 5, name: 'Provider Rates', required: true }
+  ],
+  'Orthopaedic': [
+    { id: 1, name: 'Orthopaedic License', required: true },
+    { id: 2, name: 'Medical Practitioner License', required: true },
+    { id: 3, name: 'Tax Compliance Certificate', required: true },
+    { id: 4, name: 'Provider Rates', required: true }
+  ],
+  'Physiotherapy': [
+    { id: 1, name: 'Physiotherapy License', required: true },
+    { id: 2, name: 'Medical Practitioner License', required: true },
     { id: 3, name: 'Tax Compliance Certificate', required: false },
     { id: 4, name: 'Provider Rates', required: true }
   ],
@@ -49,9 +74,22 @@ export class SettingsService {
         const categoryName = category.categoryName;
 
         // Use template if available, otherwise use default template
-        if (defaultDocumentTemplates[categoryName]) {
-          mappings[categoryName] = [...defaultDocumentTemplates[categoryName]];
+        // First try exact match, then try case-insensitive match
+        let template = defaultDocumentTemplates[categoryName];
+        
+        if (!template) {
+          // Try to find a matching template by case-insensitive comparison
+          const templateKey = Object.keys(defaultDocumentTemplates).find(key => 
+            key.toLowerCase() === categoryName.toLowerCase()
+          );
+          template = templateKey ? defaultDocumentTemplates[templateKey] : null;
+        }
+        
+        if (template) {
+          mappings[categoryName] = [...template];
         } else {
+          // Use default template and log for debugging
+          console.log(`No template found for category: "${categoryName}", using default template`);
           mappings[categoryName] = [...defaultDocumentTemplates['Default']];
         }
       });
@@ -100,7 +138,26 @@ export class SettingsService {
   // Get documents for a specific category
   static getDocumentsForCategory(category) {
     const mappings = this.getCategoryDocuments();
-    return mappings[category] || [];
+    
+    // First try exact match
+    if (mappings[category]) {
+      return mappings[category];
+    }
+    
+    // Try case-insensitive match
+    const mappingKey = Object.keys(mappings).find(key => 
+      key.toLowerCase() === category.toLowerCase()
+    );
+    
+    if (mappingKey && mappings[mappingKey]) {
+      return mappings[mappingKey];
+    }
+    
+    // Log for debugging if no match found
+    console.log(`No documents found for category: "${category}". Available categories:`, Object.keys(mappings));
+    
+    // Return default documents if no match found
+    return [...defaultDocumentTemplates['Default']];
   }
 
   // Add a new document to a category
@@ -205,5 +262,18 @@ export class SettingsService {
     this.clearCache();
     this.setCategoryDocuments(defaultDocumentTemplates);
     return defaultDocumentTemplates;
+  }
+
+  // Force refresh from API - clear cache and reinitialize
+  static async forceRefreshFromAPI() {
+    this.clearCache();
+    try {
+      const mappings = await this.initializeFromAPI();
+      console.log('Force refreshed category mappings from API:', mappings);
+      return mappings;
+    } catch (error) {
+      console.error('Failed to force refresh from API, using defaults:', error);
+      return this.forceRefresh();
+    }
   }
 }
