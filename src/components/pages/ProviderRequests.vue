@@ -1192,6 +1192,7 @@ const confirmApprove = async () => {
       { text: 'Creating provider in Actisure', status: 'pending' },
       { text: 'Adding healthcare provider role', status: 'pending' },
       { text: 'Setting up payee details', status: 'pending' },
+      { text: 'Adding contact/address info', status: 'pending' },
       { text: 'Finalizing setup', status: 'pending' }
     ]
 
@@ -1215,7 +1216,7 @@ const confirmApprove = async () => {
         licenseNo
       )
       
-      // Update remaining steps
+      // Update steps 2-4 (provider creation, healthcare role, payee details)
       loadingSteps.value[1].status = 'completed'
       loadingSteps.value[2].status = 'completed'
       loadingSteps.value[3].status = 'completed'
@@ -1223,8 +1224,23 @@ const confirmApprove = async () => {
       
       console.log('Provider created in Actisure with Entity ID:', actisureResult.entityId)
       
-      // Step 5: Finalize
+      // Step 5: Add contact details
+      const contactResult = await ProviderAPIService.addContactDetailsToActisure(
+        actisureResult.entityId,
+        {
+          address: request.address,
+          phone: request.phone
+        }
+      )
+      
+      // Update step 5
       loadingSteps.value[4].status = 'completed'
+      loadingSteps.value[5].status = 'in-progress'
+      
+      console.log('Contact details added to Actisure:', contactResult)
+      
+      // Step 6: Finalize
+      loadingSteps.value[5].status = 'completed'
       
       // Wait a moment to show completion
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -1238,16 +1254,11 @@ const confirmApprove = async () => {
       actionComment.value = ''
       selectedRequestId.value = null
       
-      // Refresh the data
+      // Refresh the data to show updated status
       await fetchProviderRequests()
       
-      // Redirect to Actisure listing
-      setTimeout(() => {
-        router.push('/provider-listings')
-      }, 2000)
-      
     } catch (actisureError) {
-      console.error('Error creating provider in Actisure:', actisureError)
+      console.error('Error in Actisure provider creation process:', actisureError)
       
       // Update failed steps
       for (let i = 1; i < loadingSteps.value.length; i++) {
@@ -1258,7 +1269,7 @@ const confirmApprove = async () => {
       }
       
       isProcessingActisure.value = false
-      showToastMessage('Request approved locally but failed to create in Actisure system. Please check manually.')
+      showToastMessage('Request approved locally but failed in Actisure system. Please check manually.')
       
       // Still refresh local data
       await fetchProviderRequests()

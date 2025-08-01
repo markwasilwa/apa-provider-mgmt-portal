@@ -466,6 +466,56 @@ export class ProviderAPIService {
     }
   }
 
+  // Add contact details to provider in Actisure
+  static async addContactDetailsToActisure(entityId, providerData) {
+    const contactDetailsPayload = {
+      EntityId: entityId,
+      ContactDetails: {
+        Addresses: [
+          {
+            Territory: "Kenya",
+            StartDate: new Date().toISOString().split('T')[0],
+            AddressLine1: providerData.address || "123 Kenyatta Avenue",
+            AddressLine2: "1st Floor",
+            AddressLine3: "Suite 12",
+            AddressLine4: "",
+            PostCode: "00100",
+            AddressType: "Physical",
+            Latitude: -1.2921,
+            Longitude: 36.8219
+          }
+        ],
+        Phones: [
+          {
+            PhoneNumber: providerData.phone ? providerData.phone.replace(/[^0-9]/g, '') : "721234567",
+            CountryDialCode: "+254",
+            RegionDialCode: "20",
+            PhoneType: "Mobile"
+          }
+        ]
+      }
+    }
+
+    try {
+      const response = await api.post('/api/entity/add-contact-details', contactDetailsPayload)
+      
+      if (response.data.status !== 0) {
+        throw new Error(response.data.error || 'Failed to add contact details')
+      }
+
+      return {
+        success: true,
+        addressIds: response.data.content.addressIds,
+        phoneIds: response.data.content.phoneIds,
+        message: 'Contact details added successfully'
+      }
+
+    } catch (error) {
+      console.error('Failed to add contact details in Actisure:', error)
+      throw error
+    }
+  }
+
   // Provider Countries API methods
   static async getProviderCountries(search = '') {
     const queryParams = new URLSearchParams(
