@@ -1,4 +1,11 @@
 <template>
+  <!-- Loading Overlay -->
+  <LoadingOverlay 
+    :visible="isProcessingActisure"
+    :title="loadingTitle"
+    :message="loadingMessage"
+    :steps="loadingSteps"
+  />
   <div class="provider-requests-container">
     <!-- Header Section -->
     <div class="header-section">
@@ -872,6 +879,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { 
   EyeIcon, 
   CheckIcon, 
@@ -896,9 +904,17 @@ import {
 import { ProviderAPIService } from '@/services/api'
 import { SettingsService } from '@/services/settings'
 import { useAuthStore } from '@/stores/auth'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
-// Auth store
+// Auth store and router
 const authStore = useAuthStore()
+const router = useRouter()
+
+// Actisure processing state
+const isProcessingActisure = ref(false)
+const loadingTitle = ref('Creating Provider in Actisure')
+const loadingMessage = ref('Please wait while we create the provider in the core system.')
+const loadingSteps = ref([])
 
 // Form states
 const searchTerm = ref('')
@@ -1160,22 +1176,97 @@ const approveRequest = (requestId) => {
 const confirmApprove = async () => {
   if (!actionComment.value.trim()) return
 
+  const requestId = selectedRequestId.value
   try {
-    await ProviderAPIService.approveProviderRequest(selectedRequestId.value, {
-      actionBy: 'admin', // This should be the current user
-      hodComments: actionComment.value
-    })
+    // Find the request details
+    const request = requests.value.find(r => r.id === requestId)
+    if (!request) {
+      showToastMessage('Request not found. Please refresh and try again.')
+      return
+    }
 
-    // Refresh the data
-    await fetchProviderRequests()
-    showToastMessage(`Request ${selectedRequestId.value} has been approved`)
+    // Start loading
+    isProcessingActisure.value = true
+    loadingSteps.value = [
+      { text: 'Approving request in system', status: 'in-progress' },
+      { text: 'Creating provider in Actisure', status: 'pending' },
+      { text: 'Adding healthcare provider role', status: 'pending' },
+      { text: 'Setting up payee details', status: 'pending' },
+      { text: 'Finalizing setup', status: 'pending' }
+    ]
 
-    // Close the dialog and reset
-    showApproveDialog.value = false
-    actionComment.value = ''
-    selectedRequestId.value = null
+    // Step 1: Approve the request in the local system first
+    await ProviderAPIService.approveProviderRequest(requestId, 'admin', actionComment.value)
+    
+    // Update step 1
+    loadingSteps.value[0].status = 'completed'
+    loadingSteps.value[1].status = 'in-progress'
+
+    // Step 2-4: Create provider in Actisure using the 3-step API sequence
+    // Extract required data from request (using available fields)
+    const providerName = request.providerName || 'Unknown Provider'
+    const licenseNo = request.licenseNumber || 'N/A'
+    const kraPin = request.phone || 'A12345678' // Using phone as placeholder for KRA PIN
+    
+    try {
+      const actisureResult = await ProviderAPIService.createProviderInActisure(
+        providerName,
+        kraPin,
+        licenseNo
+      )
+      
+      // Update remaining steps
+      loadingSteps.value[1].status = 'completed'
+      loadingSteps.value[2].status = 'completed'
+      loadingSteps.value[3].status = 'completed'
+      loadingSteps.value[4].status = 'in-progress'
+      
+      console.log('Provider created in Actisure with Entity ID:', actisureResult.entityId)
+      
+      // Step 5: Finalize
+      loadingSteps.value[4].status = 'completed'
+      
+      // Wait a moment to show completion
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Show success message
+      showToastMessage(`Request ${requestId} approved and provider created in Actisure (Entity ID: ${actisureResult.entityId})`)
+      
+      // Close loading and dialogs
+      isProcessingActisure.value = false
+      showApproveDialog.value = false
+      actionComment.value = ''
+      selectedRequestId.value = null
+      
+      // Refresh the data
+      await fetchProviderRequests()
+      
+      // Redirect to Actisure listing
+      setTimeout(() => {
+        router.push('/provider-listings')
+      }, 2000)
+      
+    } catch (actisureError) {
+      console.error('Error creating provider in Actisure:', actisureError)
+      
+      // Update failed steps
+      for (let i = 1; i < loadingSteps.value.length; i++) {
+        if (loadingSteps.value[i].status === 'in-progress') {
+          loadingSteps.value[i].status = 'pending'
+          break
+        }
+      }
+      
+      isProcessingActisure.value = false
+      showToastMessage('Request approved locally but failed to create in Actisure system. Please check manually.')
+      
+      // Still refresh local data
+      await fetchProviderRequests()
+    }
+
   } catch (error) {
     console.error('Error approving request:', error)
+    isProcessingActisure.value = false
     showToastMessage('Failed to approve request. Please try again.')
   }
 }
@@ -1190,10 +1281,7 @@ const confirmReject = async () => {
   if (!actionComment.value.trim()) return
 
   try {
-    await ProviderAPIService.declineProviderRequest(selectedRequestId.value, {
-      actionBy: 'admin', // This should be the current user
-      hodComments: actionComment.value
-    })
+    await ProviderAPIService.declineProviderRequest(selectedRequestId.value, 'admin', actionComment.value)
 
     // Refresh the data
     await fetchProviderRequests()

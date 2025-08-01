@@ -401,6 +401,71 @@ export class ProviderAPIService {
     }
   }
 
+  // Actisure Core System API methods for provider creation
+  static async createProviderInActisure(providerName, kraPin, licenseNo) {
+    const createProviderPayload = {
+      CorporateClientEntityDetails: {
+        CompanyName: providerName,
+        ListRoleAdditionalInfo: [
+          {
+            Description: "Gender",
+            Value: "Male"
+          }
+        ]
+      }
+    }
+
+    try {
+      // Step 1: Create Provider
+      const createResponse = await api.post('/client/add', createProviderPayload)
+      
+      if (!createResponse.data.success) {
+        throw new Error(createResponse.data.errorMessage || 'Failed to create provider')
+      }
+
+      const entityId = createResponse.data.entityId
+
+      // Step 2: Add Healthcare Provider Role
+      const healthcareRolePayload = {
+        entityId: entityId,
+        additionalInfo: {
+          "KRA PIN No": kraPin,
+          "License No": licenseNo
+        },
+        changedBy: "admin.user"
+      }
+
+      const healthcareRoleResponse = await api.post('/api/entity/add-role-info/healthcare-provider', healthcareRolePayload)
+      
+      if (healthcareRoleResponse.data.status !== 0) {
+        throw new Error(healthcareRoleResponse.data.error || 'Failed to add healthcare provider role')
+      }
+
+      // Step 3: Add Payee Details
+      const payeePayload = {
+        entityId: entityId,
+        name: providerName,
+        changedBy: "admin.user"
+      }
+
+      const payeeResponse = await api.post('/api/entity/add-role-info/payee', payeePayload)
+      
+      if (payeeResponse.data.status !== 0) {
+        throw new Error(payeeResponse.data.error || 'Failed to add payee role')
+      }
+
+      return {
+        success: true,
+        entityId: entityId,
+        message: 'Provider successfully created in Actisure system'
+      }
+
+    } catch (error) {
+      console.error('Failed to create provider in Actisure:', error)
+      throw error
+    }
+  }
+
   // Provider Countries API methods
   static async getProviderCountries(search = '') {
     const queryParams = new URLSearchParams(
