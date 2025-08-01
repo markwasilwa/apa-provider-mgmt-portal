@@ -742,6 +742,24 @@ export class ProviderAPIService {
       throw error
     }
   }
+
+  // Compare provider rates with master rates
+  static async compareProviderRates(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await api.post(`${API_BASE_URL}/rates/compare`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to compare provider rates:', error)
+      throw error
+    }
+  }
 }
 
 // Transform API data to component-friendly format

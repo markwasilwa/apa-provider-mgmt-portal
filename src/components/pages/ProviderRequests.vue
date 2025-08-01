@@ -801,6 +801,69 @@
                 </div>
               </div>
             </div>
+
+            <!-- Provider Rates Comparison Results -->
+            <div v-if="showRatesComparison || ratesComparisonLoading" class="detail-section" style="grid-column: span 3;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h4 class="section-title" style="margin-bottom: 0; font-size: 0.9rem;">Provider Rates Comparison</h4>
+                <div v-if="ratesComparisonLoading" class="loading-spinner">
+                  <div class="spinner"></div>
+                  <span style="margin-left: 0.5rem; font-size: 0.8rem; color: #64748b;">Comparing rates...</span>
+                </div>
+              </div>
+
+              <div v-if="showRatesComparison && !ratesComparisonLoading" class="rates-comparison-container">
+                <div class="rates-summary">
+                  <div class="summary-item">
+                    <span class="summary-label">Total Items:</span>
+                    <span class="summary-value">{{ ratesComparisonResults.length }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">New Items:</span>
+                    <span class="summary-value new">{{ ratesComparisonResults.filter(r => r.status === 'NEW').length }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Price Changes:</span>
+                    <span class="summary-value changed">{{ ratesComparisonResults.filter(r => r.status === 'PRICE_INCREASED' || r.status === 'PRICE_DECREASED').length }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Removed:</span>
+                    <span class="summary-value removed">{{ ratesComparisonResults.filter(r => r.status === 'REMOVED').length }}</span>
+                  </div>
+                </div>
+
+                <div class="rates-table-container">
+                  <table class="rates-table">
+                    <thead>
+                      <tr>
+                        <th>Item Code</th>
+                        <th>Description</th>
+                        <th>APA Price</th>
+                        <th>Hospital Price</th>
+                        <th>Difference</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="rate in ratesComparisonResults" :key="rate.itemCode" :class="getRateStatusClass(rate.status)">
+                        <td class="item-code">{{ rate.itemCode }}</td>
+                        <td class="description">{{ rate.description }}</td>
+                        <td class="price">{{ rate.apaPrice ? formatCurrency(rate.apaPrice) : '-' }}</td>
+                        <td class="price">{{ rate.hospitalTierPrice ? formatCurrency(rate.hospitalTierPrice) : '-' }}</td>
+                        <td class="difference" :class="getDifferenceClass(rate.priceDifference)">
+                          {{ rate.priceDifference ? formatCurrency(rate.priceDifference) : '-' }}
+                        </td>
+                        <td class="status">
+                          <span class="status-badge" :class="getRateStatusClass(rate.status)">
+                            {{ formatStatus(rate.status) }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="detail-grid">
@@ -957,6 +1020,11 @@ const categoryDocuments = ref([])
 
 // Store the required documents for the currently edited request
 const editCategoryDocuments = ref([])
+
+// Provider rates comparison results
+const ratesComparisonResults = ref([])
+const showRatesComparison = ref(false)
+const ratesComparisonLoading = ref(false)
 
 // Pagination
 const currentPage = ref(0)
@@ -1446,10 +1514,16 @@ const closeCreateModal = () => {
 }
 
 // Handle file upload for documents in create form
-const handleFileUpload = (event, documentId) => {
+const handleFileUpload = async (event, documentId) => {
   const file = event.target.files[0]
   if (file) {
     requestForm.value.documents[documentId] = file
+    
+    // Check if this is a Provider Rates document
+    const document = categoryDocuments.value.find(doc => doc.id === documentId)
+    if (document && document.name === 'Provider Rates') {
+      await compareProviderRates(file)
+    }
   }
 }
 
@@ -1467,10 +1541,68 @@ const handleEditFileUpload = (event, request, documentId) => {
   }
 }
 
+// Compare provider rates with master rates
+const compareProviderRates = async (file) => {
+  ratesComparisonLoading.value = true
+  showRatesComparison.value = false
+  ratesComparisonResults.value = []
+  
+  try {
+    const comparisonData = await ProviderAPIService.compareProviderRates(file)
+    ratesComparisonResults.value = comparisonData
+    showRatesComparison.value = true
+    
+    showToast.value = true
+    toastMessage.value = `Rate comparison completed. Found ${comparisonData.length} items.`
+  } catch (error) {
+    console.error('Failed to compare provider rates:', error)
+    showToast.value = true
+    toastMessage.value = 'Failed to compare provider rates. Please try again.'
+  } finally {
+    ratesComparisonLoading.value = false
+  }
+}
+
 // Get file name for display
 const getFileName = (file) => {
   if (!file) return ''
   return file.name
+}
+
+// Helper functions for rates comparison display
+const formatCurrency = (amount) => {
+  if (amount === null || amount === undefined) return '-'
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES'
+  }).format(amount)
+}
+
+const formatStatus = (status) => {
+  const statusMap = {
+    'NEW': 'New',
+    'UNCHANGED': 'Unchanged',
+    'PRICE_INCREASED': 'Price Increased',
+    'PRICE_DECREASED': 'Price Decreased',
+    'REMOVED': 'Removed'
+  }
+  return statusMap[status] || status
+}
+
+const getRateStatusClass = (status) => {
+  const classMap = {
+    'NEW': 'status-new',
+    'UNCHANGED': 'status-unchanged',
+    'PRICE_INCREASED': 'status-increased',
+    'PRICE_DECREASED': 'status-decreased',
+    'REMOVED': 'status-removed'
+  }
+  return classMap[status] || ''
+}
+
+const getDifferenceClass = (difference) => {
+  if (!difference) return ''
+  return difference > 0 ? 'positive' : 'negative'
 }
 
 // Get document type name based on category and document ID
@@ -3239,5 +3371,181 @@ const createRequest = async () => {
   background: #3b82f6;
   border-color: #3b82f6;
   color: white;
+}
+
+/* Provider Rates Comparison Styles */
+.rates-comparison-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.rates-summary {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.summary-value.new {
+  color: #059669;
+}
+
+.summary-value.changed {
+  color: #dc2626;
+}
+
+.summary-value.removed {
+  color: #64748b;
+}
+
+.rates-table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+}
+
+.rates-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.rates-table th {
+  background: #f1f5f9;
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+}
+
+.rates-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.item-code {
+  font-family: monospace;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.description {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price {
+  text-align: right;
+  font-weight: 500;
+}
+
+.difference {
+  text-align: right;
+  font-weight: 600;
+}
+
+.difference.positive {
+  color: #dc2626;
+}
+
+.difference.negative {
+  color: #059669;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.status-new {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.status-unchanged {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-badge.status-increased {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.status-badge.status-decreased {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.status-removed {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .rates-summary {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .rates-table-container {
+    overflow-x: auto;
+  }
+  
+  .rates-table {
+    min-width: 600px;
+  }
 }
 </style>
