@@ -204,8 +204,8 @@ onUnmounted(() => {
 
 /* Top Navigation - matching existing TopNavigation.vue */
 .top-nav {
-  background-color: #1e40af;
-  color: white;
+  background-color: white;
+  color: #1f2937;
   padding: 0.75rem 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: relative;
@@ -229,7 +229,7 @@ onUnmounted(() => {
 .sidebar-toggle {
   background: none;
   border: none;
-  color: white;
+  color: #1f2937;
   padding: 0.5rem;
   margin-right: 1rem;
   border-radius: 0.375rem;
@@ -238,7 +238,7 @@ onUnmounted(() => {
 }
 
 .sidebar-toggle:hover {
-  background-color: #2563eb;
+  background-color: #f3f4f6;
 }
 
 .toggle-icon {
@@ -305,7 +305,7 @@ onUnmounted(() => {
 
 .user-role {
   font-size: 0.75rem;
-  color: #cbd5e1;
+  color: black;
 }
 
 .user-dropdown-container {
@@ -315,7 +315,7 @@ onUnmounted(() => {
 .user-menu-button {
   background: none;
   border: none;
-  color: white;
+  color: #1f2937;
   padding: 0.25rem;
   border-radius: 0.375rem;
   cursor: pointer;
@@ -323,7 +323,7 @@ onUnmounted(() => {
 }
 
 .user-menu-button:hover {
-  background-color: #2563eb;
+  background-color: #f3f4f6;
 }
 
 .dropdown-icon {
