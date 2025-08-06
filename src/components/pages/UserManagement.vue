@@ -1,13 +1,12 @@
 <template>
   <div class="user-management">
-    <div class="page-header">
+    <div v-if="showHeader" class="page-header">
       <h1 class="page-title">User Management</h1>
       <p class="page-description">Manage user accounts across the system</p>
     </div>
 
     <!-- Search and Filters -->
     <div class="search-section">
-      <div class="search-controls">
         <div class="search-group">
           <input
             v-model="searchTerm"
@@ -21,7 +20,7 @@
             {{ loading ? 'Loading...' : 'Refresh' }}
           </button>
         </div>
-        
+
         <div class="filter-group">
           <select v-model="selectedRole" @change="filterUsers" class="filter-select">
             <option value="">All Roles</option>
@@ -29,7 +28,7 @@
             <option value="ROLE_BACK_OFFICE">Back Office</option>
             <option value="ROLE_ADMIN">Administrators</option>
           </select>
-          
+
           <select v-model="selectedStatus" @change="filterUsers" class="filter-select">
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -38,7 +37,6 @@
             <option value="unverified">Email Unverified</option>
           </select>
         </div>
-      </div>
     </div>
 
     <!-- Statistics Cards -->
@@ -130,33 +128,33 @@
                   <div class="user-id">ID: {{ user.id }}</div>
                 </div>
               </td>
-              
+
               <td class="user-email">
                 <a :href="`mailto:${user.email}`" class="email-link">{{ user.email }}</a>
               </td>
-              
+
               <td class="user-phone">
                 {{ user.phone || 'Not provided' }}
               </td>
-              
+
               <td class="user-role">
                 <span class="role-badge" :class="getRoleClass(user.role)">
                   {{ formatRole(user.role) }}
                 </span>
               </td>
-              
+
               <td class="user-status">
                 <span class="status-badge" :class="user.isActive ? 'status-active' : 'status-inactive'">
                   {{ user.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              
+
               <td class="user-verification">
                 <span class="verification-badge" :class="user.emailVerified ? 'verified' : 'unverified'">
                   {{ user.emailVerified ? 'Verified' : 'Unverified' }}
                 </span>
               </td>
-              
+
               <td class="user-api-key">
                 <button 
                   @click="showApiKey(user)"
@@ -168,7 +166,7 @@
                   </svg>
                 </button>
               </td>
-              
+
               <td class="user-actions">
                 <div class="action-buttons">
                   <button 
@@ -181,7 +179,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                   </button>
-                  
+
                   <button 
                     v-if="user.id !== authStore.user?.id"
                     @click="confirmDeleteUser(user)"
@@ -258,9 +256,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineProps } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import AuthService from '@/services/auth'
+
+const props = defineProps({
+  showHeader: {
+    type: Boolean,
+    default: true
+  }
+})
 
 const authStore = useAuthStore()
 
@@ -284,7 +289,7 @@ const stats = computed(() => {
   const admins = users.value.filter(u => u.role === 'ROLE_ADMIN').length
   const verified = users.value.filter(u => u.emailVerified).length
   const active = users.value.filter(u => u.isActive).length
-  
+
   return { total, providers, backOffice, admins, verified, active }
 })
 
@@ -359,7 +364,7 @@ const formatRole = (role) => {
     'ROLE_PROVIDER': 'Provider',
     'ROLE_BACK_OFFICE': 'Back Office'
   }
-  
+
   return roleMap[role] || role.replace('ROLE_', '').replace('_', ' ')
 }
 
@@ -369,7 +374,7 @@ const getRoleClass = (role) => {
     'ROLE_PROVIDER': 'role-provider',
     'ROLE_BACK_OFFICE': 'role-back-office'
   }
-  
+
   return classMap[role] || 'role-default'
 }
 
@@ -410,7 +415,7 @@ const closeDeleteModal = () => {
 
 const deleteUser = async () => {
   if (!userToDelete.value) return
-  
+
   loading.value = true
   try {
     await AuthService.deleteUser(userToDelete.value.id)
@@ -432,6 +437,8 @@ onMounted(() => {
 .user-management {
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .page-header {
@@ -456,10 +463,7 @@ onMounted(() => {
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
-  margin-bottom: 2rem;
-}
-
-.search-controls {
+  margin: 1rem 1rem 2rem 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
@@ -501,7 +505,7 @@ onMounted(() => {
 }
 
 .stats-section {
-  margin-bottom: 2rem;
+  margin: 0 1rem 2rem 1rem;
 }
 
 .stats-grid {
@@ -950,15 +954,15 @@ onMounted(() => {
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .search-controls {
+  .search-section {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-group {
     min-width: auto;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -968,22 +972,22 @@ onMounted(() => {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .section-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .users-table th,
   .users-table td {
     padding: 0.5rem 0.75rem;
   }
-  
+
   .modal-overlay {
     padding: 0.5rem;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
@@ -993,18 +997,18 @@ onMounted(() => {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .users-table {
     font-size: 0.75rem;
   }
-  
+
   .user-info {
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 0.5rem;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
