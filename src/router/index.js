@@ -18,7 +18,15 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/dashboard'
+      name: 'home',
+      beforeEnter: (to, from, next) => {
+        const authStore = useAuthStore()
+        if (authStore.isProvider) {
+          next('/provider-requests')
+        } else {
+          next('/dashboard')
+        }
+      }
     },
     {
       path: '/login',
@@ -48,7 +56,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresNonProvider: true }
     },
     {
       path: '/provider-visits',
@@ -112,9 +120,16 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/dashboard')
+    // Redirect authenticated users based on role
+    if (authStore.isProvider) {
+      next('/provider-requests') // Providers go to requests page
+    } else {
+      next('/dashboard') // Others go to dashboard
+    }
   } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
     next('/dashboard') // Redirect non-admins to dashboard
+  } else if (to.meta.requiresNonProvider && authStore.isProvider) {
+    next('/provider-requests') // Redirect providers away from dashboard
   } else {
     next()
   }

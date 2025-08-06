@@ -10,7 +10,9 @@
           <p class="subtitle">Overview of system metrics and key performance indicators</p>
         </div>
         <div class="header-stats">
-          <div class="stat-item" v-for="(stat, index) in stats" :key="index">
+          <div v-if="loading" class="loading-stats">Loading...</div>
+          <div v-else-if="error" class="error-stats">{{ error }}</div>
+          <div v-else class="stat-item" v-for="(stat, index) in stats.slice(0, 4)" :key="index">
             <div class="stat-number">{{ stat.value }}</div>
             <div class="stat-label">{{ stat.title }}</div>
           </div>
@@ -20,8 +22,19 @@
 
     <!-- Main Content -->
     <div class="content-section">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-section">
+        <div class="loading-spinner">Loading dashboard data...</div>
+      </div>
+      
+      <!-- Error State -->
+      <div v-else-if="error" class="error-section">
+        <div class="error-message">{{ error }}</div>
+        <button @click="loadDashboardStatistics" class="retry-button">Retry</button>
+      </div>
+      
       <!-- KPI Cards -->
-      <div class="kpi-section">
+      <div v-else class="kpi-section">
         <div class="kpi-card" v-for="stat in stats" :key="stat.title">
           <div class="kpi-header">
             <component :is="stat.icon" class="kpi-icon" />
@@ -98,49 +111,115 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { 
   BuildingOffice2Icon, 
   ClipboardDocumentListIcon, 
   CheckCircleIcon, 
   ClockIcon,
+  XCircleIcon,
   PlusIcon,
   DocumentTextIcon,
   ChartBarIcon,
   ArrowUpIcon,
   ArrowDownIcon
 } from '@heroicons/vue/24/outline'
+import { DashboardAPIService } from '@/services/api'
 
-const stats = ref([
-  {
-    title: 'Total Providers',
-    value: '1,245',
-    icon: BuildingOffice2Icon,
-    change: '+12%',
-    changeType: 'positive'
-  },
-  {
-    title: 'Active Requests',
-    value: '87',
-    icon: ClipboardDocumentListIcon,
-    change: '-5%',
-    changeType: 'negative'
-  },
-  {
-    title: 'Completed Visits',
-    value: '456',
-    icon: CheckCircleIcon,
-    change: '+23%',
-    changeType: 'positive'
-  },
-  {
-    title: 'Pending Approvals',
-    value: '23',
-    icon: ClockIcon,
-    change: '+8%',
-    changeType: 'positive'
+const stats = ref([])
+const loading = ref(true)
+const error = ref(null)
+
+const loadDashboardStatistics = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    const response = await DashboardAPIService.getDashboardStatistics()
+    
+    // Handle direct response data (no wrapper structure)
+    const data = response.data || response
+    
+    stats.value = [
+      {
+        title: 'Total Providers',
+        value: data.totalProviders?.toLocaleString() || '0',
+        icon: BuildingOffice2Icon,
+        change: '+12%',
+        changeType: 'positive'
+      },
+      {
+        title: 'Total Requests',
+        value: data.totalRequests?.toLocaleString() || '0',
+        icon: ClipboardDocumentListIcon,
+        change: '+5%',
+        changeType: 'positive'
+      },
+      {
+        title: 'Pending Requests',
+        value: data.pendingRequests?.toLocaleString() || '0',
+        icon: ClockIcon,
+        change: data.pendingRequests > 20 ? '+8%' : '-2%',
+        changeType: data.pendingRequests > 20 ? 'positive' : 'negative'
+      },
+      {
+        title: 'Approved Requests',
+        value: data.approvedRequests?.toLocaleString() || '0',
+        icon: CheckCircleIcon,
+        change: '+15%',
+        changeType: 'positive'
+      },
+      {
+        title: 'Declined Requests',
+        value: data.declinedRequests?.toLocaleString() || '0',
+        icon: XCircleIcon,
+        change: data.declinedRequests > 5 ? '+3%' : '-1%',
+        changeType: data.declinedRequests > 5 ? 'negative' : 'positive'
+      }
+    ]
+  } catch (err) {
+    error.value = 'Failed to load dashboard statistics'
+    console.error('Error loading dashboard statistics:', err)
+    
+    // Fallback to default stats on error
+    stats.value = [
+      {
+        title: 'Total Providers',
+        value: '0',
+        icon: BuildingOffice2Icon,
+        change: '0%',
+        changeType: 'neutral'
+      },
+      {
+        title: 'Total Requests', 
+        value: '0',
+        icon: ClipboardDocumentListIcon,
+        change: '0%',
+        changeType: 'neutral'
+      },
+      {
+        title: 'Pending Requests',
+        value: '0',
+        icon: ClockIcon,
+        change: '0%',
+        changeType: 'neutral'
+      },
+      {
+        title: 'Approved Requests',
+        value: '0',
+        icon: CheckCircleIcon,
+        change: '0%',
+        changeType: 'neutral'
+      }
+    ]
+  } finally {
+    loading.value = false
   }
-])
+}
+
+onMounted(() => {
+  loadDashboardStatistics()
+})
 
 const recentActivities = ref([
   {
@@ -456,6 +535,60 @@ const recentActivities = ref([
 .activity-time {
   font-size: 0.75rem;
   color: #64748b;
+}
+
+/* Loading and Error States */
+.loading-stats, .error-stats {
+  color: #64748b;
+  font-size: 0.875rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.error-stats {
+  color: #dc2626;
+}
+
+.loading-section, .error-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.loading-spinner {
+  font-size: 1.125rem;
+  color: #64748b;
+}
+
+.error-message {
+  font-size: 1.125rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.retry-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background-color: #2563eb;
+}
+
+.kpi-change.neutral {
+  color: #64748b;
+  background: #f1f5f9;
 }
 
 /* Responsive Styles */

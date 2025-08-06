@@ -307,28 +307,17 @@
                             </div>
                             <div class="compact-field">
                               <label class="compact-label">Venue</label>
-                              <div class="venue-search-compact">
+                              <div class="venue-input-compact">
+                                <svg class="input-icon-compact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
                                 <input 
                                   type="text" 
-                                  v-model="venueSearchTerm" 
-                                  @input="searchVenues(venueSearchTerm)"
-                                  @focus="showVenueResults = true"
-                                  class="compact-input"
-                                  placeholder="Search venue/location..."
+                                  v-model="visitForm.venue" 
+                                  class="compact-input with-icon-compact"
+                                  placeholder="Enter venue/location..."
                                 >
-                                <div v-if="showVenueResults && venueSearchTerm && filteredVenues.length > 0" class="search-results compact-dropdown">
-                                  <div 
-                                    v-for="venue in filteredVenues" 
-                                    :key="venue.entityId" 
-                                    class="search-result-item"
-                                    @click="selectVenue(venue)"
-                                  >
-                                    {{ venue.companyName || `${venue.firstName} ${venue.surname}`.trim() }}
-                                  </div>
-                                </div>
-                                <div v-else-if="showVenueResults && venueSearchTerm && venueSearchTerm.length >= 2 && filteredVenues.length === 0" class="search-results compact-dropdown">
-                                  <div class="search-result-item no-results">No venues found</div>
-                                </div>
                               </div>
                             </div>
                           </div>
@@ -500,32 +489,17 @@
                   </div>
                   <div class="input-group">
                     <label class="input-label">Venue</label>
-                    <div class="input-wrapper venue-search">
+                    <div class="input-wrapper venue-input">
+                      <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
                       <input 
                         type="text" 
-                        v-model="venueSearchTerm" 
-                        @input="searchVenues(venueSearchTerm)"
-                        @focus="showVenueResults = true"
-                        class="modern-input compact-input"
-                        placeholder="Search venue..."
+                        v-model="visitForm.venue" 
+                        class="modern-input compact-input with-icon"
+                        placeholder="Enter venue/location..."
                       >
-                      <div v-if="showVenueResults && venueSearchTerm && filteredVenues.length > 0" class="search-results">
-                        <div 
-                          v-for="venue in filteredVenues" 
-                          :key="venue.id" 
-                          class="search-result-item"
-                          @click="selectVenue(venue)"
-                        >
-                          {{ venue.name }}
-                        </div>
-                      </div>
-                      <div v-else-if="showVenueResults && venueSearchTerm && venueSearchTerm.length >= 2 && filteredVenues.length === 0" class="search-results">
-                        <div class="search-result-item no-results">No venues found</div>
-                      </div>
-                    </div>
-                    <div v-if="selectedVenue" class="selected-item compact-selected">
-                      <span>{{ selectedVenue.name }}</span>
-                      <button type="button" class="clear-selection" @click="selectedVenue = null; visitForm.venue = ''; venueSearchTerm = ''">×</button>
                     </div>
                   </div>
                   <div class="input-group">
@@ -828,7 +802,7 @@ const loadVisitMeetings = async () => {
       response = await ProviderAPIService.getVisitMeetings({
         page: currentPage.value,
         size: pageSize.value,
-        sortBy: 'visitDate',
+        sortBy: 'createdAt',
         sortDir: 'desc'
       })
     }
@@ -3669,6 +3643,37 @@ onMounted(() => {
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   height: 2.5rem;
+}
+
+/* Venue Input Icons */
+.venue-input, .venue-input-compact {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon, .input-icon-compact {
+  position: absolute;
+  left: 0.75rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-icon-compact {
+  width: 1rem;
+  height: 1rem;
+  left: 0.5rem;
+}
+
+.with-icon {
+  padding-left: 2.5rem !important;
+}
+
+.with-icon-compact {
+  padding-left: 2rem !important;
 }
 
 .compact-selected {

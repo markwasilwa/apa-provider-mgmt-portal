@@ -516,3 +516,16 @@ const getProviderIcon = (entity) => {
 
   return iconMap[category] || '🏢'
 }
+
+// Dashboard Statistics API methods
+export class DashboardAPIService {
+  static async getDashboardStatistics() {
+    try {
+      const response = await api.get(`${API_BASE_URL}/dashboard/statistics`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch dashboard statistics:', error)
+      throw error
+    }
+  }
+}
